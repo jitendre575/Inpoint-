@@ -10,7 +10,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6 rounded-b-[2rem] shadow-lg">
+      <div className="bg-gradient-to-r from-blue-500 to-emerald-600 text-white p-6 rounded-b-[2rem] shadow-lg">
         <div className="flex items-center gap-4 mb-4">
           <Button onClick={() => router.back()} variant="ghost" className="text-white hover:bg-white/20 p-2">
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,7 +24,7 @@ export default function AboutPage() {
       <div className="p-6 space-y-4">
         <Card className="p-6 shadow-lg">
           <div className="text-center mb-6">
-            <div className="h-20 w-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <div className="h-20 w-20 bg-gradient-to-br from-blue-500 to-emerald-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
               <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>

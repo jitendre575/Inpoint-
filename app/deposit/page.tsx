@@ -64,7 +64,7 @@ export default function DepositPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold">Deposit</h1>
           <button className="p-2 rounded-lg hover:bg-white/20">
@@ -86,7 +86,7 @@ export default function DepositPage() {
           <button
             onClick={() => setActiveTab("INR")}
             className={`flex-1 py-4 text-center font-semibold transition-colors ${
-              activeTab === "INR" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-gray-500"
+              activeTab === "INR" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-500"
             }`}
           >
             INR
@@ -94,7 +94,7 @@ export default function DepositPage() {
           <button
             onClick={handleUsdtClick}
             className={`flex-1 py-4 text-center font-semibold transition-colors ${
-              activeTab === "USDT" ? "text-indigo-600 border-b-2 border-indigo-600" : "text-gray-400"
+              activeTab === "USDT" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-400"
             }`}
           >
             USDT
@@ -118,10 +118,10 @@ export default function DepositPage() {
             onChange={(e) => setMaxAmount(e.target.value)}
             className="flex-1 h-12 text-center text-base"
           />
-          <Button onClick={handleGo} className="bg-indigo-600 hover:bg-indigo-700 h-12 px-8 text-base font-semibold">
+          <Button onClick={handleGo} className="bg-emerald-600 hover:bg-emerald-700 h-12 px-8 text-base font-semibold">
             Go
           </Button>
-          <Button onClick={handleReset} className="bg-indigo-600 hover:bg-indigo-700 h-12 px-6 text-base font-semibold">
+          <Button onClick={handleReset} className="bg-emerald-600 hover:bg-emerald-700 h-12 px-6 text-base font-semibold">
             Reset
           </Button>
         </div>
@@ -133,7 +133,7 @@ export default function DepositPage() {
           <Card key={index} className="p-4 shadow-md bg-white hover:shadow-lg transition-shadow">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-md">
+                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-emerald-600 to-purple-600 flex items-center justify-center shadow-md">
                   <span className="text-white text-xl font-bold">₹</span>
                 </div>
                 <div>
@@ -154,7 +154,7 @@ export default function DepositPage() {
               <div className="text-right">
                 <Button
                   onClick={() => handleBuy(option.amount)}
-                  className="bg-indigo-600 hover:bg-indigo-700 rounded-full px-6 py-2 mb-2 text-base font-semibold shadow-md"
+                  className="bg-emerald-600 hover:bg-emerald-700 rounded-full px-6 py-2 mb-2 text-base font-semibold shadow-md"
                 >
                   Buy
                 </Button>
@@ -187,7 +187,7 @@ export default function DepositPage() {
             </p>
             <Button
               onClick={() => setShowUsdtLock(false)}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 h-12 text-base font-semibold"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 h-12 text-base font-semibold"
             >
               Got it
             </Button>

@@ -14,7 +14,7 @@ function PaymentContent() {
   const { toast } = useToast()
   const [amount, setAmount] = useState("")
   const [utr, setUtr] = useState("")
-  const [showScanner, setShowScanner] = useState(false)
+  const [screenshot, setScreenshot] = useState<File | null>(null)
   const [processing, setProcessing] = useState(false)
 
   useEffect(() => {
@@ -24,7 +24,7 @@ function PaymentContent() {
     }
   }, [searchParams])
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     if (utr.length !== 12) {
       toast({
         title: "Invalid UTR",
@@ -34,30 +34,59 @@ function PaymentContent() {
       return
     }
 
+    if (!screenshot) {
+      toast({
+        title: "Missing Screenshot",
+        description: "Please upload the payment screenshot.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setProcessing(true)
 
-    setTimeout(() => {
+    try {
       const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
-      currentUser.wallet = (currentUser.wallet || 0) + Number.parseFloat(amount)
-      localStorage.setItem("currentUser", JSON.stringify(currentUser))
+      if (!currentUser.email) {
+        throw new Error("User session invalid. Please login again.");
+      }
 
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const userIndex = users.findIndex((u: any) => u.id === currentUser.id)
-      users[userIndex] = currentUser
-      localStorage.setItem("users", JSON.stringify(users))
+      const formData = new FormData();
+      formData.append('email', currentUser.email);
+      formData.append('amount', amount);
+      formData.append('utr', utr);
+      formData.append('screenshot', screenshot);
+
+      const res = await fetch('/api/user/deposit', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Deposit failed');
+
+      // Update Local Storage
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
 
       toast({
-        title: "Payment Successful",
-        description: `₹${amount} has been added to your wallet.`,
+        title: "Deposit Request Submitted",
+        description: "Your deposit is pending approval. Check history for status.",
       })
 
-      setProcessing(false)
       router.push("/dashboard")
-    }, 2000)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setProcessing(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="min-h-screen bg-gray-50 pb-20">
       <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-6 rounded-b-[2rem] shadow-lg">
         <div className="flex items-center gap-4 mb-4">
           <Button onClick={() => router.back()} variant="ghost" className="text-white hover:bg-white/20 p-2">
@@ -77,52 +106,9 @@ function PaymentContent() {
           </div>
         </Card>
 
-        {!showScanner ? (
-          <div className="space-y-4">
-            <Card className="p-6 shadow-lg">
-              <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mb-4">
-                <div className="text-center">
-                  <div className="h-20 w-20 bg-white rounded-2xl mx-auto mb-4 flex items-center justify-center shadow-lg">
-                    <svg className="h-10 w-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-gray-600 font-medium">QR Code Scanner</p>
-                  <p className="text-sm text-gray-500 mt-1">Scan to pay securely</p>
-                </div>
-              </div>
-              <Button
-                onClick={() => setShowScanner(true)}
-                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-              >
-                Proceed to Payment
-              </Button>
-            </Card>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <Card className="p-6 shadow-lg">
-              <div className="aspect-square bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mb-4 animate-pulse">
-                <div className="text-center text-white">
-                  <svg className="h-16 w-16 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <p className="font-bold text-lg">Payment Processing...</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6 shadow-lg">
+        <div className="space-y-4">
+          <Card className="p-6 shadow-lg space-y-4">
+            <div>
               <Label htmlFor="utr" className="text-gray-700 font-medium">
                 Enter 12-Digit UTR Number
               </Label>
@@ -135,20 +121,30 @@ function PaymentContent() {
                 className="mt-2 h-12 text-base"
                 maxLength={12}
               />
-              <p className="text-xs text-gray-500 mt-2">
-                Enter the 12-digit transaction reference number from your payment confirmation
-              </p>
-            </Card>
+            </div>
 
-            <Button
-              onClick={handlePayment}
-              disabled={utr.length !== 12 || processing}
-              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
-            >
-              {processing ? "Verifying Payment..." : "Confirm Payment"}
-            </Button>
-          </div>
-        )}
+            <div>
+              <Label htmlFor="screenshot" className="text-gray-700 font-medium">
+                Upload Payment Screenshot
+              </Label>
+              <Input
+                id="screenshot"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setScreenshot(e.target.files?.[0] || null)}
+                className="mt-2 h-12 pt-2 text-base"
+              />
+            </div>
+          </Card>
+
+          <Button
+            onClick={handlePayment}
+            disabled={utr.length !== 12 || !screenshot || processing}
+            className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-md font-bold text-lg"
+          >
+            {processing ? "Processing..." : "Submit Deposit Request"}
+          </Button>
+        </div>
       </div>
     </div>
   )

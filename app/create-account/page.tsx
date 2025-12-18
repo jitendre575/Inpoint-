@@ -34,48 +34,46 @@ export default function CreateAccountPage() {
 
     setLoading(true)
 
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const userExists = users.some((u: any) => u.email === formData.email)
-
-      if (userExists) {
-        toast({
-          title: "Account Exists",
-          description: "An account with this email already exists.",
-          variant: "destructive",
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
         })
-        setLoading(false)
-        return
-      }
+      });
 
-      const newUser = {
-        id: Date.now().toString(),
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        wallet: 0,
-        plans: [],
-      }
+      const data = await res.json();
 
-      users.push(newUser)
-      localStorage.setItem("users", JSON.stringify(users))
+      if (!res.ok) {
+        throw new Error(data.message || 'Registration failed');
+      }
 
       toast({
         title: "Account Created",
-        description: "Your account has been created successfully!",
+        description: "Your account has been created successfully! Please login.",
       })
 
-      setLoading(false)
       router.push("/login")
-    }, 1000)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-400 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <div className="h-16 w-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
               <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -100,7 +98,7 @@ export default function CreateAccountPage() {
                 placeholder="Enter your full name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
                 required
               />
             </div>
@@ -115,7 +113,7 @@ export default function CreateAccountPage() {
                 placeholder="Enter your email or mobile"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
                 required
               />
             </div>
@@ -130,7 +128,7 @@ export default function CreateAccountPage() {
                 placeholder="Create a password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
                 required
               />
             </div>
@@ -145,14 +143,14 @@ export default function CreateAccountPage() {
                 placeholder="Confirm your password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
                 required
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold text-base shadow-lg"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold text-base shadow-lg"
               disabled={loading}
             >
               {loading ? "Creating Account..." : "Create Account"}
@@ -162,7 +160,7 @@ export default function CreateAccountPage() {
           <div className="mt-6 text-center">
             <p className="text-gray-600">
               Already have an account?{" "}
-              <button onClick={() => router.push("/login")} className="text-indigo-600 font-semibold hover:underline">
+              <button onClick={() => router.push("/login")} className="text-emerald-600 font-semibold hover:underline">
                 Login
               </button>
             </p>

@@ -32,8 +32,8 @@ export default function BonusPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white pb-20">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white pb-20">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
         <h1 className="text-center text-2xl font-bold">Bonus & Rewards</h1>
       </div>
 
@@ -54,11 +54,11 @@ export default function BonusPage() {
 
         <Card className="p-6 shadow-md">
           <div className="flex items-center gap-3 mb-4">
-            <TrendingUp className="h-8 w-8 text-indigo-600" />
+            <TrendingUp className="h-8 w-8 text-emerald-600" />
             <h3 className="text-lg font-bold text-gray-900">Investment Bonus</h3>
           </div>
           <p className="text-sm text-gray-600 mb-4">Earn 20% instant credit on every plan purchase</p>
-          <Button className="w-full bg-indigo-600 hover:bg-indigo-700" onClick={() => router.push("/dashboard")}>
+          <Button className="w-full bg-emerald-600 hover:bg-emerald-700" onClick={() => router.push("/dashboard")}>
             View Plans
           </Button>
         </Card>

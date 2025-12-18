@@ -28,7 +28,7 @@ export default function MinePage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 pb-8">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6 pb-8">
         <h1 className="text-center text-2xl font-bold">Mine</h1>
       </div>
 
@@ -100,7 +100,7 @@ export default function MinePage() {
                 Today's earnings: <span className="font-semibold">0</span>
               </p>
             </div>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6">Detail</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6">Detail</Button>
           </div>
         </Card>
 
@@ -108,7 +108,7 @@ export default function MinePage() {
         <Card className="p-6 shadow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold">Withdrawal</h2>
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-6">Manage</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6">Manage</Button>
           </div>
           <div className="grid grid-cols-2 gap-4 mb-3">
             <div>

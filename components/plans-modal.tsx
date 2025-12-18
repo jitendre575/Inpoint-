@@ -21,7 +21,7 @@ export function PlansModal({ open, onClose }: { open: boolean; onClose: () => vo
   const [selectedPlan, setSelectedPlan] = useState<any>(null)
   const [customAmount, setCustomAmount] = useState("")
 
-  const handlePurchase = () => {
+  const handlePurchase = async () => {
     const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
     const amount = customAmount ? Number.parseFloat(customAmount) : selectedPlan.amount
 
@@ -34,30 +34,42 @@ export function PlansModal({ open, onClose }: { open: boolean; onClose: () => vo
       return
     }
 
-    currentUser.wallet -= amount
-    const instantCredit = amount * 0.2
-    currentUser.wallet += instantCredit
+    try {
+      const res = await fetch('/api/user/invest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: currentUser.email,
+          plan: selectedPlan,
+          amount
+        })
+      });
 
-    if (!currentUser.plans) currentUser.plans = []
-    currentUser.plans.push({
-      ...selectedPlan,
-      amount,
-      purchaseDate: new Date().toISOString(),
-    })
+      const data = await res.json();
 
-    localStorage.setItem("currentUser", JSON.stringify(currentUser))
-    const users = JSON.parse(localStorage.getItem("users") || "[]")
-    const userIndex = users.findIndex((u: any) => u.id === currentUser.id)
-    users[userIndex] = currentUser
-    localStorage.setItem("users", JSON.stringify(users))
+      if (!res.ok) {
+        throw new Error(data.message || 'Investment failed');
+      }
 
-    toast({
-      title: "Plan Purchased",
-      description: `20% (₹${instantCredit}) credited instantly to your wallet!`,
-    })
+      // Update local storage with new user state from server
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
 
-    onClose()
-    router.refresh()
+      const instantCredit = amount * 0.2
+      toast({
+        title: "Plan Purchased",
+        description: `20% (₹${instantCredit}) credited instantly to your wallet!`,
+      })
+
+      onClose()
+      // Force reload to update dashboard UI immediately
+      window.location.reload();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    }
   }
 
   return (
@@ -139,7 +151,7 @@ export function PlansModal({ open, onClose }: { open: boolean; onClose: () => vo
           </div>
         ) : (
           <div className="space-y-4">
-            <Card className="p-5 bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-300 shadow-lg">
+            <Card className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-300 shadow-lg">
               <h3 className="font-bold text-xl text-gray-900 mb-3">{selectedPlan.name}</h3>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
@@ -148,7 +160,7 @@ export function PlansModal({ open, onClose }: { open: boolean; onClose: () => vo
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Return Rate:</span>
-                  <span className="font-semibold text-indigo-600">{selectedPlan.return}%</span>
+                  <span className="font-semibold text-emerald-600">{selectedPlan.return}%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Duration:</span>
@@ -168,11 +180,11 @@ export function PlansModal({ open, onClose }: { open: boolean; onClose: () => vo
                 placeholder={`Default: ₹${selectedPlan.amount}`}
                 value={customAmount}
                 onChange={(e) => setCustomAmount(e.target.value)}
-                className="h-12 text-base border-2 focus:border-indigo-500"
+                className="h-12 text-base border-2 focus:border-emerald-500"
               />
             </div>
 
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-4 rounded-2xl border border-blue-200">
+            <div className="bg-gradient-to-br from-blue-50 to-emerald-50 p-4 rounded-2xl border border-blue-200">
               <p className="text-sm text-blue-900 font-semibold mb-1">💰 Instant Benefit</p>
               <p className="text-xs text-blue-700 leading-relaxed">
                 Get 20% of your investment amount credited instantly to your wallet. Remaining amount will be credited
@@ -186,7 +198,7 @@ export function PlansModal({ open, onClose }: { open: boolean; onClose: () => vo
               </Button>
               <Button
                 onClick={handlePurchase}
-                className="flex-1 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 shadow-lg"
+                className="flex-1 h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-lg"
               >
                 Purchase Now
               </Button>

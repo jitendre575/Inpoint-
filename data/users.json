@@ -1,0 +1,58 @@
+[
+  {
+    "id": "1766079165511",
+    "name": "teja",
+    "email": "jite@gmail.com",
+    "password": "MzM1NTI0",
+    "wallet": 0,
+    "plans": [],
+    "history": [],
+    "createdAt": "2025-12-18T17:32:45.512Z"
+  },
+  {
+    "id": "1766079217315",
+    "name": "Jitender Ruhil",
+    "email": "1234567890",
+    "password": "MTIzNDU2",
+    "wallet": 50,
+    "plans": [],
+    "history": [
+      {
+        "type": "bonus",
+        "amount": 50,
+        "date": "2025-12-18T17:33:58.940Z",
+        "description": "Welcome Bonus"
+      }
+    ],
+    "createdAt": "2025-12-18T17:33:37.315Z",
+    "lastLogin": "2025-12-18T17:33:58.940Z"
+  },
+  {
+    "id": "1766079549931",
+    "name": "rampyari234",
+    "email": "1233211230",
+    "password": "000000",
+    "wallet": 150,
+    "plans": [],
+    "history": [
+      {
+        "type": "bonus",
+        "amount": 50,
+        "date": "2025-12-18T17:40:09.503Z",
+        "description": "Welcome Bonus"
+      }
+    ],
+    "createdAt": "2025-12-18T17:39:09.931Z",
+    "lastLogin": "2025-12-18T17:40:09.503Z",
+    "deposits": [
+      {
+        "id": "1766080823832",
+        "amount": 100,
+        "utr": "563456346654",
+        "screenshotUrl": "/uploads/1766080823822_IMG_2399.HEIC",
+        "status": "Approved",
+        "date": "2025-12-18T18:00:23.832Z"
+      }
+    ]
+  }
+]

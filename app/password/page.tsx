@@ -61,8 +61,8 @@ export default function PasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white pb-20">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white pb-20">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="p-2 hover:bg-white/20 rounded-full">
             <ArrowLeft className="h-6 w-6" />
@@ -74,8 +74,8 @@ export default function PasswordPage() {
       <div className="p-5">
         <Card className="p-6 shadow-md">
           <div className="flex items-center gap-3 mb-6">
-            <div className="h-14 w-14 rounded-full bg-indigo-100 flex items-center justify-center">
-              <Lock className="h-7 w-7 text-indigo-600" />
+            <div className="h-14 w-14 rounded-full bg-emerald-100 flex items-center justify-center">
+              <Lock className="h-7 w-7 text-emerald-600" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-gray-900">Security</h2>
@@ -128,7 +128,7 @@ export default function PasswordPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-base shadow-lg"
+              className="w-full h-12 bg-gradient-to-r from-emerald-600 to-purple-600 hover:from-emerald-700 hover:to-purple-700 text-white font-semibold text-base shadow-lg"
             >
               Change Password
             </Button>

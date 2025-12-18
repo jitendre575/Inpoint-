@@ -17,8 +17,8 @@ export default function SettingsPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-indigo-50 to-white pb-20">
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white pb-20">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
         <div className="flex items-center gap-4">
           <button onClick={() => router.back()} className="p-2 hover:bg-white/20 rounded-full">
             <ArrowLeft className="h-6 w-6" />
@@ -36,8 +36,8 @@ export default function SettingsPage() {
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                  <option.icon className="h-6 w-6 text-indigo-600" />
+                <div className="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+                  <option.icon className="h-6 w-6 text-emerald-600" />
                 </div>
                 <span className="font-semibold text-gray-900 text-base">{option.label}</span>
               </div>

@@ -13,6 +13,7 @@ export default function WithdrawPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [user, setUser] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     amount: "",
     name: "",
@@ -27,7 +28,7 @@ export default function WithdrawPage() {
     }
   }, [])
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     const amount = Number.parseFloat(formData.amount)
 
     if (!amount || amount <= 0) {
@@ -39,7 +40,7 @@ export default function WithdrawPage() {
       return
     }
 
-    if (amount > user.wallet) {
+    if (user && amount > user.wallet) {
       toast({
         title: "Insufficient Balance",
         description: "You do not have enough balance to withdraw this amount.",
@@ -57,14 +58,44 @@ export default function WithdrawPage() {
       return
     }
 
-    toast({
-      title: "Withdrawal Requested",
-      description: "Your withdrawal request is being processed.",
-    })
+    setLoading(true)
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/user/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          amount,
+          bankDetails: {
+            name: formData.name,
+            type: formData.bankOrUpi,
+            accountNumber: formData.accountNumber
+          }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Withdraw failed');
+
+      // Update Local Storage
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
+
+      toast({
+        title: "Withdrawal Requested",
+        description: "Your withdrawal request is pending approval.",
+      })
+
       router.push("/dashboard")
-    }, 1500)
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (!user) return null
@@ -124,22 +155,20 @@ export default function WithdrawPage() {
                 <Button
                   type="button"
                   onClick={() => setFormData({ ...formData, bankOrUpi: "bank" })}
-                  className={`flex-1 h-12 ${
-                    formData.bankOrUpi === "bank"
+                  className={`flex-1 h-12 ${formData.bankOrUpi === "bank"
                       ? "bg-orange-500 hover:bg-orange-600"
                       : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  }`}
+                    }`}
                 >
                   Bank Account
                 </Button>
                 <Button
                   type="button"
                   onClick={() => setFormData({ ...formData, bankOrUpi: "upi" })}
-                  className={`flex-1 h-12 ${
-                    formData.bankOrUpi === "upi"
+                  className={`flex-1 h-12 ${formData.bankOrUpi === "upi"
                       ? "bg-orange-500 hover:bg-orange-600"
                       : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                  }`}
+                    }`}
                 >
                   UPI ID
                 </Button>
@@ -177,8 +206,7 @@ export default function WithdrawPage() {
             <div>
               <p className="text-sm font-medium text-orange-900 mb-1">Processing Time</p>
               <p className="text-xs text-orange-700 leading-relaxed">
-                Withdrawal requests are typically processed within 24-48 hours. You'll receive a confirmation once
-                completed.
+                Withdrawal requests are typically processed within 24-48 hours.
               </p>
             </div>
           </div>
@@ -186,9 +214,10 @@ export default function WithdrawPage() {
 
         <Button
           onClick={handleWithdraw}
-          className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+          disabled={loading}
+          className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-bold text-lg shadow-md"
         >
-          Submit Withdrawal Request
+          {loading ? "Processing..." : "Submit Withdrawal Request"}
         </Button>
       </div>
 

@@ -23,12 +23,12 @@ export default function ToolPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
         <h1 className="text-center text-2xl font-bold">Tools</h1>
       </div>
 
       <div className="p-6 space-y-4">
-        <Card className="p-6 shadow-lg bg-gradient-to-br from-purple-50 to-indigo-50">
+        <Card className="p-6 shadow-lg bg-gradient-to-br from-purple-50 to-emerald-50">
           <h2 className="text-xl font-bold text-gray-900 mb-2">Quick Tools</h2>
           <p className="text-sm text-gray-600">Access all your investment tools in one place</p>
         </Card>
@@ -60,7 +60,7 @@ export default function ToolPage() {
             <p className="text-xs text-white/80">Cash out earnings</p>
           </Card>
 
-          <Card className="p-6 cursor-pointer hover:shadow-xl transition-all bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+          <Card className="p-6 cursor-pointer hover:shadow-xl transition-all bg-gradient-to-br from-blue-500 to-emerald-600 text-white">
             <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center mb-3">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path

@@ -20,55 +20,55 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
 
-    // Simulate login check
-    setTimeout(() => {
-      const users = JSON.parse(localStorage.getItem("users") || "[]")
-      const user = users.find((u: any) => u.email === email && u.password === password)
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
 
-      if (user) {
-        const isFirstLogin = !user.hasLoggedIn
-        if (isFirstLogin) {
-          user.wallet = (user.wallet || 0) + 50
-          user.hasLoggedIn = true
+      const data = await res.json();
 
-          // Update users array
-          const userIndex = users.findIndex((u: any) => u.email === email)
-          users[userIndex] = user
-          localStorage.setItem("users", JSON.stringify(users))
+      if (!res.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
 
-          toast({
-            title: "Welcome Bonus! 🎁",
-            description: "₹50 has been added to your wallet as a first-time login gift!",
-          })
-        }
+      // Store user to localStorage for session management (simple approach)
+      localStorage.setItem("currentUser", JSON.stringify(data.user));
 
-        localStorage.setItem("currentUser", JSON.stringify(user))
+      toast({
+        title: "Login Successful",
+        description: "Welcome back!",
+      })
 
-        if (!isFirstLogin) {
-          toast({
-            title: "Login Successful",
-            description: "Welcome back!",
-          })
-        }
-
-        router.push("/dashboard")
-      } else {
+      // Check for bonus in history to show toast
+      const hasBonus = data.user.history.some((h: any) => h.type === 'bonus' && new Date(h.date).getTime() > Date.now() - 10000);
+      // Only show if recent, but here we just rely on standard flow.
+      if (hasBonus && data.user.wallet === 50) {
         toast({
-          title: "Login Failed",
-          description: "Invalid credentials or account does not exist.",
-          variant: "destructive",
+          title: "Welcome Bonus! 🎁",
+          description: "₹50 has been added to your wallet as a first-time login gift!",
         })
       }
+
+      router.push("/dashboard")
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive",
+      })
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-indigo-500 to-indigo-400 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 flex items-center justify-center p-6">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-3xl shadow-2xl p-8">
           <div className="text-center mb-8">
-            <div className="h-16 w-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <div className="h-16 w-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
               <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 placeholder="Enter your email or mobile"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
                 required
               />
             </div>
@@ -108,14 +108,14 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 h-12 text-base"
+                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
                 required
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold text-base shadow-lg"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold text-base shadow-lg"
               disabled={loading}
             >
               {loading ? "Logging in..." : "Login"}
@@ -127,7 +127,7 @@ export default function LoginPage() {
             <Button
               onClick={() => router.push("/create-account")}
               variant="outline"
-              className="w-full h-12 border-2 border-indigo-500 text-indigo-600 hover:bg-indigo-50 font-semibold text-base"
+              className="w-full h-12 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-semibold text-base"
             >
               Create Account
             </Button>

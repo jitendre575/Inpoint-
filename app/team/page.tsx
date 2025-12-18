@@ -21,7 +21,7 @@ export default function TeamPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
         <h1 className="text-center text-2xl font-bold">Team</h1>
       </div>
 
@@ -30,10 +30,10 @@ export default function TeamPage() {
         <div>
           <h2 className="text-xl font-bold text-gray-900 mb-3">Invite Link</h2>
           <div className="bg-white p-5 rounded-2xl shadow-md">
-            <p className="text-indigo-600 text-sm mb-4 break-all font-medium">{inviteLink}</p>
+            <p className="text-emerald-600 text-sm mb-4 break-all font-medium">{inviteLink}</p>
             <Button
               onClick={handleCopy}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 rounded-full h-12 text-base font-semibold shadow-md"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 rounded-full h-12 text-base font-semibold shadow-md"
             >
               copy
             </Button>
@@ -62,7 +62,7 @@ export default function TeamPage() {
               </div>
             </button>
             <button className="flex flex-col items-center transition-transform active:scale-95">
-              <div className="h-16 w-16 rounded-full bg-indigo-500 flex items-center justify-center shadow-md">
+              <div className="h-16 w-16 rounded-full bg-emerald-500 flex items-center justify-center shadow-md">
                 <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
@@ -89,13 +89,13 @@ export default function TeamPage() {
               you earn rewards from both levels.
             </p>
 
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-xl mb-4">
+            <div className="bg-gradient-to-br from-emerald-50 to-purple-50 p-4 rounded-xl mb-4">
               <p className="font-semibold text-gray-900 mb-2 text-base">Earning Structure:</p>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-indigo-600"></span>
+                  <span className="h-2 w-2 rounded-full bg-emerald-600"></span>
                   <span className="text-gray-700">
-                    Level A (Direct referrals): <span className="font-bold text-indigo-600">0.3%</span> commission
+                    Level A (Direct referrals): <span className="font-bold text-emerald-600">0.3%</span> commission
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -115,16 +115,16 @@ export default function TeamPage() {
                 </div>
 
                 <div className="flex items-center gap-8 mb-4">
-                  <div className="h-1 w-16 bg-indigo-300"></div>
+                  <div className="h-1 w-16 bg-emerald-300"></div>
                   <div className="px-3 py-1 bg-amber-900 text-white rounded-lg text-xs font-semibold shadow-md">
                     invite
                   </div>
-                  <div className="h-1 w-16 bg-indigo-300"></div>
+                  <div className="h-1 w-16 bg-emerald-300"></div>
                 </div>
 
                 <div className="flex gap-8 mb-6">
                   <div className="flex flex-col items-center">
-                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md mb-2">
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md mb-2">
                       <span className="text-white font-bold text-xs">A1</span>
                     </div>
                     <div className="flex flex-col gap-2 mt-2">
@@ -138,7 +138,7 @@ export default function TeamPage() {
                   </div>
 
                   <div className="flex flex-col items-center">
-                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center shadow-md mb-2">
+                    <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md mb-2">
                       <span className="text-white font-bold text-xs">A2</span>
                     </div>
                     <div className="flex flex-col gap-2 mt-2">
@@ -166,7 +166,7 @@ export default function TeamPage() {
                 If A1 purchases ₹100,000 and B1 purchases ₹200,000:
               </p>
               <div className="bg-white p-3 rounded-lg border border-green-200">
-                <p className="text-indigo-600 font-mono text-sm font-semibold">
+                <p className="text-emerald-600 font-mono text-sm font-semibold">
                   (100,000 × 0.3%) + (200,000 × 0.1%) = ₹500
                 </p>
               </div>

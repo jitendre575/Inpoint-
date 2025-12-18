@@ -12,9 +12,8 @@ export function BottomNav({ active }: BottomNavProps) {
       <div className="flex items-center justify-around py-2">
         <Link
           href="/dashboard"
-          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${
-            active === "home" ? "text-indigo-600" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${active === "home" ? "text-emerald-600" : "text-gray-400"
+            }`}
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -29,9 +28,8 @@ export function BottomNav({ active }: BottomNavProps) {
 
         <Link
           href="/deposit"
-          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${
-            active === "wallet" ? "text-indigo-600" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${active === "wallet" ? "text-emerald-600" : "text-gray-400"
+            }`}
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
@@ -42,11 +40,10 @@ export function BottomNav({ active }: BottomNavProps) {
         {/* Center Tool Button */}
         <Link
           href="/tool"
-          className={`flex flex-col items-center gap-1 px-3 py-2 -mt-6 transition-colors ${
-            active === "tool" ? "text-indigo-600" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center gap-1 px-3 py-2 -mt-6 transition-colors ${active === "tool" ? "text-emerald-600" : "text-gray-400"
+            }`}
         >
-          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+          <div className="h-14 w-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
             <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
@@ -56,9 +53,8 @@ export function BottomNav({ active }: BottomNavProps) {
 
         <Link
           href="/team"
-          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${
-            active === "team" ? "text-indigo-600" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${active === "team" ? "text-emerald-600" : "text-gray-400"
+            }`}
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -73,9 +69,8 @@ export function BottomNav({ active }: BottomNavProps) {
 
         <Link
           href="/mine"
-          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${
-            active === "mine" ? "text-indigo-600" : "text-gray-400"
-          }`}
+          className={`flex flex-col items-center gap-1 px-3 py-2 transition-colors ${active === "mine" ? "text-emerald-600" : "text-gray-400"
+            }`}
         >
           <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
