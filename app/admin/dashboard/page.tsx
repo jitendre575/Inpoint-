@@ -25,7 +25,7 @@ export default function AdminDashboardPage() {
 
     // Modal State
     const [selectedUser, setSelectedUser] = useState<any>(null)
-    const [showDepositModal, setShowDepositModal] = useState(false)
+    const [showHistoryModal, setShowHistoryModal] = useState(false)
     const [showWithdrawModal, setShowWithdrawModal] = useState(false)
     const [actionLoading, setActionLoading] = useState(false)
 
@@ -82,7 +82,6 @@ export default function AdminDashboardPage() {
                 // Refresh Users
                 await fetchUsers();
                 // Close modals
-                setShowDepositModal(false);
                 setShowWithdrawModal(false);
             } else {
                 alert("Action failed");
@@ -99,9 +98,9 @@ export default function AdminDashboardPage() {
         router.push("/admin")
     }
 
-    const openDepositModal = (user: any) => {
+    const openHistoryModal = (user: any) => {
         setSelectedUser(user);
-        setShowDepositModal(true);
+        setShowHistoryModal(true);
     }
 
     const openWithdrawModal = (user: any) => {
@@ -116,12 +115,14 @@ export default function AdminDashboardPage() {
     )
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-neutral-900 text-white shadow-md">
+        <div className="min-h-screen bg-gray-100 pb-20">
+            <header className="bg-neutral-900 text-white shadow-md sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-                    <h1 className="text-xl font-bold tracking-tight">Admin Dashboard</h1>
+                    <div>
+                        <h1 className="text-xl font-bold tracking-tight">Admin Dashboard</h1>
+                        <p className="text-xs text-neutral-400">Manage Users & Withdrawals</p>
+                    </div>
                     <div className="flex items-center gap-4">
-                        <span className="text-sm text-neutral-400">Restricted Access</span>
                         <Button
                             onClick={handleLogout}
                             variant="destructive"
@@ -135,150 +136,127 @@ export default function AdminDashboardPage() {
             </header>
 
             <main className="container mx-auto px-6 py-8">
+                {/* Search & Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-                        <p className="text-gray-500">View and track all registered users.</p>
+                    <div className="relative w-full max-w-md">
+                        <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                        <Input
+                            type="text"
+                            placeholder="Search by ID, Name or Email..."
+                            className="pl-10 h-11 bg-white shadow-sm border-gray-200"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
                     </div>
-
-                    <div className="flex items-center gap-3">
-                        <div className="relative w-64">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                            <Input
-                                type="text"
-                                placeholder="Search ID, Name or Email"
-                                className="pl-9 bg-white"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                            />
-                        </div>
-                        <Button onClick={() => fetchUsers()} variant="outline" size="icon">
-                            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </div>
+                    <Button onClick={() => fetchUsers()} variant="outline" size="icon" className="bg-white shadow-sm">
+                        <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    </Button>
                 </div>
 
-                <Card className="shadow-sm border-0 overflow-hidden">
-                    <div className="overflow-x-auto">
-                        <Table>
-                            <TableHeader className="bg-gray-50">
-                                <TableRow>
-                                    <TableHead className="w-[100px]">User ID</TableHead>
-                                    <TableHead>User Details</TableHead>
-                                    <TableHead>Password</TableHead>
-                                    <TableHead className="text-right">Wallet</TableHead>
-                                    <TableHead>Requests</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {loading ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10 text-gray-500">Loading data...</TableCell>
-                                    </TableRow>
-                                ) : filteredUsers.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={6} className="text-center py-10 text-gray-500">No users found.</TableCell>
-                                    </TableRow>
-                                ) : (
-                                    filteredUsers.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell className="font-mono text-xs text-gray-500">{user.id}</TableCell>
-                                            <TableCell>
-                                                <div className="flex flex-col">
-                                                    <span className="font-semibold text-gray-900">{user.name}</span>
-                                                    <span className="text-xs text-gray-500">{user.email}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                <span className="text-sm font-mono text-gray-700 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                                                    {user.password}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="text-right font-bold text-emerald-600">
-                                                ₹{user.wallet.toFixed(2)}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex gap-2">
-                                                    <Button onClick={() => openDepositModal(user)} size="sm" variant="outline" className="gap-2 border-emerald-200 hover:bg-emerald-50 text-emerald-700">
-                                                        <ArrowDownCircle className="h-4 w-4" /> Deposit
-                                                        {user.deposits?.some((d: any) => d.status === 'Pending') && (
-                                                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                                        )}
-                                                    </Button>
-                                                    <Button onClick={() => openWithdrawModal(user)} size="sm" variant="outline" className="gap-2 border-orange-200 hover:bg-orange-50 text-orange-700">
-                                                        <ArrowUpCircle className="h-4 w-4" /> Withdraw
-                                                        {user.withdrawals?.some((w: any) => w.status === 'Pending') && (
-                                                            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                                                        )}
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                {/* Users Cards Grid */}
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-emerald-600" />
                     </div>
-                </Card>
+                ) : filteredUsers.length === 0 ? (
+                    <div className="text-center py-20 text-gray-500">
+                        <p className="text-lg">No users found matching your search.</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {filteredUsers.map((user) => {
+                            const pendingWithdrawals = user.withdrawals?.filter((w: any) => w.status === 'Pending').length || 0;
+                            const hasPending = pendingWithdrawals > 0;
+                            const totalDeposits = user.deposits?.reduce((acc: number, curr: any) => acc + (curr.status === 'Approved' ? curr.amount : 0), 0) || 0;
+                            const totalWithdrawals = user.withdrawals?.reduce((acc: number, curr: any) => acc + (curr.status === 'Completed' ? curr.amount : 0), 0) || 0;
+
+                            return (
+                                <Card key={user.id} className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-white group">
+                                    <div className={`h-1.5 w-full ${hasPending ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500'}`} />
+                                    <div className="p-6">
+                                        <div className="flex justify-between items-start mb-4">
+                                            <div>
+                                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 transition-colors">{user.name}</h3>
+                                                <p className="text-xs text-gray-500 font-mono mt-1">ID: {user.id}</p>
+                                                <p className="text-sm text-gray-600 mt-0.5 mb-2">{user.email}</p>
+                                            </div>
+                                            {hasPending && (
+                                                <Badge className="bg-orange-100 text-orange-800 border-orange-200 animate-pulse">
+                                                    Action Req.
+                                                </Badge>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <span className="text-sm text-gray-500">Wallet Balance</span>
+                                                <span className="text-lg font-bold text-emerald-600">₹{user.wallet.toFixed(2)}</span>
+                                            </div>
+                                            <div className="h-px bg-gray-200 my-2" />
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div>
+                                                    <p className="text-gray-400 text-xs">Total Deposit</p>
+                                                    <p className="font-semibold text-gray-900">₹{totalDeposits}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="text-gray-400 text-xs">Total Withdraw</p>
+                                                    <p className="font-semibold text-gray-900">₹{totalWithdrawals}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <Button
+                                                onClick={() => openHistoryModal(user)}
+                                                variant="outline"
+                                                className="w-full border-gray-200 hover:bg-gray-50 text-gray-700"
+                                            >
+                                                <Eye className="h-4 w-4 mr-2" /> History
+                                            </Button>
+                                            <Button
+                                                onClick={() => openWithdrawModal(user)}
+                                                className={`w-full ${hasPending ? 'bg-orange-500 hover:bg-orange-600' : 'bg-neutral-800 hover:bg-neutral-900'} text-white border-0`}
+                                            >
+                                                <ArrowUpCircle className="h-4 w-4 mr-2" />
+                                                {hasPending ? 'Requests' : 'Withdraws'}
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </Card>
+                            )
+                        })}
+                    </div>
+                )}
             </main>
 
-            {/* Deposit Modal */}
-            <Dialog open={showDepositModal} onOpenChange={setShowDepositModal}>
-                <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+            {/* History Modal (View Only for Deposits) */}
+            <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+                <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Deposit Requests - {selectedUser?.name}</DialogTitle>
+                        <DialogTitle>Transaction History - {selectedUser?.name}</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
-                        {(selectedUser?.deposits || []).slice().reverse().map((deposit: any) => (
-                            <Card key={deposit.id} className="p-4 border">
-                                <div className="flex justify-between items-start gap-4">
-                                    <div className="flex-1 space-y-2">
-                                        <p className="text-sm text-gray-500">Transaction ID: {deposit.id}</p>
-                                        <p className="text-lg font-bold text-gray-900">₹{deposit.amount}</p>
-                                        <p className="text-sm">UTR: <span className="font-mono font-bold">{deposit.utr}</span></p>
-                                        <p className="text-xs text-gray-400">{new Date(deposit.date).toLocaleString()}</p>
-                                        <Badge className={
-                                            deposit.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                deposit.status === 'Approved' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }>{deposit.status}</Badge>
+                    <div className="space-y-6">
+                        <div>
+                            <h4 className="font-bold text-sm text-gray-500 uppercase mb-3">Recent Deposits</h4>
+                            <div className="space-y-2">
+                                {(selectedUser?.deposits || []).slice().reverse().slice(0, 10).map((deposit: any) => (
+                                    <div key={deposit.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                        <div>
+                                            <p className="font-bold text-gray-900">₹{deposit.amount}</p>
+                                            <p className="text-xs text-gray-500">{new Date(deposit.date).toLocaleString()}</p>
+                                            <p className="text-xs text-gray-400">Method: {deposit.method || 'Manual'}</p>
+                                        </div>
+                                        <Badge className="bg-green-100 text-green-800">{deposit.status}</Badge>
                                     </div>
-
-                                    <div className="w-48 h-32 bg-gray-100 rounded-lg overflow-hidden border relative group">
-                                        {deposit.screenshotUrl ? (
-                                            <a href={deposit.screenshotUrl} target="_blank" rel="noopener noreferrer">
-                                                <img src={deposit.screenshotUrl} alt="Screenshot" className="w-full h-full object-cover" />
-                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                    <Eye className="text-white" />
-                                                </div>
-                                            </a>
-                                        ) : (
-                                            <div className="flex items-center justify-center h-full text-gray-400">
-                                                <ImageIcon className="h-8 w-8" />
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                {deposit.status === 'Pending' && (
-                                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-                                        <Button
-                                            onClick={() => handleAction(deposit.id, 'deposit', 'reject')}
-                                            disabled={actionLoading}
-                                            variant="destructive" size="sm">Reject</Button>
-                                        <Button
-                                            onClick={() => handleAction(deposit.id, 'deposit', 'approve')}
-                                            disabled={actionLoading}
-                                            className="bg-green-600 hover:bg-green-700 text-white" size="sm">Approve</Button>
-                                    </div>
-                                )}
-                            </Card>
-                        ))}
-                        {!selectedUser?.deposits?.length && <p className="text-center text-gray-500">No deposit history.</p>}
+                                ))}
+                                {!selectedUser?.deposits?.length && <p className="text-sm text-gray-400 italic">No deposits found.</p>}
+                            </div>
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            {/* Withdraw Modal */}
+            {/* Withdraw Action Modal */}
             <Dialog open={showWithdrawModal} onOpenChange={setShowWithdrawModal}>
                 <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
                     <DialogHeader>
@@ -286,39 +264,47 @@ export default function AdminDashboardPage() {
                     </DialogHeader>
                     <div className="space-y-4">
                         {(selectedUser?.withdrawals || []).slice().reverse().map((withdrawal: any) => (
-                            <Card key={withdrawal.id} className="p-4 border">
+                            <Card key={withdrawal.id} className="p-4 border shadow-sm">
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-2">
-                                        <p className="text-sm text-gray-500">Transaction ID: {withdrawal.id}</p>
-                                        <p className="text-lg font-bold text-gray-900">₹{withdrawal.amount}</p>
-                                        <div className="bg-gray-50 p-2 rounded text-sm space-y-1">
-                                            <p className="font-semibold">{withdrawal.bankDetails.name}</p>
-                                            <p>{withdrawal.bankDetails.type === 'bank' ? 'Bank Account' : 'UPI'}</p>
-                                            <p className="font-mono">{withdrawal.bankDetails.accountNumber}</p>
+                                        <div className="flex items-center gap-2">
+                                            <p className="text-lg font-bold text-gray-900">₹{withdrawal.amount}</p>
+                                            <Badge className={
+                                                withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                    withdrawal.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                            }>{withdrawal.status}</Badge>
+                                        </div>
+                                        <div className="bg-gray-50 p-3 rounded-lg text-sm border border-gray-100">
+                                            <p><span className="text-gray-500">Bank Name:</span> <span className="font-semibold">{withdrawal.bankDetails.name}</span></p>
+                                            <p><span className="text-gray-500">Account/UPI:</span> <span className="font-mono font-semibold">{withdrawal.bankDetails.accountNumber}</span></p>
+                                            <p><span className="text-gray-500">IFSC:</span> <span className="font-mono">{withdrawal.bankDetails.ifsc}</span></p>
                                         </div>
                                         <p className="text-xs text-gray-400">{new Date(withdrawal.date).toLocaleString()}</p>
-                                        <Badge className={
-                                            withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
-                                                withdrawal.status === 'Completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                        }>{withdrawal.status}</Badge>
                                     </div>
                                 </div>
 
                                 {withdrawal.status === 'Pending' && (
-                                    <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+                                    <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
                                         <Button
                                             onClick={() => handleAction(withdrawal.id, 'withdraw', 'reject')}
                                             disabled={actionLoading}
-                                            variant="destructive" size="sm">Failed</Button>
+                                            variant="destructive" size="sm"
+                                            className="px-6"
+                                        >
+                                            Cancel
+                                        </Button>
                                         <Button
                                             onClick={() => handleAction(withdrawal.id, 'withdraw', 'approve')}
                                             disabled={actionLoading}
-                                            className="bg-green-600 hover:bg-green-700 text-white" size="sm">Complete</Button>
+                                            className="bg-green-600 hover:bg-green-700 text-white px-6" size="sm"
+                                        >
+                                            Approve
+                                        </Button>
                                     </div>
                                 )}
                             </Card>
                         ))}
-                        {!selectedUser?.withdrawals?.length && <p className="text-center text-gray-500">No withdraw history.</p>}
+                        {!selectedUser?.withdrawals?.length && <p className="text-center text-gray-500 py-4">No withdraw history.</p>}
                     </div>
                 </DialogContent>
             </Dialog>

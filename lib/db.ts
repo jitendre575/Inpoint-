@@ -31,9 +31,16 @@ export type User = {
 
 export const getUsers = (): User[] => {
     try {
+        if (!fs.existsSync(dbPath)) return [];
         const data = fs.readFileSync(dbPath, 'utf-8');
-        return JSON.parse(data);
+        try {
+            return JSON.parse(data);
+        } catch (parseError) {
+            console.error("Error parsing users.json:", parseError);
+            return [];
+        }
     } catch (error) {
+        console.error("Error reading users.json:", error);
         return [];
     }
 };

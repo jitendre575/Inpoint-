@@ -279,6 +279,17 @@ export default function DashboardPage() {
       </div>
 
       <PlansModal open={showPlansModal} onClose={() => setShowPlansModal(false)} />
+
+      {/* Support FAB */}
+      <a
+        href="mailto:support@example.com?subject=Support Request"
+        className="fixed bottom-24 right-5 z-50 h-14 w-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+        </svg>
+      </a>
+
       <BottomNav active="home" />
     </div>
   )

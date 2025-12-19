@@ -54,5 +54,32 @@
         "date": "2025-12-18T18:00:23.832Z"
       }
     ]
+  },
+  {
+    "id": "1766130092467",
+    "name": "Rahulbhai66",
+    "email": "4561234561",
+    "password": "335524",
+    "wallet": 150,
+    "plans": [],
+    "history": [
+      {
+        "type": "bonus",
+        "amount": 50,
+        "date": "2025-12-19T07:41:51.375Z",
+        "description": "Welcome Bonus"
+      }
+    ],
+    "createdAt": "2025-12-19T07:41:32.467Z",
+    "lastLogin": "2025-12-19T07:41:51.374Z",
+    "deposits": [
+      {
+        "id": "1766130152569",
+        "amount": 100,
+        "method": "PhonePe",
+        "status": "Approved",
+        "date": "2025-12-19T07:42:32.569Z"
+      }
+    ]
   }
 ]
