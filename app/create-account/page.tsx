@@ -55,7 +55,9 @@ export default function CreateAccountPage() {
         if (res.status === 400) {
           throw new Error(data.message || "Invalid input details.");
         }
-        throw new Error(data.message || 'Registration failed');
+        // Include debug info if available (for 500 errors)
+        const errorMessage = data.debug ? `${data.message}\nDebug: ${data.debug}` : (data.message || 'Registration failed');
+        throw new Error(errorMessage);
       }
 
       toast({

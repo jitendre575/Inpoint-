@@ -1,12 +1,8 @@
 
 import { NextResponse } from 'next/server';
-import { findUserByEmail, saveUser, User } from '@/lib/db';
+import { findUserByEmail, saveUser, User, hashPassword } from '@/lib/db';
 
-// Helper to hash password (simple simulation)
-// In production use bcryptjs or argon2
-const hashPassword = (pass: string) => {
-    return Buffer.from(pass).toString('base64');
-}
+
 
 export async function POST(request: Request) {
     try {
@@ -65,7 +61,7 @@ export async function POST(request: Request) {
             id: Date.now().toString(),
             name,
             email, // acts as mobile too
-            password: password,
+            password: hashPassword(password),
             wallet: 0,
             plans: [],
             history: [],
@@ -74,9 +70,12 @@ export async function POST(request: Request) {
 
         try {
             saveUser(newUser);
-        } catch (dbError) {
+        } catch (dbError: any) {
             console.error("Database Save Error:", dbError);
-            return NextResponse.json({ message: 'Failed to create account. Please try again.' }, { status: 500 });
+            return NextResponse.json({
+                message: 'Failed to create account. Please try again.',
+                debug: dbError.message
+            }, { status: 500 });
         }
 
         return NextResponse.json({ message: 'User created successfully', user: { ...newUser, password: undefined } }, { status: 201 });
