@@ -1,25 +1,32 @@
 
 import fs from 'fs';
 import path from 'path';
+import { db } from './firebase';
+import { collection, getDocs, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
 const dataDir = path.join(process.cwd(), 'data');
 const dbPath = path.join(dataDir, 'users.json');
 
-// Ensure data directory exists
-if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// Ensure users.json exists
-if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify([]), 'utf-8');
+// Ensure data directory exists (only for local fs)
+if (typeof window === 'undefined' && !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    try {
+        if (!fs.existsSync(dataDir)) {
+            fs.mkdirSync(dataDir, { recursive: true });
+        }
+        if (!fs.existsSync(dbPath)) {
+            fs.writeFileSync(dbPath, JSON.stringify([]), 'utf-8');
+        }
+    } catch (e) {
+        // Ignore errors in environments where fs is not available (like Vercel production without local fallback)
+        console.warn("FS setup failed (expected in read-only envs if not using Firebase):", e);
+    }
 }
 
 export type User = {
     id: string;
     name: string;
     email: string;
-    password: string; // Hashed password (simulated)
+    password: string;
     wallet: number;
     plans: any[];
     history: any[];
@@ -42,64 +49,93 @@ export type User = {
     lastLogin?: string;
 };
 
-export const getUsers = (): User[] => {
-    try {
-        if (!fs.existsSync(dbPath)) return [];
-        const data = fs.readFileSync(dbPath, 'utf-8');
-        try {
-            return JSON.parse(data);
-        } catch (parseError) {
-            console.error("Error parsing users.json:", parseError);
-            return [];
-        }
-    } catch (error) {
-        console.error("Error reading users.json:", error);
-        return [];
-    }
-};
+// Mode detection
+const USE_FIREBASE = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-// Simple Base64 encoding for "hashing" to meet requirement without breaking simple setup
+// Helper to hash password
 export const hashPassword = (password: string): string => {
     return Buffer.from(password).toString('base64');
 };
 
 export const verifyPassword = (input: string, stored: string): boolean => {
-    // Check if stored matches input (legacy plain text)
     if (input === stored) return true;
-    // Check if stored matches hashed input
     if (hashPassword(input) === stored) return true;
     return false;
 };
 
-export const saveUser = (user: User) => {
-    const users = getUsers();
-    if (!Array.isArray(users)) {
-        throw new Error("Database corruption: users data is not an array");
-    }
-    users.push(user);
-    try {
-        fs.writeFileSync(dbPath, JSON.stringify(users, null, 2), 'utf-8');
-    } catch (err: any) {
-        throw new Error(`Failed to write to database: ${err.message}`);
+// --- Async Data Access Layer ---
+
+export const getUsers = async (): Promise<User[]> => {
+    if (USE_FIREBASE) {
+        try {
+            const querySnapshot = await getDocs(collection(db, "users"));
+            const users: User[] = [];
+            querySnapshot.forEach((doc: any) => {
+                users.push(doc.data() as User);
+            });
+            return users;
+        } catch (e) {
+            console.error("Firebase get users error:", e);
+            return [];
+        }
+    } else {
+        // Local FS Fallback
+        try {
+            if (!fs.existsSync(dbPath)) return [];
+            const data = fs.readFileSync(dbPath, 'utf-8');
+            return JSON.parse(data);
+        } catch (error) {
+            console.error("Error reading users.json:", error);
+            return [];
+        }
     }
 };
 
-export const updateUser = (updatedUser: User) => {
-    const users = getUsers();
-    const index = users.findIndex((u) => u.id === updatedUser.id);
-    if (index !== -1) {
-        users[index] = updatedUser;
+export const saveUser = async (user: User) => {
+    if (USE_FIREBASE) {
+        try {
+            await setDoc(doc(db, "users", user.id), user);
+        } catch (e: any) {
+            throw new Error(`Firebase Save Error: ${e.message}`);
+        }
+    } else {
+        const users = await getUsers(); // reuse async but implementation is sync-ish for fs
+        if (!Array.isArray(users)) {
+            // In FS mode, getUsers returns array, so this is safe
+            throw new Error("Local DB corruption");
+        }
+        users.push(user);
         fs.writeFileSync(dbPath, JSON.stringify(users, null, 2), 'utf-8');
     }
 };
 
-export const findUserByEmail = (email: string): User | undefined => {
-    const users = getUsers();
+export const updateUser = async (updatedUser: User) => {
+    if (USE_FIREBASE) {
+        try {
+            await setDoc(doc(db, "users", updatedUser.id), updatedUser, { merge: true });
+        } catch (e) {
+            console.error("Firebase update error:", e);
+        }
+    } else {
+        const users = await getUsers();
+        const index = users.findIndex((u) => u.id === updatedUser.id);
+        if (index !== -1) {
+            users[index] = updatedUser;
+            fs.writeFileSync(dbPath, JSON.stringify(users, null, 2), 'utf-8');
+        }
+    }
+};
+
+export const findUserByEmail = async (email: string): Promise<User | undefined> => {
+    // In Firebase we could query, but scanning all for simplicity implies we should keep 'getUsers' as source of truth?
+    // Scanning all is inefficient for DB, but fine for small scale. 
+    // Ideally use query(collection(db, "users"), where("email", "==", email))
+    const users = await getUsers();
     return users.find((u) => u.email === email);
 };
 
-export const findUserByCredentials = (identifier: string, password: string): User | undefined => {
-    const users = getUsers();
+export const findUserByCredentials = async (identifier: string, password: string): Promise<User | undefined> => {
+    const users = await getUsers();
     return users.find((u) =>
         (u.email === identifier || u.name === identifier || u.email === identifier) &&
         verifyPassword(password, u.password)

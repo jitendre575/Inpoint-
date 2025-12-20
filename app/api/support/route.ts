@@ -8,7 +8,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { userId, message, type = 'text', problemType, action, isTyping } = body;
 
-        const users = getUsers();
+        const users = await getUsers();
         const user = users.find(u => u.id === userId);
 
         if (!user) {
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
                 timestamp: new Date().toISOString(),
                 isTyping: !!isTyping
             };
-            updateUser(user);
+            await updateUser(user);
             return NextResponse.json({ message: 'Typing updated' });
         }
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         // Clear user typing status when sent
         user.lastTyping = { sender: 'user', timestamp: new Date().toISOString(), isTyping: false };
 
-        updateUser(user);
+        await updateUser(user);
 
         return NextResponse.json({ message: 'Sent', chat: newMessage });
     } catch (error) {
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
         return NextResponse.json({ message: 'User ID required' }, { status: 400 });
     }
 
-    const users = getUsers();
+    const users = await getUsers();
     const user = users.find(u => u.id === userId);
 
     if (!user) return NextResponse.json({ chats: [], lastTyping: null });

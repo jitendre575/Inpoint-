@@ -12,7 +12,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const users = getUsers();
+        const users = await getUsers();
         const user = users.find(u => u.id === userId);
 
         if (!user) {
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Invalid type' }, { status: 400 });
         }
 
-        updateUser(user);
+        await updateUser(user);
 
         return NextResponse.json({ message: 'Success', user });
     } catch (error) {

@@ -13,6 +13,7 @@ export const metadata: Metadata = {
   title: "Tovexar-roj-grow - Secure Investment Platform",
   description:
     "Grow your wealth with Tovexar's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system.",
+  metadataBase: new URL("https://tovexar-roj-grow.vercel.app"),
   generator: "v0.app",
   openGraph: {
     title: "Tovexar-roj-grow",

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'User ID is required' }, { status: 400 });
         }
 
-        const users = getUsers();
+        const users = await getUsers();
         const user = users.find((u) => u.id === userId);
 
         if (!user) {

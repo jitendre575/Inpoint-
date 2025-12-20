@@ -13,7 +13,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const users = getUsers();
+        const users = await getUsers();
         return NextResponse.json({ users });
     } catch (error) {
         return NextResponse.json({ message: 'Internal Error' }, { status: 500 });

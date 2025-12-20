@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         }
 
         // 3. Duplicate User Validation
-        const existingUser = findUserByEmail(email);
+        const existingUser = await findUserByEmail(email);
         if (existingUser) {
             return NextResponse.json({ message: 'Account already exists with this Email or Mobile.' }, { status: 409 });
         }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         };
 
         try {
-            saveUser(newUser);
+            await saveUser(newUser);
         } catch (dbError: any) {
             console.error("Database Save Error:", dbError);
             return NextResponse.json({

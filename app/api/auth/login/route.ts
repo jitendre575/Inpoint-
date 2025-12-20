@@ -7,7 +7,7 @@ export async function POST(request: Request) {
         const body = await request.json();
         const { email, password } = body;
 
-        const user = findUserByCredentials(email, password);
+        const user = await findUserByCredentials(email, password);
 
         if (!user) {
             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
             });
         }
 
-        updateUser(user);
+        await updateUser(user);
 
         // Return user without password
         const { password: _, ...userWithoutPass } = user;
