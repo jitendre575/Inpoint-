@@ -48,19 +48,28 @@ export default function CreateAccountPage() {
       const data = await res.json();
 
       if (!res.ok) {
+        // If it's a 409, it's a conflict (duplicate)
+        if (res.status === 409) {
+          throw new Error("Account already exists with this Email or Mobile.");
+        }
+        if (res.status === 400) {
+          throw new Error(data.message || "Invalid input details.");
+        }
         throw new Error(data.message || 'Registration failed');
       }
 
       toast({
         title: "Account Created",
         description: "Your account has been created successfully! Please login.",
+        className: "bg-emerald-600 text-white border-0"
       })
 
       router.push("/login")
     } catch (error: any) {
+      console.error("Signup error:", error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Registration Failed",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive"
       })
     } finally {
