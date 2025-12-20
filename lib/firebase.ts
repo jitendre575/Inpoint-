@@ -15,9 +15,19 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
+let app, auth, db, googleProvider;
+
+if (firebaseConfig.apiKey) {
+    try {
+        app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+        auth = getAuth(app);
+        db = getFirestore(app);
+        googleProvider = new GoogleAuthProvider();
+    } catch (e) {
+        console.error("Firebase init failed:", e);
+    }
+} else {
+    console.warn("Firebase API Key missing. Firebase features will be disabled. App will fallback to local checks if configured.");
+}
 
 export { app, auth, db, googleProvider };
