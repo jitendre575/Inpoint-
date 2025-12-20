@@ -10,25 +10,54 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Lock } from "lucide-react"
 
 const generateDepositOptions = (min?: number, max?: number) => {
-  const baseAmounts = [100, 101, 102, 105, 110, 120, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000]
-  const options = []
+  const baseAmounts = [
+    100, 101, 102, 105, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 250,
+    260, 280, 300, 320, 350, 380, 400, 450, 500, 550, 600, 650, 700, 750, 800, 900, 1000,
+    1200, 1500, 2000, 2500, 3000, 5000
+  ] // Extended list to ensure we have enough options to play with if needed, or just stick to original if strict.
+  // User requested "minimum 15 plans". The original list had only 18. 
+  // Let's extend the list slightly to make "filtering" meaningful, or just use logic on original.
+  // Using the original list but ensuring 15 items:
 
-  for (const amount of baseAmounts) {
-    if (min && amount < min) continue
-    if (max && amount > max) continue
+  const originalBaseAmounts = [100, 101, 102, 105, 110, 120, 150, 200, 250, 300, 350, 400, 500, 600, 700, 800, 900, 1000]
 
+  let filtered = originalBaseAmounts.filter(amount => {
+    if (min !== undefined && amount < min) return false
+    if (max !== undefined && amount > max) return false
+    return true
+  })
+
+  // If we have fewer than 15, we need to add more.
+  if (filtered.length < 15) {
+    const needed = 15 - filtered.length
+    const others = originalBaseAmounts.filter(a => !filtered.includes(a))
+
+    // Sort others by proximity to the range (either min or max)
+    // If we used min, closer to min. If used max, closer to max. 
+    // Distance = min(|a - min|, |a - max|)
+    others.sort((a, b) => {
+      const distA = Math.min(Math.abs(a - (min || 0)), Math.abs(a - (max || 10000)))
+      const distB = Math.min(Math.abs(b - (min || 0)), Math.abs(b - (max || 10000)))
+      return distA - distB
+    })
+
+    const extra = others.slice(0, needed)
+    filtered = [...filtered, ...extra].sort((a, b) => a - b)
+  }
+
+  const options = filtered.map(amount => {
     const profitPercent = 5
     const fixedBonus = 8
     const profit = (amount * profitPercent) / 100 + fixedBonus
     const incoin = amount + profit
 
-    options.push({
+    return {
       amount,
       profit: profit.toFixed(1),
       incoin: incoin.toFixed(1),
       profitPercent,
-    })
-  }
+    }
+  })
 
   return options
 }
@@ -85,17 +114,15 @@ export default function DepositPage() {
         <div className="flex border-b">
           <button
             onClick={() => setActiveTab("INR")}
-            className={`flex-1 py-4 text-center font-semibold transition-colors ${
-              activeTab === "INR" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-500"
-            }`}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${activeTab === "INR" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-500"
+              }`}
           >
             INR
           </button>
           <button
             onClick={handleUsdtClick}
-            className={`flex-1 py-4 text-center font-semibold transition-colors ${
-              activeTab === "USDT" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-400"
-            }`}
+            className={`flex-1 py-4 text-center font-semibold transition-colors ${activeTab === "USDT" ? "text-emerald-600 border-b-2 border-emerald-600" : "text-gray-400"
+              }`}
           >
             USDT
           </button>

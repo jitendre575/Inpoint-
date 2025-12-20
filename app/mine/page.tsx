@@ -15,7 +15,23 @@ export default function MinePage() {
     if (!currentUser) {
       router.push("/login")
     } else {
-      setUser(JSON.parse(currentUser))
+      const dbUser = JSON.parse(currentUser)
+      setUser(dbUser)
+
+      // Fetch fresh data
+      fetch('/api/user/details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: dbUser.id })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setUser(data.user)
+            localStorage.setItem("currentUser", JSON.stringify(data.user))
+          }
+        })
+        .catch(err => console.error("Failed to refresh user data", err))
     }
   }, [router])
 

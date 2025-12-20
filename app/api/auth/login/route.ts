@@ -1,15 +1,15 @@
 
 import { NextResponse } from 'next/server';
-import { findUserByEmail, updateUser } from '@/lib/db';
+import { findUserByCredentials, updateUser } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { email, password } = body;
 
-        const user = findUserByEmail(email);
+        const user = findUserByCredentials(email, password);
 
-        if (!user || user.password !== password) {
+        if (!user) {
             return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
         }
 

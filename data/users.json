@@ -81,5 +81,123 @@
         "date": "2025-12-19T07:42:32.569Z"
       }
     ]
+  },
+  {
+    "id": "1766209533292",
+    "name": "teja",
+    "email": "9784269440",
+    "password": "335524",
+    "wallet": 1100,
+    "plans": [
+      {
+        "name": "Starter Plan",
+        "amount": 1000,
+        "return": 12,
+        "duration": "7 days",
+        "hourlyReturn": 5,
+        "expectedProfit": 1120,
+        "purchaseDate": "2025-12-20T08:13:10.770Z"
+      }
+    ],
+    "history": [
+      {
+        "type": "bonus",
+        "amount": 50,
+        "date": "2025-12-20T06:13:48.058Z",
+        "description": "Welcome Bonus"
+      },
+      {
+        "type": "investment",
+        "plan": "Starter Plan",
+        "amount": 1000,
+        "date": "2025-12-20T08:13:10.770Z"
+      }
+    ],
+    "createdAt": "2025-12-20T05:45:33.292Z",
+    "lastLogin": "2025-12-20T06:13:48.058Z",
+    "withdrawals": [
+      {
+        "id": "1766212600894",
+        "amount": 50,
+        "bankDetails": {
+          "name": "teja",
+          "type": "bank",
+          "accountNumber": "123159753"
+        },
+        "status": "Completed",
+        "date": "2025-12-20T06:36:40.894Z"
+      }
+    ],
+    "supportChats": [
+      {
+        "id": "1766217154258",
+        "sender": "user",
+        "message": "[Issue: Other] fer",
+        "timestamp": "2025-12-20T07:52:34.258Z",
+        "read": true,
+        "type": "text"
+      },
+      {
+        "id": "1766217179883",
+        "sender": "admin",
+        "message": "fsdfsd",
+        "timestamp": "2025-12-20T07:52:59.883Z",
+        "read": false,
+        "type": "text"
+      },
+      {
+        "id": "1766217913743",
+        "sender": "admin",
+        "message": "fasd",
+        "timestamp": "2025-12-20T08:05:13.743Z",
+        "read": false,
+        "type": "text"
+      },
+      {
+        "id": "1766218165062",
+        "sender": "user",
+        "message": "df",
+        "timestamp": "2025-12-20T08:09:25.062Z",
+        "read": true,
+        "type": "text"
+      },
+      {
+        "id": "1766218176771",
+        "sender": "admin",
+        "message": "fdf",
+        "timestamp": "2025-12-20T08:09:36.771Z",
+        "read": false,
+        "type": "text"
+      },
+      {
+        "id": "1766218230044",
+        "sender": "user",
+        "message": "afdadhgg",
+        "timestamp": "2025-12-20T08:10:30.044Z",
+        "read": true,
+        "type": "text"
+      }
+    ],
+    "lastTyping": {
+      "sender": "user",
+      "timestamp": "2025-12-20T08:10:30.044Z",
+      "isTyping": false
+    },
+    "deposits": [
+      {
+        "id": "1766218307050",
+        "amount": 900,
+        "method": "PhonePe",
+        "status": "Approved",
+        "date": "2025-12-20T08:11:47.050Z"
+      },
+      {
+        "id": "1766218370027",
+        "amount": 1000,
+        "method": "Paytm",
+        "status": "Approved",
+        "date": "2025-12-20T08:12:50.027Z"
+      }
+    ]
   }
 ]

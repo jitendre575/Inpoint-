@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -13,7 +13,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, ArrowDownCircle, Banknote, ImageIcon } from "lucide-react"
+import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, ArrowDownCircle, Banknote, ImageIcon, EyeOff } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 
@@ -22,26 +22,41 @@ export default function AdminDashboardPage() {
     const [users, setUsers] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
     const [searchTerm, setSearchTerm] = useState("")
+    const [visiblePasswordId, setVisiblePasswordId] = useState<string | null>(null)
 
     // Modal State
     const [selectedUser, setSelectedUser] = useState<any>(null)
     const [showHistoryModal, setShowHistoryModal] = useState(false)
     const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+    const [showChatModal, setShowChatModal] = useState(false)
     const [actionLoading, setActionLoading] = useState(false)
+    const [adminMessage, setAdminMessage] = useState("")
+
+    const [userTypingOfId, setUserTypingOfId] = useState<string | null>(null)
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
     useEffect(() => {
-        fetchUsers()
+        fetchUsers() // Initial load
+
+        // Polling (every 3s)
+        const interval = setInterval(() => {
+            fetchUsers(true)
+        }, 3000)
+
+        return () => clearInterval(interval)
     }, [])
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (silent = false) => {
         const password = sessionStorage.getItem("adminSecret")
         if (!password) {
             router.push("/admin")
             return
         }
 
-        setLoading(true)
+        if (!silent) setLoading(true)
         try {
+            // Note: In a real app we would use optimistic updates or differencing, 
+            // but for this JSON file setup, we just replace the list.
             const res = await fetch('/api/admin/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -51,16 +66,44 @@ export default function AdminDashboardPage() {
             if (res.ok) {
                 const data = await res.json()
                 setUsers(data.users)
+
+                // Check if the currently selected user (in chat) is typing
+                // We need to traverse users to find typing status
+                let foundTypingId: string | null = null;
+                data.users.forEach((u: any) => {
+                    if (u.lastTyping && u.lastTyping.sender === 'user' && u.lastTyping.isTyping) {
+                        // Check timestamp validity (<5s)
+                        const timeDiff = new Date().getTime() - new Date(u.lastTyping.timestamp).getTime()
+                        if (timeDiff < 5000) {
+                            foundTypingId = u.id;
+                        }
+                    }
+                });
+                setUserTypingOfId(foundTypingId);
+
+                // If chat modal is open, we should update selectedUser reference to show new messages
+                // But we can't depend on closure variable `selectedUser` easily inside this helper if it wasn't a ref.
+                // However, `selectedUser` is state. We have to be careful.
+                // We can't update selectedUser inside here easily without causing loops if we use it in dependency.
+                // Instead, we derive the chat data in the render from `users` array + `selectedUser.id`.
             } else {
-                sessionStorage.removeItem("adminSecret")
-                router.push("/admin")
+                if (!silent) {
+                    sessionStorage.removeItem("adminSecret")
+                    router.push("/admin")
+                }
             }
         } catch (error) {
             console.error(error)
         } finally {
-            setLoading(false)
+            if (!silent) setLoading(false)
         }
     }
+
+    // Calculate total unread (from users to admin)
+    const totalUnreadSupport = users.reduce((acc, user) => {
+        const unreadCount = user.supportChats?.filter((c: any) => c.sender === 'user' && !c.read).length || 0;
+        return acc + unreadCount;
+    }, 0);
 
     const handleAction = async (transactionId: string, type: 'deposit' | 'withdraw', action: 'approve' | 'reject') => {
         const password = sessionStorage.getItem("adminSecret")
@@ -93,6 +136,68 @@ export default function AdminDashboardPage() {
         }
     }
 
+    const handleSupportReply = async () => {
+        if (!adminMessage.trim()) return
+        const password = sessionStorage.getItem("adminSecret")
+        setActionLoading(true)
+        try {
+            const res = await fetch('/api/admin/support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    adminSecret: password,
+                    userId: selectedUser.id,
+                    message: adminMessage,
+                    action: 'reply'
+                })
+            })
+
+            if (res.ok) {
+                // Determine new chat structure or just refetch users
+                await fetchUsers();
+                setAdminMessage("")
+                // Optimistically update selected user chat to show new message immediately if we want
+                // But fetchUsers resets state, so we might need to find selectedUser again to keep modal updated?
+                // Actually, `fetchUsers` updates `users` state. 
+                // We need to update `selectedUser` reference too if it's open.
+                // Or better, just close and reopen? No, that's bad UX.
+                // Let's implement a refetch effect or manually update selectedUser.
+
+                // For simplicity, we just refetch and find the user again.
+                // Note: user state update is async, so this might be tricky in one go.
+                // Let's just rely on the effect of users updating? No, local `selectedUser` is static.
+                const updatedRes = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password })
+                });
+                const data = await updatedRes.json();
+                setUsers(data.users);
+                const updatedUser = data.users.find((u: any) => u.id === selectedUser.id);
+                setSelectedUser(updatedUser);
+            }
+        } catch (error) {
+            console.error("Reply failed")
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
+    const markChatRead = async (user: any) => {
+        // Optimistically mark local state
+        const password = sessionStorage.getItem("adminSecret")
+        // Fire and forget
+        fetch('/api/admin/support', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                adminSecret: password,
+                userId: user.id,
+                action: 'mark_read'
+            })
+        }).then(() => fetchUsers())
+    }
+
     const handleLogout = () => {
         sessionStorage.removeItem("adminSecret")
         router.push("/admin")
@@ -108,11 +213,63 @@ export default function AdminDashboardPage() {
         setShowWithdrawModal(true);
     }
 
+    const openChatModal = (user: any) => {
+        setSelectedUser(user);
+        setShowChatModal(true);
+        // If there are unread messages, mark them as read when opening
+        if (user.supportChats?.some((c: any) => c.sender === 'user' && !c.read)) {
+            markChatRead(user);
+        }
+    }
+
     const filteredUsers = users.filter((u) =>
         u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.id.includes(searchTerm)
     )
+
+    const togglePasswordVisibility = (userId: string) => {
+        setVisiblePasswordId(prev => prev === userId ? null : userId)
+    }
+
+    const handleAdminTyping = (text: string) => {
+        setAdminMessage(text)
+
+        if (!selectedUser) return
+
+        if (typingTimeoutRef.current) {
+            clearTimeout(typingTimeoutRef.current)
+        } else {
+            sendTypingStatus(true)
+        }
+
+        typingTimeoutRef.current = setTimeout(() => {
+            sendTypingStatus(false)
+            typingTimeoutRef.current = null
+        }, 1000)
+    }
+
+    const sendTypingStatus = async (isTyping: boolean) => {
+        if (!selectedUser) return
+        try {
+            const password = sessionStorage.getItem("adminSecret")
+            await fetch('/api/admin/support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    adminSecret: password,
+                    userId: selectedUser.id,
+                    action: 'typing',
+                    isTyping
+                })
+            })
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // Derived active user for live chat
+    const activeUser = selectedUser ? users.find(u => u.id === selectedUser.id) || selectedUser : null;
 
     return (
         <div className="min-h-screen bg-gray-100 pb-20">
@@ -123,6 +280,18 @@ export default function AdminDashboardPage() {
                         <p className="text-xs text-neutral-400">Manage Users & Withdrawals</p>
                     </div>
                     <div className="flex items-center gap-4">
+                        {/* Notification Bell */}
+                        <div className="relative">
+                            <div className="p-2 bg-neutral-800 rounded-full">
+                                <span className="text-xl">🔔</span>
+                            </div>
+                            {totalUnreadSupport > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] h-5 w-5 flex items-center justify-center rounded-full border-2 border-neutral-900 font-bold">
+                                    {totalUnreadSupport}
+                                </span>
+                            )}
+                        </div>
+
                         <Button
                             onClick={handleLogout}
                             variant="destructive"
@@ -154,7 +323,7 @@ export default function AdminDashboardPage() {
                 </div>
 
                 {/* Users Cards Grid */}
-                {loading ? (
+                {loading && !users.length ? (
                     <div className="flex justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-emerald-600" />
                     </div>
@@ -166,25 +335,56 @@ export default function AdminDashboardPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredUsers.map((user) => {
                             const pendingWithdrawals = user.withdrawals?.filter((w: any) => w.status === 'Pending').length || 0;
+                            const unreadChats = user.supportChats?.filter((c: any) => c.sender === 'user' && !c.read).length || 0;
                             const hasPending = pendingWithdrawals > 0;
+                            const hasUnread = unreadChats > 0;
                             const totalDeposits = user.deposits?.reduce((acc: number, curr: any) => acc + (curr.status === 'Approved' ? curr.amount : 0), 0) || 0;
                             const totalWithdrawals = user.withdrawals?.reduce((acc: number, curr: any) => acc + (curr.status === 'Completed' ? curr.amount : 0), 0) || 0;
 
+                            const isPasswordVisible = visiblePasswordId === user.id;
+
                             return (
-                                <Card key={user.id} className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-white group">
-                                    <div className={`h-1.5 w-full ${hasPending ? 'bg-orange-500 animate-pulse' : 'bg-emerald-500'}`} />
+                                <Card key={user.id} className="overflow-hidden border-0 shadow-md hover:shadow-xl transition-all duration-300 bg-white group select-none">
+                                    <div className={`h-1.5 w-full ${hasPending ? 'bg-orange-500 animate-pulse' : hasUnread ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`} />
                                     <div className="p-6">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
                                                 <h3 className="font-bold text-lg text-gray-900 group-hover:text-emerald-700 transition-colors">{user.name}</h3>
                                                 <p className="text-xs text-gray-500 font-mono mt-1">ID: {user.id}</p>
                                                 <p className="text-sm text-gray-600 mt-0.5 mb-2">{user.email}</p>
+
+                                                {/* Password Row */}
+                                                <div className="flex items-center gap-2 mt-2 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 w-fit">
+                                                    <span className="text-xs font-semibold text-gray-500">Pass:</span>
+                                                    <span className="text-sm font-mono font-medium text-gray-800">
+                                                        {isPasswordVisible ? user.password || "N/A" : "******"}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => togglePasswordVisibility(user.id)}
+                                                        className="ml-1 text-gray-400 hover:text-gray-600 focus:outline-none"
+                                                        aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+                                                    >
+                                                        {isPasswordVisible ? (
+                                                            <EyeOff className="h-3.5 w-3.5" />
+                                                        ) : (
+                                                            <Eye className="h-3.5 w-3.5" />
+                                                        )}
+                                                    </button>
+                                                </div>
                                             </div>
-                                            {hasPending && (
-                                                <Badge className="bg-orange-100 text-orange-800 border-orange-200 animate-pulse">
-                                                    Action Req.
-                                                </Badge>
-                                            )}
+                                            <div className="flex flex-col gap-1 items-end">
+                                                {hasPending && (
+                                                    <Badge className="bg-orange-100 text-orange-800 border-orange-200 animate-pulse">
+                                                        Action Req.
+                                                    </Badge>
+                                                )}
+                                                {hasUnread && (
+                                                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 animate-pulse flex items-center gap-1">
+                                                        <span className="h-2 w-2 rounded-full bg-blue-600"></span>
+                                                        {unreadChats} New Msg
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </div>
 
                                         <div className="bg-gray-50 rounded-xl p-4 mb-4 border border-gray-100">
@@ -205,20 +405,26 @@ export default function AdminDashboardPage() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-3 gap-2">
                                             <Button
                                                 onClick={() => openHistoryModal(user)}
                                                 variant="outline"
-                                                className="w-full border-gray-200 hover:bg-gray-50 text-gray-700"
+                                                className="w-full border-gray-200 hover:bg-gray-50 text-gray-700 px-0"
                                             >
-                                                <Eye className="h-4 w-4 mr-2" /> History
+                                                <Eye className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                onClick={() => openChatModal(user)}
+                                                className={`w-full ${hasUnread ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'} border-0 px-0 relative`}
+                                            >
+                                                <span className="mr-1">💬</span> Chat
+                                                {hasUnread && <span className="absolute top-0 right-0 h-3 w-3 bg-red-500 rounded-full border-2 border-white -mt-1 -mr-1"></span>}
                                             </Button>
                                             <Button
                                                 onClick={() => openWithdrawModal(user)}
-                                                className={`w-full ${hasPending ? 'bg-orange-500 hover:bg-orange-600' : 'bg-neutral-800 hover:bg-neutral-900'} text-white border-0`}
+                                                className={`w-full ${hasPending ? 'bg-orange-500 hover:bg-orange-600' : 'bg-neutral-800 hover:bg-neutral-900'} text-white border-0 px-0`}
                                             >
-                                                <ArrowUpCircle className="h-4 w-4 mr-2" />
-                                                {hasPending ? 'Requests' : 'Withdraws'}
+                                                <ArrowUpCircle className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </div>
@@ -228,6 +434,60 @@ export default function AdminDashboardPage() {
                     </div>
                 )}
             </main>
+
+            {/* Chat Modal */}
+            <Dialog open={showChatModal} onOpenChange={setShowChatModal}>
+                <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 overflow-hidden">
+                    <DialogHeader className="p-4 border-b border-gray-100 bg-gray-50">
+                        <DialogTitle className="flex items-center gap-2">
+                            Chat with {activeUser?.name}
+                            {activeUser?.supportChats?.some((c: any) => c.sender === 'user' && !c.read) && (
+                                <Badge className="bg-red-500">Unread</Badge>
+                            )}
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-100/50">
+                        {(!activeUser?.supportChats || activeUser.supportChats.length === 0) ? (
+                            <p className="text-center text-gray-400 py-10">No messages yet.</p>
+                        ) : (
+                            activeUser.supportChats.map((chat: any) => (
+                                <div key={chat.id} className={`flex ${chat.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${chat.sender === 'admin'
+                                        ? 'bg-blue-600 text-white rounded-tr-none'
+                                        : 'bg-white text-gray-800 border border-gray-200 rounded-tl-none'
+                                        }`}>
+                                        <p>{chat.message}</p>
+                                        <p className={`text-[10px] mt-1 text-right ${chat.sender === 'admin' ? 'text-blue-100' : 'text-gray-400'}`}>
+                                            {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                        {userTypingOfId === activeUser?.id && (
+                            <div className="flex justify-start">
+                                <div className="bg-white border border-gray-200 text-gray-500 text-xs py-2 px-3 rounded-2xl rounded-tl-none italic animate-pulse">
+                                    User is typing...
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="p-3 bg-white border-t border-gray-100 flex gap-2">
+                        <Input
+                            value={adminMessage}
+                            onChange={(e) => handleAdminTyping(e.target.value)}
+                            placeholder="Type a reply..."
+                            className="flex-1"
+                            onKeyDown={(e) => e.key === 'Enter' && handleSupportReply()}
+                        />
+                        <Button onClick={handleSupportReply} disabled={actionLoading} size="icon" className="bg-blue-600 hover:bg-blue-700">
+                            <div className="text-white">➤</div>
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             {/* History Modal (View Only for Deposits) */}
             <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>

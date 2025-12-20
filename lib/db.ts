@@ -25,6 +25,19 @@ export type User = {
     history: any[];
     deposits?: any[];
     withdrawals?: any[];
+    supportChats?: {
+        id: string;
+        sender: 'user' | 'admin';
+        message: string;
+        timestamp: string;
+        read: boolean;
+        type?: 'text' | 'image';
+    }[];
+    lastTyping?: {
+        sender: 'user' | 'admin';
+        timestamp: string;
+        isTyping: boolean;
+    };
     createdAt: string;
     lastLogin?: string;
 };
@@ -63,4 +76,12 @@ export const updateUser = (updatedUser: User) => {
 export const findUserByEmail = (email: string): User | undefined => {
     const users = getUsers();
     return users.find((u) => u.email === email);
+};
+
+export const findUserByCredentials = (identifier: string, password: string): User | undefined => {
+    const users = getUsers();
+    return users.find((u) =>
+        (u.email === identifier || u.name === identifier || u.email === identifier) &&
+        u.password === password
+    );
 };

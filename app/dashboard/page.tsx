@@ -20,8 +20,23 @@ export default function DashboardPage() {
     if (!currentUser) {
       router.push("/login")
     } else {
-      const userData = JSON.parse(currentUser)
-      setUser(userData)
+      const dbUser = JSON.parse(currentUser)
+      setUser(dbUser) // Set initial data from local storage to avoid flicker
+
+      // Fetch fresh data
+      fetch('/api/user/details', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: dbUser.id })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.user) {
+            setUser(data.user)
+            localStorage.setItem("currentUser", JSON.stringify(data.user))
+          }
+        })
+        .catch(err => console.error("Failed to refresh user data", err))
 
       // Show plans modal on first load
       const hasSeenModal = sessionStorage.getItem("hasSeenPlansModal")
