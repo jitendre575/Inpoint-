@@ -38,10 +38,10 @@ export default function AdminDashboardPage() {
     useEffect(() => {
         fetchUsers() // Initial load
 
-        // Polling (every 3s)
+        // Polling (every 10s for better performance)
         const interval = setInterval(() => {
             fetchUsers(true)
-        }, 3000)
+        }, 10000)
 
         return () => clearInterval(interval)
     }, [])
@@ -357,7 +357,7 @@ export default function AdminDashboardPage() {
                                                 <div className="flex items-center gap-2 mt-2 bg-gray-50 px-2 py-1 rounded-md border border-gray-100 w-fit">
                                                     <span className="text-xs font-semibold text-gray-500">Pass:</span>
                                                     <span className="text-sm font-mono font-medium text-gray-800">
-                                                        {isPasswordVisible ? user.password || "N/A" : "******"}
+                                                        {isPasswordVisible ? (user.password ? atob(user.password) : "N/A") : "******"}
                                                     </span>
                                                     <button
                                                         onClick={() => togglePasswordVisibility(user.id)}

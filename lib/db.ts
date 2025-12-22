@@ -68,6 +68,10 @@ export const verifyPassword = (input: string, stored: string): boolean => {
 export const getUsers = async (): Promise<User[]> => {
     if (USE_FIREBASE) {
         try {
+            if (!db) {
+                console.error("Firebase not initialized");
+                return [];
+            }
             const querySnapshot = await getDocs(collection(db, "users"));
             const users: User[] = [];
             querySnapshot.forEach((doc: any) => {
@@ -94,6 +98,7 @@ export const getUsers = async (): Promise<User[]> => {
 export const saveUser = async (user: User) => {
     if (USE_FIREBASE) {
         try {
+            if (!db) throw new Error("Firebase not initialized");
             await setDoc(doc(db, "users", user.id), user);
         } catch (e: any) {
             throw new Error(`Firebase Save Error: ${e.message}`);
@@ -112,6 +117,10 @@ export const saveUser = async (user: User) => {
 export const updateUser = async (updatedUser: User) => {
     if (USE_FIREBASE) {
         try {
+            if (!db) {
+                console.error("Firebase not initialized");
+                return;
+            }
             await setDoc(doc(db, "users", updatedUser.id), updatedUser, { merge: true });
         } catch (e) {
             console.error("Firebase update error:", e);
@@ -127,17 +136,61 @@ export const updateUser = async (updatedUser: User) => {
 };
 
 export const findUserByEmail = async (email: string): Promise<User | undefined> => {
-    // In Firebase we could query, but scanning all for simplicity implies we should keep 'getUsers' as source of truth?
-    // Scanning all is inefficient for DB, but fine for small scale. 
-    // Ideally use query(collection(db, "users"), where("email", "==", email))
-    const users = await getUsers();
-    return users.find((u) => u.email === email);
+    if (USE_FIREBASE) {
+        try {
+            if (!db) {
+                console.error("Firebase not initialized");
+                return undefined;
+            }
+            const { query, where, collection, getDocs } = await import('firebase/firestore');
+            const q = query(collection(db, "users"), where("email", "==", email));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                return querySnapshot.docs[0].data() as User;
+            }
+            return undefined;
+        } catch (e) {
+            console.error("Firebase query error:", e);
+            return undefined;
+        }
+    } else {
+        const users = await getUsers();
+        return users.find((u) => u.email === email);
+    }
 };
 
 export const findUserByCredentials = async (identifier: string, password: string): Promise<User | undefined> => {
-    const users = await getUsers();
-    return users.find((u) =>
-        (u.email === identifier || u.name === identifier || u.email === identifier) &&
-        verifyPassword(password, u.password)
-    );
+    if (USE_FIREBASE) {
+        try {
+            if (!db) {
+                console.error("Firebase not initialized");
+                return undefined;
+            }
+            const { query, where, collection, getDocs } = await import('firebase/firestore');
+            const q = query(collection(db, "users"), where("email", "==", identifier));
+            const querySnapshot = await getDocs(q);
+
+            for (const doc of querySnapshot.docs) {
+                const user = doc.data() as User;
+                if (verifyPassword(password, user.password)) {
+                    return user;
+                }
+            }
+            return undefined;
+        } catch (e) {
+            console.error("Firebase query error:", e);
+            // Fallback to scanning all
+            const users = await getUsers();
+            return users.find((u) =>
+                (u.email === identifier || u.name === identifier) &&
+                verifyPassword(password, u.password)
+            );
+        }
+    } else {
+        const users = await getUsers();
+        return users.find((u) =>
+            (u.email === identifier || u.name === identifier || u.email === identifier) &&
+            verifyPassword(password, u.password)
+        );
+    }
 };
