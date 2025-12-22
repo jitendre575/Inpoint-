@@ -176,11 +176,43 @@
         "timestamp": "2025-12-20T08:10:30.044Z",
         "read": true,
         "type": "text"
+      },
+      {
+        "id": "1766246447043",
+        "sender": "admin",
+        "message": "dfs",
+        "timestamp": "2025-12-20T16:00:47.043Z",
+        "read": false,
+        "type": "text"
+      },
+      {
+        "id": "1766246452004",
+        "sender": "user",
+        "message": "sdsf",
+        "timestamp": "2025-12-20T16:00:52.004Z",
+        "read": true,
+        "type": "text"
+      },
+      {
+        "id": "1766246461094",
+        "sender": "admin",
+        "message": "sdfs",
+        "timestamp": "2025-12-20T16:01:01.094Z",
+        "read": false,
+        "type": "text"
+      },
+      {
+        "id": "1766246511741",
+        "sender": "user",
+        "message": "sad",
+        "timestamp": "2025-12-20T16:01:51.741Z",
+        "read": false,
+        "type": "text"
       }
     ],
     "lastTyping": {
       "sender": "user",
-      "timestamp": "2025-12-20T08:10:30.044Z",
+      "timestamp": "2025-12-20T16:01:51.741Z",
       "isTyping": false
     },
     "deposits": [
@@ -199,5 +231,23 @@
         "date": "2025-12-20T08:12:50.027Z"
       }
     ]
+  },
+  {
+    "id": "1766391595994",
+    "name": "ramkumar231",
+    "email": "0001112223",
+    "password": "MzM1NTI0",
+    "wallet": 50,
+    "plans": [],
+    "history": [
+      {
+        "type": "bonus",
+        "amount": 50,
+        "date": "2025-12-22T08:20:15.193Z",
+        "description": "Welcome Bonus"
+      }
+    ],
+    "createdAt": "2025-12-22T08:19:55.998Z",
+    "lastLogin": "2025-12-22T08:20:15.193Z"
   }
 ]
