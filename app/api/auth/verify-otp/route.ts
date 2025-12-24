@@ -1,45 +1,85 @@
 import { NextResponse } from 'next/server';
 import { verifyOTP } from '@/lib/otp';
 import { getUsers, saveUser, updateUser, User } from '@/lib/db';
-import { isValidEmail, normalizePhone } from '@/lib/messaging';
+import { validateAndNormalizeIdentifier } from '@/lib/otp-validation';
 
+/**
+ * POST /api/auth/verify-otp
+ * 
+ * Verify OTP and create/login user
+ * 
+ * Request Body:
+ * - identifier: string (email or 10-digit Indian mobile number)
+ * - otp: string (6-digit OTP)
+ * - name: string (optional, for new users)
+ * 
+ * Response:
+ * - 200: OTP verified, user logged in/created
+ * - 400: Invalid OTP or identifier
+ * - 500: Server error
+ */
 export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { identifier, otp, name } = body;
 
+        // Validate required fields
         if (!identifier || !otp) {
             return NextResponse.json(
-                { message: 'Identifier and OTP are required' },
+                {
+                    success: false,
+                    message: 'Identifier and OTP are required'
+                },
                 { status: 400 }
             );
         }
 
-        // Normalize identifier
-        const isEmail = isValidEmail(identifier);
-        const normalizedIdentifier = isEmail ? identifier.toLowerCase() : normalizePhone(identifier);
+        // Validate OTP format (6 digits)
+        if (!/^\d{6}$/.test(otp)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: 'OTP must be a 6-digit number'
+                },
+                { status: 400 }
+            );
+        }
+
+        // Validate and normalize identifier
+        const validation = validateAndNormalizeIdentifier(identifier.trim());
+
+        if (!validation.valid) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: validation.message
+                },
+                { status: 400 }
+            );
+        }
+
+        const { normalized, type } = validation;
 
         // Verify OTP
-        const verification = verifyOTP(normalizedIdentifier, otp);
+        const verification = verifyOTP(normalized, otp);
 
         if (!verification.success) {
             return NextResponse.json(
-                { message: verification.message },
+                {
+                    success: false,
+                    message: verification.message,
+                    attemptsRemaining: verification.attemptsRemaining
+                },
                 { status: 400 }
             );
         }
 
-        // OTP verified, now find or create user
+        // OTP verified successfully - Find or create user
         const users = await getUsers();
 
         // Find user by email or phone
         let user = users.find(u => {
-            if (isEmail) {
-                return u.email === normalizedIdentifier;
-            } else {
-                // Check if phone matches (stored in email field for legacy compatibility)
-                return u.email === normalizedIdentifier;
-            }
+            return u.email === normalized;
         });
 
         if (user) {
@@ -47,9 +87,13 @@ export async function POST(request: Request) {
             user.lastLogin = new Date().toISOString();
             await updateUser(user);
 
+            // Remove password from response
+            const { password, ...userWithoutPassword } = user;
+
             return NextResponse.json({
+                success: true,
                 message: 'Login successful',
-                user,
+                user: userWithoutPassword,
                 isNewUser: false
             });
         } else {
@@ -57,7 +101,7 @@ export async function POST(request: Request) {
             const newUser: User = {
                 id: Date.now().toString(),
                 name: name || 'User',
-                email: normalizedIdentifier,
+                email: normalized,
                 password: '', // No password for OTP login
                 wallet: 50, // Welcome bonus
                 plans: [],
@@ -78,18 +122,27 @@ export async function POST(request: Request) {
 
             await saveUser(newUser);
 
+            // Remove password from response
+            const { password, ...userWithoutPassword } = newUser;
+
             return NextResponse.json({
+                success: true,
                 message: 'Account created successfully',
-                user: newUser,
+                user: userWithoutPassword,
                 isNewUser: true
             });
         }
 
     } catch (error: any) {
-        console.error('Verify OTP Error:', error);
+        console.error('❌ Verify OTP Error:', error.message);
+
         return NextResponse.json(
-            { message: 'Failed to verify OTP. Please try again.' },
+            {
+                success: false,
+                message: 'Failed to verify OTP. Please try again.'
+            },
             { status: 500 }
         );
     }
 }
+
