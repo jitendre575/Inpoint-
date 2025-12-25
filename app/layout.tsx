@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: "Inpoint Rose Grow",
     images: [
       {
-        url: "/images/inpoint-rose-grow-og.png",
+        url: `${process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app"}/images/inpoint-rose-grow-og.png`,
         width: 1200,
         height: 630,
         alt: "Inpoint Rose Grow - Smart Investment Platform",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: "Inpoint Rose Grow - Smart Investment Platform",
     description:
       "Grow your wealth with Inpoint Rose Grow's trusted investment platform. Get guaranteed returns on your investments.",
-    images: ["/images/inpoint-rose-grow-og.png"],
+    images: [`${process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app"}/images/inpoint-rose-grow-og.png`],
   },
   icons: {
     icon: [

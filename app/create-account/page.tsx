@@ -232,13 +232,27 @@ export default function CreateAccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-700 to-rose-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(244,63,94,0.15),transparent_50%)]" />
+      </div>
+
+      {/* Floating Shapes */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-500" />
+
+      {/* Glassmorphism Card */}
+      <div className="relative w-full max-w-md z-10">
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 md:p-10">
+          {/* Logo & Header */}
           <div className="text-center mb-8">
-            <div className="h-16 w-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-rose-500 shadow-lg mb-6 relative">
+              <div className="absolute inset-0 bg-white/20 rounded-2xl backdrop-blur-sm" />
               {step === 'details' ? (
-                <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-10 w-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -247,7 +261,7 @@ export default function CreateAccountPage() {
                   />
                 </svg>
               ) : (
-                <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="h-10 w-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -257,10 +271,10 @@ export default function CreateAccountPage() {
                 </svg>
               )}
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
               {step === 'details' ? 'Create Account' : 'Verify OTP'}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-emerald-100/80 text-sm md:text-base">
               {step === 'details'
                 ? 'Join us and start investing today'
                 : `Enter the OTP sent to ${normalizedIdentifier || formData.identifier}`}
@@ -271,7 +285,7 @@ export default function CreateAccountPage() {
           {step === 'details' && (
             <form onSubmit={handleCreateAccount} className="space-y-5">
               <div>
-                <Label htmlFor="name" className="text-gray-700 font-medium">
+                <Label htmlFor="name" className="text-white/90 font-medium text-sm">
                   Full Name
                 </Label>
                 <Input
@@ -280,13 +294,13 @@ export default function CreateAccountPage() {
                   placeholder="Enter your full name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
+                  className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="identifier" className="text-gray-700 font-medium">
+                <Label htmlFor="identifier" className="text-white/90 font-medium text-sm">
                   Email / Mobile Number
                 </Label>
                 <Input
@@ -295,14 +309,14 @@ export default function CreateAccountPage() {
                   placeholder="Enter your email or mobile"
                   value={formData.identifier}
                   onChange={(e) => setFormData({ ...formData, identifier: e.target.value })}
-                  className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
+                  className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">OTP will be sent automatically</p>
+                <p className="text-xs text-emerald-200/60 mt-1">OTP will be sent automatically</p>
               </div>
 
               <div>
-                <Label htmlFor="password" className="text-gray-700 font-medium">
+                <Label htmlFor="password" className="text-white/90 font-medium text-sm">
                   Password
                 </Label>
                 <Input
@@ -311,13 +325,13 @@ export default function CreateAccountPage() {
                   placeholder="Create a password (min 6 characters)"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
+                  className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                <Label htmlFor="confirmPassword" className="text-white/90 font-medium text-sm">
                   Confirm Password
                 </Label>
                 <Input
@@ -326,17 +340,25 @@ export default function CreateAccountPage() {
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
+                  className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                   required
                 />
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold text-base shadow-lg"
+                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-rose-500 hover:from-emerald-600 hover:to-rose-600 text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 border-0"
                 disabled={loading}
               >
-                {loading ? "Sending OTP..." : "Create Account & Send OTP"}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Sending OTP...
+                  </span>
+                ) : "Create Account & Send OTP"}
               </Button>
             </form>
           )}
@@ -344,14 +366,14 @@ export default function CreateAccountPage() {
           {/* Step 2: OTP Verification */}
           {step === 'otp' && (
             <form onSubmit={handleVerifyOTP} className="space-y-5">
-              <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
-                <p className="text-sm text-blue-800">
+              <div className="bg-emerald-500/20 border-l-4 border-emerald-400 p-4 rounded-lg backdrop-blur-sm">
+                <p className="text-sm text-white">
                   <strong>📱 OTP Sent!</strong> Please check your {(normalizedIdentifier || formData.identifier).includes('@') ? 'email' : 'phone'} for the verification code.
                 </p>
               </div>
 
               <div>
-                <Label htmlFor="otp" className="text-gray-700 font-medium">
+                <Label htmlFor="otp" className="text-white/90 font-medium text-sm">
                   Enter 6-Digit OTP
                 </Label>
                 <Input
@@ -360,19 +382,27 @@ export default function CreateAccountPage() {
                   placeholder="000000"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  className="mt-2 h-14 text-center text-2xl font-bold tracking-widest focus-visible:ring-emerald-500"
+                  className="mt-2 h-14 text-center text-2xl font-bold tracking-widest bg-white/10 border-white/20 text-white placeholder:text-white/30 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                   maxLength={6}
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1 text-center">Valid for 5 minutes</p>
+                <p className="text-xs text-emerald-200/60 mt-1 text-center">Valid for 5 minutes</p>
               </div>
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold text-base shadow-lg"
+                className="w-full h-12 bg-gradient-to-r from-emerald-500 to-rose-500 hover:from-emerald-600 hover:to-rose-600 text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 border-0"
                 disabled={loading}
               >
-                {loading ? "Verifying..." : "Verify OTP & Create Account"}
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Verifying...
+                  </span>
+                ) : "Verify OTP & Create Account"}
               </Button>
 
               <div className="text-center">
@@ -381,7 +411,7 @@ export default function CreateAccountPage() {
                   variant="ghost"
                   onClick={handleResendOTP}
                   disabled={timer > 0 || resendLoading}
-                  className="text-emerald-600 hover:text-emerald-700"
+                  className="text-emerald-300 hover:text-emerald-200 hover:bg-white/5"
                 >
                   {resendLoading ? "Resending..." : timer > 0 ? `Resend OTP in ${timer}s` : "Resend OTP"}
                 </Button>
@@ -394,7 +424,7 @@ export default function CreateAccountPage() {
                   setStep('details')
                   setOtp('')
                 }}
-                className="w-full"
+                className="w-full bg-white/5 border-white/30 text-white hover:bg-white/10 hover:border-white/40 backdrop-blur-sm transition-all"
               >
                 ← Back to Details
               </Button>
@@ -402,14 +432,18 @@ export default function CreateAccountPage() {
           )}
 
           <div className="mt-6 text-center">
-            <p className="text-gray-600">
+            <p className="text-white/70 text-sm">
               Already have an account?{" "}
-              <button onClick={() => router.push("/login")} className="text-emerald-600 font-semibold hover:underline">
+              <button onClick={() => router.push("/login")} className="text-emerald-300 font-semibold hover:text-emerald-200 transition-colors">
                 Login
               </button>
             </p>
           </div>
         </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-400 to-amber-400 rounded-full blur-2xl opacity-40 animate-pulse" />
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-full blur-2xl opacity-40 animate-pulse delay-700" />
       </div>
     </div>
   )

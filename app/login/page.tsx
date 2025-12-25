@@ -64,12 +64,26 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
+      {/* Animated Gradient Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-700 to-rose-900">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(244,63,94,0.15),transparent_50%)]" />
+      </div>
+
+      {/* Floating Shapes */}
+      <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+      <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-500" />
+
+      {/* Glassmorphism Card */}
+      <div className="relative w-full max-w-md z-10">
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 md:p-10">
+          {/* Logo & Header */}
           <div className="text-center mb-8">
-            <div className="h-16 w-16 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
-              <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-rose-500 shadow-lg mb-6 relative">
+              <div className="absolute inset-0 bg-white/20 rounded-2xl backdrop-blur-sm" />
+              <svg className="h-10 w-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -78,13 +92,18 @@ export default function LoginPage() {
                 />
               </svg>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
-            <p className="text-gray-600">Login to your investment account</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
+              Welcome Back
+            </h1>
+            <p className="text-emerald-100/80 text-sm md:text-base">
+              Login to your investment account
+            </p>
           </div>
 
+          {/* Login Form */}
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
-              <Label htmlFor="email" className="text-gray-700 font-medium">
+              <Label htmlFor="email" className="text-white/90 font-medium text-sm">
                 Email / Mobile
               </Label>
               <Input
@@ -93,13 +112,13 @@ export default function LoginPage() {
                 placeholder="Enter your email or mobile"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
+                className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                 required
               />
             </div>
 
             <div>
-              <Label htmlFor="password" className="text-gray-700 font-medium">
+              <Label htmlFor="password" className="text-white/90 font-medium text-sm">
                 Password
               </Label>
               <Input
@@ -108,48 +127,32 @@ export default function LoginPage() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 h-12 text-base focus-visible:ring-emerald-500"
+                className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
                 required
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-semibold text-base shadow-lg"
+              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-rose-500 hover:from-emerald-600 hover:to-rose-600 text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 border-0"
               disabled={loading}
             >
-              {loading ? "Logging in..." : "Login"}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Logging in...
+                </span>
+              ) : "Login"}
             </Button>
           </form>
-
-          <div className="mt-6 text-center space-y-3">
-            <p className="text-gray-600">Don't have an account?</p>
-            <Button
-              onClick={() => router.push("/create-account")}
-              variant="outline"
-              className="w-full h-12 border-2 border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-semibold text-base"
-            >
-              Create Account
-            </Button>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">Or</span>
-              </div>
-            </div>
-
-            <Button
-              onClick={() => router.push("/otp-login")}
-              variant="outline"
-              className="w-full h-12 border-2 border-blue-500 text-blue-600 hover:bg-blue-50 font-semibold text-base"
-            >
-              Login with OTP
-            </Button>
-          </div>
         </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-400 to-amber-400 rounded-full blur-2xl opacity-40 animate-pulse" />
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-full blur-2xl opacity-40 animate-pulse delay-700" />
       </div>
     </div>
   )

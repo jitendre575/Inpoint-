@@ -118,12 +118,72 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
+
   /* Add smooth transitions globally */
   button,
   a {
     @apply transition-all duration-200;
   }
+}
+
+/* Custom animations for login/create account pages */
+@keyframes pulse-delay-500 {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-delay-700 {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-delay-1000 {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+.delay-500 {
+  animation: pulse-delay-500 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 500ms;
+}
+
+.delay-700 {
+  animation: pulse-delay-700 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 700ms;
+}
+
+.delay-1000 {
+  animation: pulse-delay-1000 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  animation-delay: 1000ms;
 }
