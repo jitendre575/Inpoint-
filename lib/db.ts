@@ -4,11 +4,15 @@ import path from 'path';
 import { db } from './firebase';
 import { collection, getDocs, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 
+// Mode detection - Use Firebase if configured, otherwise local FS (dev only)
+const USE_FIREBASE = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 const dataDir = path.join(process.cwd(), 'data');
 const dbPath = path.join(dataDir, 'users.json');
 
-// Ensure data directory exists (only for local fs)
-if (typeof window === 'undefined' && !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+// Ensure data directory exists ONLY in development with local FS
+if (typeof window === 'undefined' && !USE_FIREBASE && !IS_PRODUCTION) {
     try {
         if (!fs.existsSync(dataDir)) {
             fs.mkdirSync(dataDir, { recursive: true });
@@ -17,8 +21,7 @@ if (typeof window === 'undefined' && !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_I
             fs.writeFileSync(dbPath, JSON.stringify([]), 'utf-8');
         }
     } catch (e) {
-        // Ignore errors in environments where fs is not available (like Vercel production without local fallback)
-        console.warn("FS setup failed (expected in read-only envs if not using Firebase):", e);
+        console.warn("FS setup failed (expected in read-only envs):", e);
     }
 }
 
@@ -49,8 +52,6 @@ export type User = {
     lastLogin?: string;
 };
 
-// Mode detection
-const USE_FIREBASE = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
 // Helper to hash password
 export const hashPassword = (password: string): string => {
@@ -70,6 +71,9 @@ export const getUsers = async (): Promise<User[]> => {
         try {
             if (!db) {
                 console.error("Firebase not initialized");
+                if (IS_PRODUCTION) {
+                    throw new Error("Database not configured. Please set up Firebase.");
+                }
                 return [];
             }
             const querySnapshot = await getDocs(collection(db, "users"));
@@ -80,10 +84,16 @@ export const getUsers = async (): Promise<User[]> => {
             return users;
         } catch (e) {
             console.error("Firebase get users error:", e);
+            if (IS_PRODUCTION) {
+                throw new Error("Database error. Please try again later.");
+            }
             return [];
         }
     } else {
-        // Local FS Fallback
+        // Local FS Fallback (development only)
+        if (IS_PRODUCTION) {
+            throw new Error("Production requires Firebase configuration");
+        }
         try {
             if (!fs.existsSync(dbPath)) return [];
             const data = fs.readFileSync(dbPath, 'utf-8');

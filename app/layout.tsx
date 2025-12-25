@@ -13,23 +13,25 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-  title: "Tovexar-roj-grow - Secure Investment Platform",
+  title: "Inpoint Rose Grow - Smart Investment Platform",
   description:
-    "Grow your wealth with Tovexar's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system.",
-  metadataBase: new URL("https://tovexar-roj-grow.vercel.app"),
-  generator: "v0.app",
+    "Grow your wealth with Inpoint Rose Grow's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system. Start investing today!",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app"),
+  generator: "Next.js",
+  keywords: ["investment", "trading", "wealth growth", "financial planning", "secure investment", "Inpoint Rose Grow"],
+  authors: [{ name: "Inpoint Rose Grow" }],
   openGraph: {
-    title: "Tovexar-roj-grow",
+    title: "Inpoint Rose Grow - Smart Investment Platform",
     description:
-      "Grow your wealth with Tovexar's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system.",
-    url: "https://tovexar-roj-grow.vercel.app",
-    siteName: "Tovexar",
+      "Grow your wealth with Inpoint Rose Grow's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system.",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app",
+    siteName: "Inpoint Rose Grow",
     images: [
       {
-        url: "/images/tovexar-logo.png",
+        url: "/images/inpoint-rose-grow-og.png",
         width: 1200,
         height: 630,
-        alt: "Tovexar Logo",
+        alt: "Inpoint Rose Grow - Smart Investment Platform",
       },
     ],
     locale: "en_US",
@@ -37,19 +39,19 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tovexar-roj-grow",
+    title: "Inpoint Rose Grow - Smart Investment Platform",
     description:
-      "Grow your wealth with Tovexar's trusted investment platform. Get guaranteed returns on your investments.",
-    images: ["/images/tovexar-logo.png"],
+      "Grow your wealth with Inpoint Rose Grow's trusted investment platform. Get guaranteed returns on your investments.",
+    images: ["/images/inpoint-rose-grow-og.png"],
   },
   icons: {
     icon: [
       {
-        url: "/images/tovexar-logo.png",
+        url: "/images/inpoint-rose-grow-icon.png",
         media: "(prefers-color-scheme: light)",
       },
       {
-        url: "/images/tovexar-logo.png",
+        url: "/images/inpoint-rose-grow-icon.png",
         media: "(prefers-color-scheme: dark)",
       },
       {
@@ -57,7 +59,7 @@ export const metadata: Metadata = {
         type: "image/svg+xml",
       },
     ],
-    apple: "/images/tovexar-logo.png",
+    apple: "/images/inpoint-rose-grow-icon.png",
   },
 }
 

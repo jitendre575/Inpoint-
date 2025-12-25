@@ -1,7 +1,6 @@
 /**
- * Production-Ready SMS Service for Indian Mobile Numbers
- * Uses Fast2SMS as primary provider (better for Indian numbers)
- * Falls back to console logging in development if not configured
+ * Fast2SMS Integration for Indian Mobile Numbers
+ * Alternative to Twilio for Indian SMS delivery
  */
 
 interface SMSResult {
@@ -25,34 +24,24 @@ function isFast2SMSConfigured(): boolean {
 }
 
 /**
- * Send OTP via SMS using Fast2SMS (Indian SMS Provider)
- * In production: ALWAYS sends real SMS (never logs to console)
- * In development: Logs to console if Fast2SMS not configured
+ * Send OTP via Fast2SMS (Indian SMS Provider)
+ * Easier setup for Indian numbers, no trial restrictions
  */
-export async function sendOTPViaSMS(
+export async function sendOTPViaFast2SMS(
     phone: string,
     otp: string
 ): Promise<SMSResult> {
     try {
         // Remove country code if present (Fast2SMS uses 10-digit numbers)
-        const cleanPhone = phone.replace(/^(91|\+91)/, '').trim();
+        const cleanPhone = phone.replace(/^\+?91/, '').trim();
 
-        // Validate 10-digit number
-        if (!/^\d{10}$/.test(cleanPhone)) {
-            return {
-                success: false,
-                message: 'Invalid mobile number. Must be exactly 10 digits.'
-            };
-        }
-
-        const appName = process.env.NEXT_PUBLIC_APP_NAME || 'Inpoint Rose Grow';
+        const appName = process.env.APP_NAME || 'Investment App';
         const message = `Your OTP for ${appName} is ${otp}. Valid for 5 minutes. Do not share this code.`;
 
         // PRODUCTION MODE - MUST send real SMS
         if (isProduction()) {
             if (!isFast2SMSConfigured()) {
                 console.error('❌ CRITICAL: Fast2SMS not configured in production!');
-                console.error('Set FAST2SMS_API_KEY in environment variables');
                 return {
                     success: false,
                     message: 'SMS service is not configured. Please contact support.'
@@ -82,7 +71,7 @@ export async function sendOTPViaSMS(
                 console.error('❌ Fast2SMS Error:', data);
                 return {
                     success: false,
-                    message: data.message || 'Failed to send OTP. Please try again.'
+                    message: 'Failed to send OTP. Please try again.'
                 };
             }
 
@@ -149,7 +138,7 @@ export async function sendOTPViaSMS(
         };
 
     } catch (error: any) {
-        console.error('❌ SMS sending error:', error.message);
+        console.error('❌ Fast2SMS sending error:', error.message);
 
         return {
             success: false,
@@ -159,7 +148,7 @@ export async function sendOTPViaSMS(
 }
 
 /**
- * Send OTP via SMS with rate limiting check
+ * Send OTP via Fast2SMS with rate limiting check
  */
 export async function sendOTPWithRateLimit(
     phone: string,
@@ -180,5 +169,5 @@ export async function sendOTPWithRateLimit(
         }
     }
 
-    return sendOTPViaSMS(phone, otp);
+    return sendOTPViaFast2SMS(phone, otp);
 }
