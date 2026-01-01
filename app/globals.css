@@ -128,6 +128,11 @@
   a {
     @apply transition-all duration-200;
   }
+
+  /* Prevent browser extension interference (bis_skin_checked attribute) */
+  [bis_skin_checked] {
+    animation: none !important;
+  }
 }
 
 /* Custom animations for login/create account pages */

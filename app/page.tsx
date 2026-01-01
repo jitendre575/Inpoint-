@@ -7,8 +7,16 @@ export default function HomePage() {
   const router = useRouter()
   const [isMobile, setIsMobile] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  // Ensure component is mounted before rendering to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
+    if (!mounted) return
+
     const checkDevice = () => {
       const userAgent = navigator.userAgent.toLowerCase()
       const mobileKeywords = ["android", "webos", "iphone", "ipad", "ipod", "blackberry", "windows phone"]
@@ -22,13 +30,22 @@ export default function HomePage() {
     checkDevice()
     window.addEventListener("resize", checkDevice)
     return () => window.removeEventListener("resize", checkDevice)
-  }, [])
+  }, [mounted])
 
   useEffect(() => {
     if (!isChecking && isMobile) {
       router.push("/login")
     }
   }, [isChecking, isMobile, router])
+
+  // Don't render anything until mounted to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent" />
+      </div>
+    )
+  }
 
   if (isChecking) {
     return (

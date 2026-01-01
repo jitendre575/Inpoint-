@@ -1,17 +1,18 @@
 # 🌹 Inpoint Rose Grow - Smart Investment Platform
 
-A production-ready Next.js investment platform with secure OTP authentication for Indian mobile numbers.
+A production-ready Next.js investment platform with secure email/password authentication.
 
 ![Inpoint Rose Grow](./public/images/inpoint-rose-grow-og.png)
 
 ## ✨ Features
 
-- 🔐 **Secure OTP Authentication** - Fast2SMS integration for Indian mobile numbers
+- 🔐 **Secure Email/Password Authentication** - Simple and secure login system
 - 💰 **Investment Management** - Track and manage your investments
 - 📊 **Real-time Dashboard** - Monitor your portfolio performance
 - 💳 **Deposit & Withdrawal** - Easy fund management
 - 💬 **Support Chat** - Direct communication with admin
 - 🎁 **Welcome Bonus** - ₹50 bonus for new users
+- 📱 **Mobile App Download** - Easy access to mobile application
 - 📱 **Mobile Responsive** - Works perfectly on all devices
 
 ## 🚀 Quick Start
@@ -19,8 +20,7 @@ A production-ready Next.js investment platform with secure OTP authentication fo
 ### Prerequisites
 
 - Node.js 18+ installed
-- Firebase account (for production)
-- Fast2SMS account (for production OTP)
+- Firebase account (for database)
 
 ### Installation
 
@@ -30,75 +30,87 @@ git clone <your-repo-url>
 cd mobile-app-structures
 
 # Install dependencies
-npm install
+pnpm install
+
+# Copy environment template
+cp env.template .env.local
+
+# Edit .env.local with your configuration
+# Set NEXT_PUBLIC_PLAYSTORE_URL to your Play Store link
 
 # Run development server
-npm run dev
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to see the app.
 
 ## 🔧 Configuration
 
-### Development (Local)
+### Environment Variables
 
-For local development, OTP will be logged to the console. No external services required.
+Create a `.env.local` file with the following:
 
-### Production (Vercel)
+```env
+# App Configuration
+NEXT_PUBLIC_APP_URL=https://your-domain.com
+NEXT_PUBLIC_PLAYSTORE_URL=https://play.google.com/store/apps/details?id=com.yourapp
+APP_NAME=Inpoint Rose Grow
 
-Set these environment variables in Vercel dashboard:
+# Environment
+NODE_ENV=development
 
-**Firebase (Required):**
+# Firebase (Optional - for database)
+NEXT_PUBLIC_FIREBASE_API_KEY=
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
+NEXT_PUBLIC_FIREBASE_APP_ID=
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-NEXT_PUBLIC_FIREBASE_PROJECT_ID
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-NEXT_PUBLIC_FIREBASE_APP_ID
-```
-
-**Fast2SMS (Required):**
-```
-FAST2SMS_API_KEY
-FAST2SMS_SENDER_ID=TXTIND
-```
-
-**App Config:**
-```
-NEXT_PUBLIC_APP_NAME=Inpoint Rose Grow
-NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
-```
-
-See [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md) for detailed setup instructions.
 
 ## 📖 Documentation
 
-- **[Environment Setup Guide](./ENVIRONMENT_SETUP.md)** - Configure Firebase and Fast2SMS
+- **[Authentication Guide](./AUTHENTICATION_GUIDE.md)** - Complete authentication documentation
 - **[Deployment Guide](./DEPLOYMENT_GUIDE.md)** - Step-by-step production deployment
-- **[OTP Implementation](./OTP_IMPLEMENTATION_SUMMARY.md)** - Technical details of OTP system
-- **[Production Ready Summary](./PRODUCTION_READY_SUMMARY.md)** - Complete implementation checklist
+- **[Environment Setup](./ENVIRONMENT_SETUP.md)** - Configure environment variables
 
-## 🔐 OTP Authentication Flow
+## 🔐 Authentication System
 
-![OTP System Architecture](./public/images/otp-system-architecture.png)
+### Current Setup: Email/Password Only
 
-1. User enters 10-digit Indian mobile number
-2. System validates number (must start with 6/7/8/9)
-3. 6-digit OTP generated and stored (5-minute expiry)
-4. SMS sent via Fast2SMS
-5. User enters OTP
-6. System verifies (max 3 attempts)
-7. User logged in or registered
+- ✅ **Login**: Email/Username + Password
+- ❌ **OTP Login**: DISABLED
+- ❌ **Phone Login**: DISABLED
+- ❌ **Public Registration**: DISABLED
+
+### Security Features
+
+1. **Login Page** (`/login`)
+   - Email/Username + Password authentication
+   - Session management via localStorage
+   - Welcome bonus on first login
+   - Download Mobile App button
+
+2. **Registration Disabled**
+   - Public registration completely blocked
+   - `/create-account` redirects to `/login`
+   - API endpoint returns 403 Forbidden
+   - New users created by admins only
+
+3. **OTP System Removed**
+   - All OTP endpoints disabled (403 Forbidden)
+   - No SMS/Email OTP functionality
+   - No Firebase OTP integration
+   - Clean codebase without OTP dependencies
+
+See [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md) for complete details.
 
 ## 🛠️ Tech Stack
 
 - **Framework:** Next.js 16 (React 19)
 - **Styling:** Tailwind CSS
 - **UI Components:** Radix UI
-- **Database:** Firebase Firestore
-- **SMS Service:** Fast2SMS
-- **Email Service:** Nodemailer
+- **Database:** Firebase Firestore (optional)
 - **Deployment:** Vercel
 - **Analytics:** Vercel Analytics
 
@@ -109,22 +121,25 @@ mobile-app-structures/
 ├── app/
 │   ├── api/
 │   │   ├── auth/          # Authentication APIs
+│   │   │   ├── login/     # Email/Password login (ACTIVE)
+│   │   │   ├── register/  # Registration (DISABLED - 403)
+│   │   │   ├── otp-login/ # OTP login (DISABLED - 403)
+│   │   │   ├── send-otp/  # Send OTP (DISABLED - 403)
+│   │   │   └── verify-otp/# Verify OTP (DISABLED - 403)
 │   │   ├── user/          # User management APIs
 │   │   └── support/       # Support chat APIs
 │   ├── dashboard/         # User dashboard
 │   ├── admin/             # Admin panel
-│   ├── login/             # Password login
-│   ├── otp-login/         # OTP login
+│   ├── login/             # Login page (ACTIVE)
+│   ├── create-account/    # Redirects to login
 │   └── layout.tsx         # Root layout with metadata
 ├── lib/
-│   ├── otp.ts             # OTP generation & verification
-│   ├── otp-validation.ts  # Mobile number validation
-│   ├── sms-service.ts     # Fast2SMS integration
-│   ├── email-service.ts   # Email OTP service
 │   ├── db.ts              # Database operations
 │   └── firebase.ts        # Firebase configuration
 ├── components/
-│   └── ui/                # Reusable UI components
+│   ├── download-app-button.tsx  # Mobile app download button
+│   ├── bottom-nav.tsx           # Bottom navigation
+│   └── ui/                      # Reusable UI components
 ├── public/
 │   └── images/            # App images and icons
 └── docs/                  # Documentation files
@@ -132,46 +147,47 @@ mobile-app-structures/
 
 ## 🧪 Testing
 
-### Local Testing
+### Login Flow Testing
 ```bash
-npm run dev
+pnpm run dev
 ```
-- Navigate to `/otp-login`
-- Enter any 10-digit number (starting with 6/7/8/9)
-- Check terminal console for OTP
-- Enter OTP to login
+1. Navigate to `/login`
+2. Enter existing user email + password
+3. Click "Login"
+4. Should redirect to `/dashboard`
+5. Download App button should be visible
 
-### Production Testing
-- Deploy to Vercel
-- Navigate to `/otp-login`
-- Enter real mobile number
-- Receive SMS with OTP
-- Enter OTP to login
+### Security Testing
+1. Try accessing `/create-account` → Should redirect to `/login`
+2. Try POST to `/api/auth/register` → Should return 403
+3. Try POST to `/api/auth/send-otp` → Should return 403
+4. No OTP-related UI should be visible
+
+## 📱 Mobile App Download
+
+### Download Button Locations:
+1. **Login Page** - Below login form
+2. **Dashboard Header** - Top-right corner (desktop)
+
+### Configuration:
+Set your Play Store URL in `.env.local`:
+```env
+NEXT_PUBLIC_PLAYSTORE_URL=https://play.google.com/store/apps/details?id=com.yourapp
+```
+
+The button will automatically use this URL for downloads.
 
 ## 🔒 Security Features
 
-- ✅ Rate limiting (1 OTP per minute)
-- ✅ OTP expiry (5 minutes)
-- ✅ Maximum verification attempts (3)
+- ✅ Email/Password authentication only
+- ✅ Public registration disabled
+- ✅ OTP system completely removed
 - ✅ Secure password hashing
 - ✅ Environment-based configuration
 - ✅ No secrets in code
-- ✅ Firebase security rules
-
-## 💰 Cost Estimation
-
-### Fast2SMS
-- ₹100 = ~400-600 SMS
-- Cost per OTP: ₹0.15-0.25
-- 1000 users/month: ~₹150-250
-
-### Firebase
-- Free tier: 50K reads, 20K writes/day
-- Sufficient for small to medium apps
-
-### Vercel
-- Hobby: Free (personal projects)
-- Pro: $20/month (commercial)
+- ✅ Protected API endpoints
+- ✅ Session management
+- ✅ Admin-only user creation
 
 ## 🚀 Deployment
 
@@ -183,7 +199,10 @@ Or manually:
 
 1. Push code to GitHub
 2. Import to Vercel
-3. Add environment variables
+3. Add environment variables:
+   - `NEXT_PUBLIC_APP_URL`
+   - `NEXT_PUBLIC_PLAYSTORE_URL`
+   - `NODE_ENV=production`
 4. Deploy
 
 See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
@@ -191,49 +210,32 @@ See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions.
 ## 📱 Features Overview
 
 ### For Users
-- 🔐 OTP-based login (no password needed)
+- 🔐 Email/Password login
 - 💰 View wallet balance
 - 📊 Track investment history
 - 💳 Deposit funds with UTR upload
 - 💸 Request withdrawals
 - 💬 Chat with support
 - 🎁 ₹50 welcome bonus
+- 📱 Download mobile app
 
 ### For Admins
 - 👥 View all users
+- ➕ Create new user accounts
 - ✅ Approve/reject deposits
 - 💸 Process withdrawals
 - 💬 Support chat management
 - 📊 User analytics
 
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Open a pull request
-
-## 📄 License
-
-This project is private and proprietary.
-
-## 📞 Support
-
-For issues or questions:
-- Check [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
-- Check [ENVIRONMENT_SETUP.md](./ENVIRONMENT_SETUP.md)
-- Firebase Support: https://firebase.google.com/support
-- Fast2SMS Support: https://www.fast2sms.com/support
-
 ## 🎯 Roadmap
 
+- [x] Email/Password authentication
+- [x] Disable public registration
+- [x] Remove OTP system
+- [x] Add mobile app download button
 - [ ] Add more payment gateways
 - [ ] Implement investment plans
 - [ ] Add referral system
-- [ ] Mobile app (React Native)
 - [ ] Advanced analytics
 - [ ] Multi-language support
 
@@ -245,18 +247,25 @@ For issues or questions:
 - ✅ Server-side rendering
 - ✅ Edge functions
 
+## 📞 Support
+
+For issues or questions:
+- Check [AUTHENTICATION_GUIDE.md](./AUTHENTICATION_GUIDE.md)
+- Check [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)
+- Firebase Support: https://firebase.google.com/support
+
 ## 🌟 Acknowledgments
 
 - Next.js team for the amazing framework
 - Vercel for hosting and analytics
 - Firebase for database services
-- Fast2SMS for SMS delivery
 - Radix UI for accessible components
 
 ---
 
-**Built with ❤️ for Indian investors**
+**Built with ❤️ for investors**
 
-**Version:** 1.0.0  
-**Last Updated:** December 2024  
-**Status:** ✅ Production Ready
+**Version:** 2.0.0  
+**Last Updated:** January 2026  
+**Status:** ✅ Production Ready  
+**Authentication:** Email/Password Only

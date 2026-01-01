@@ -148,6 +148,21 @@ export default function LoginPage() {
               ) : "Login"}
             </Button>
           </form>
+
+          {/* Download Mobile App Button */}
+          <div className="mt-6 pt-6 border-t border-white/10">
+            <a
+              href={process.env.NEXT_PUBLIC_PLAYSTORE_URL || "https://play.google.com/store"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-3 w-full h-12 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm group"
+            >
+              <svg className="h-6 w-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" />
+              </svg>
+              <span>Download Mobile App</span>
+            </a>
+          </div>
         </div>
 
         {/* Decorative Elements */}

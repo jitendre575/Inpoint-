@@ -7,13 +7,21 @@ import { HeadphonesIcon } from "lucide-react"
 export function SupportFloatingButton() {
     const pathname = usePathname()
     const [show, setShow] = useState(false)
+    const [mounted, setMounted] = useState(false)
+
+    // Ensure component is mounted before accessing browser APIs
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     useEffect(() => {
+        if (!mounted) return
+
         // Check if user is logged in
         const checkAuth = () => {
             const currentUser = localStorage.getItem("currentUser")
             // Show only if logged in AND not on auth pages
-            if (currentUser && !["/login", "/create-account", "/admin", "/"].includes(pathname)) {
+            if (currentUser && !["/login", "/admin", "/"].includes(pathname)) {
                 setShow(true)
             } else {
                 setShow(false)
@@ -30,7 +38,7 @@ export function SupportFloatingButton() {
             window.removeEventListener("storage", checkAuth)
             window.removeEventListener("login-state-change", checkAuth)
         }
-    }, [pathname])
+    }, [pathname, mounted])
 
     if (!show) return null
 

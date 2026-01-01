@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PlansModal } from "@/components/plans-modal"
 import { BottomNav } from "@/components/bottom-nav"
+import { DownloadAppButton } from "@/components/download-app-button"
 import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Users, Gift, UserCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -63,6 +64,11 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2">
+            <DownloadAppButton
+              variant="ghost"
+              size="sm"
+              className="hidden sm:flex"
+            />
             <div className="text-right hidden sm:block">
               <p className="text-xs text-emerald-100">User Profile</p>
             </div>
