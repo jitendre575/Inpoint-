@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,6 +15,13 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const currentUser = localStorage.getItem("currentUser")
+    if (currentUser) {
+      router.replace("/dashboard")
+    }
+  }, [router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -134,35 +141,26 @@ export default function LoginPage() {
 
             <Button
               type="submit"
-              className="w-full h-12 bg-gradient-to-r from-emerald-500 to-rose-500 hover:from-emerald-600 hover:to-rose-600 text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base shadow-lg transition-all duration-300 border-0"
               disabled={loading}
             >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Logging in...
-                </span>
-              ) : "Login"}
+              {loading ? "Logging in..." : "Login"}
             </Button>
+
+            <div className="text-center pt-2">
+              <p className="text-white/60 text-sm mb-4">Don't have an account?</p>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => router.push("/create-account")}
+                className="w-full h-12 bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white font-semibold text-base transition-all duration-300"
+              >
+                Create Account
+              </Button>
+            </div>
           </form>
 
-          {/* Download Mobile App Button */}
-          <div className="mt-6 pt-6 border-t border-white/10">
-            <a
-              href={process.env.NEXT_PUBLIC_PLAYSTORE_URL || "https://play.google.com/store"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full h-12 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-medium text-base rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm group"
-            >
-              <svg className="h-6 w-6 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z" />
-              </svg>
-              <span>Download Mobile App</span>
-            </a>
-          </div>
+
         </div>
 
         {/* Decorative Elements */}

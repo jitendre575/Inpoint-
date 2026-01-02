@@ -34,7 +34,12 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!isChecking && isMobile) {
-      router.push("/login")
+      const currentUser = localStorage.getItem("currentUser")
+      if (currentUser) {
+        router.replace("/dashboard")
+      } else {
+        router.push("/login")
+      }
     }
   }, [isChecking, isMobile, router])
 

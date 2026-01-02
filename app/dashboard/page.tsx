@@ -67,7 +67,7 @@ export default function DashboardPage() {
             <DownloadAppButton
               variant="ghost"
               size="sm"
-              className="hidden sm:flex"
+              className="flex"
             />
             <div className="text-right hidden sm:block">
               <p className="text-xs text-emerald-100">User Profile</p>
@@ -258,43 +258,86 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          <div className="space-y-4 px-2">
-            {historyTab === 'deposits' ? (
-              (user.deposits || []).length > 0 ? (
-                // Reverse to show newest first
-                (user.deposits.slice().reverse() as any[]).map((deposit) => (
-                  <div key={deposit.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl">
-                    <div>
-                      <p className="font-bold text-gray-900">₹{deposit.amount}</p>
-                      <p className="text-xs text-gray-500">{new Date(deposit.date).toLocaleDateString()}</p>
-                    </div>
-                    <Badge className={
-                      deposit.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
-                        deposit.status === 'Approved' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'
-                    }>{deposit.status}</Badge>
-                  </div>
-                ))
+          <div className="space-y-6 px-2">
+            {/* Summary Statistics for Active Tab */}
+            <div className="grid grid-cols-2 gap-4">
+              {historyTab === 'deposits' ? (
+                <>
+                  <Card className="p-4 bg-emerald-50 border-emerald-100">
+                    <p className="text-xs text-emerald-600 font-bold uppercase mb-1">Today Deposit</p>
+                    <p className="text-xl font-extrabold text-emerald-900">₹{
+                      (user.deposits || [])
+                        .filter((d: any) => new Date(d.date).toDateString() === new Date().toDateString())
+                        .reduce((acc: number, d: any) => acc + d.amount, 0)
+                    }</p>
+                  </Card>
+                  <Card className="p-4 bg-blue-50 border-blue-100">
+                    <p className="text-xs text-blue-600 font-bold uppercase mb-1">Total Deposit</p>
+                    <p className="text-xl font-extrabold text-blue-900">₹{
+                      (user.deposits || []).reduce((acc: number, d: any) => acc + d.amount, 0)
+                    }</p>
+                  </Card>
+                </>
               ) : (
-                <p className="text-center text-gray-400 py-4">No deposit history</p>
-              )
-            ) : (
-              (user.withdrawals || []).length > 0 ? (
-                (user.withdrawals.slice().reverse() as any[]).map((withdrawal) => (
-                  <div key={withdrawal.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl">
-                    <div>
-                      <p className="font-bold text-gray-900">₹{withdrawal.amount}</p>
-                      <p className="text-xs text-gray-500">{new Date(withdrawal.date).toLocaleDateString()}</p>
+                <>
+                  <Card className="p-4 bg-yellow-50 border-yellow-100">
+                    <p className="text-xs text-yellow-600 font-bold uppercase mb-1">Pending Amount</p>
+                    <p className="text-xl font-extrabold text-yellow-900">₹{
+                      (user.withdrawals || [])
+                        .filter((w: any) => w.status === 'Pending')
+                        .reduce((acc: number, w: any) => acc + w.amount, 0)
+                    }</p>
+                  </Card>
+                  <Card className="p-4 bg-green-50 border-green-100">
+                    <p className="text-xs text-green-600 font-bold uppercase mb-1">Successful Amount</p>
+                    <p className="text-xl font-extrabold text-green-900">₹{
+                      (user.withdrawals || [])
+                        .filter((w: any) => w.status === 'Completed' || w.status === 'Approved')
+                        .reduce((acc: number, w: any) => acc + w.amount, 0)
+                    }</p>
+                  </Card>
+                </>
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-bold text-gray-500 uppercase tracking-tight">Recent Activity</h3>
+              {historyTab === 'deposits' ? (
+                (user.deposits || []).length > 0 ? (
+                  (user.deposits.slice().reverse() as any[]).map((deposit) => (
+                    <div key={deposit.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                      <div>
+                        <p className="font-bold text-gray-900">₹{deposit.amount}</p>
+                        <p className="text-xs text-gray-500">{new Date(deposit.date).toLocaleDateString()}</p>
+                      </div>
+                      <Badge className={
+                        deposit.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
+                          deposit.status === 'Approved' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'
+                      }>{deposit.status}</Badge>
                     </div>
-                    <Badge className={
-                      withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
-                        withdrawal.status === 'Completed' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'
-                    }>{withdrawal.status}</Badge>
-                  </div>
-                ))
+                  ))
+                ) : (
+                  <p className="text-center text-gray-400 py-4">No deposit history</p>
+                )
               ) : (
-                <p className="text-center text-gray-400 py-4">No withdrawal history</p>
-              )
-            )}
+                (user.withdrawals || []).length > 0 ? (
+                  (user.withdrawals.slice().reverse() as any[]).map((withdrawal) => (
+                    <div key={withdrawal.id} className="flex justify-between items-center bg-gray-50 p-4 rounded-xl border border-gray-100">
+                      <div>
+                        <p className="font-bold text-gray-900">₹{withdrawal.amount}</p>
+                        <p className="text-xs text-gray-500">{new Date(withdrawal.date).toLocaleDateString()}</p>
+                      </div>
+                      <Badge className={
+                        withdrawal.status === 'Pending' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-100' :
+                          withdrawal.status === 'Completed' || withdrawal.status === 'Approved' ? 'bg-green-100 text-green-800 hover:bg-green-100' : 'bg-red-100 text-red-800 hover:bg-red-100'
+                      }>{withdrawal.status}</Badge>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-center text-gray-400 py-4">No withdrawal history</p>
+                )
+              )}
+            </div>
           </div>
         </div>
       </div>
