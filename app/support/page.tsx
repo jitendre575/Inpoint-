@@ -1,15 +1,14 @@
-"use client"
-
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { ArrowLeft, Send, HeadphonesIcon, MessageCircle } from "lucide-react"
+import { ArrowLeft, Send, HeadphonesIcon, MessageCircle, Check, CheckCheck, Loader2, WifiOff } from "lucide-react"
+import { db } from "@/lib/firebase"
+import { doc, onSnapshot } from "firebase/firestore"
 
 export default function SupportPage() {
     const router = useRouter()
@@ -20,6 +19,8 @@ export default function SupportPage() {
     const [message, setMessage] = useState("")
     const [chats, setChats] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
+    const [isSending, setIsSending] = useState(false)
+    const [isOnline, setIsOnline] = useState(true)
     const [adminTyping, setAdminTyping] = useState(false)
     const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -28,39 +29,77 @@ export default function SupportPage() {
         const currentUser = localStorage.getItem("currentUser")
         if (!currentUser) {
             router.push("/login")
+            return
+        }
+
+        const userData = JSON.parse(currentUser)
+        setUser(userData)
+
+        // Connectivity listener
+        const handleOnline = () => setIsOnline(true)
+        const handleOffline = () => setIsOnline(false)
+        window.addEventListener('online', handleOnline)
+        window.addEventListener('offline', handleOffline)
+
+        let unsubscribe: () => void = () => { }
+
+        if (db && userData.id) {
+            // Real-time listener with Firebase
+            try {
+                unsubscribe = onSnapshot(doc(db, "users", userData.id), (doc) => {
+                    const data = doc.data()
+                    if (data) {
+                        setChats(data.supportChats || [])
+
+                        // Check admin typing
+                        if (data.lastTyping && data.lastTyping.sender === 'admin' && data.lastTyping.isTyping) {
+                            const timeDiff = new Date().getTime() - new Date(data.lastTyping.timestamp).getTime()
+                            setAdminTyping(timeDiff < 5000)
+                        } else {
+                            setAdminTyping(false)
+                        }
+
+                        if ((data.supportChats?.length > 0) && step === 1) {
+                            setStep(2)
+                        }
+                    }
+                }, (error) => {
+                    console.error("Firestore Listener Error:", error)
+                    // Fallback to polling if listener fails
+                    startPolling(userData.id)
+                })
+            } catch (e) {
+                startPolling(userData.id)
+            }
         } else {
-            const userData = JSON.parse(currentUser)
-            setUser(userData)
-            // Initial fetch
-            fetchChats(userData.id)
+            // Fallback for non-Firebase environments
+            startPolling(userData.id)
+        }
 
-            // Polling for Real-time (approx 2s interval)
-            const interval = setInterval(() => {
-                fetchChats(userData.id)
-            }, 2000)
-
-            return () => clearInterval(interval)
+        return () => {
+            unsubscribe()
+            window.removeEventListener('online', handleOnline)
+            window.removeEventListener('offline', handleOffline)
         }
     }, [router])
+
+    const startPolling = (userId: string) => {
+        const interval = setInterval(() => {
+            fetchChats(userId)
+        }, 3000)
+        return () => clearInterval(interval)
+    }
 
     const fetchChats = async (userId: string) => {
         try {
             const res = await fetch(`/api/support?userId=${userId}`)
             if (res.ok) {
                 const data = await res.json()
-                // Only update if length changed or new read status or typing status
-                // Simple approach: just update. React handles diffing.
                 setChats(data.chats)
 
-                // Check typing status
                 if (data.lastTyping && data.lastTyping.sender === 'admin' && data.lastTyping.isTyping) {
-                    // Check if recent (< 5s)
                     const timeDiff = new Date().getTime() - new Date(data.lastTyping.timestamp).getTime()
-                    if (timeDiff < 5000) {
-                        setAdminTyping(true)
-                    } else {
-                        setAdminTyping(false)
-                    }
+                    setAdminTyping(timeDiff < 5000)
                 } else {
                     setAdminTyping(false)
                 }
@@ -70,85 +109,68 @@ export default function SupportPage() {
                 }
             }
         } catch (error) {
-            console.error("Failed to fetch chats")
+            console.error("Polling failed")
         }
     }
 
-    // Auto-scroll to bottom of chat
     useEffect(() => {
         if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+            scrollRef.current.scrollTo({
+                top: scrollRef.current.scrollHeight,
+                behavior: 'smooth'
+            })
         }
-    }, [chats, step, adminTyping])
+    }, [chats, adminTyping])
 
     const handleTyping = (text: string) => {
         setMessage(text)
-
-        if (typingTimeoutRef.current) {
-            clearTimeout(typingTimeoutRef.current)
-        } else {
-            // Send start typing
-            sendTypingStatus(true)
-        }
+        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+        else sendTypingStatus(true)
 
         typingTimeoutRef.current = setTimeout(() => {
-            // Send stop typing
             sendTypingStatus(false)
             typingTimeoutRef.current = null
-        }, 1000)
+        }, 1500)
     }
 
     const sendTypingStatus = async (isTyping: boolean) => {
-        if (!user) return
+        if (!user || !isOnline) return
         try {
             await fetch('/api/support', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    userId: user.id,
-                    action: 'typing',
-                    isTyping
-                })
+                body: JSON.stringify({ userId: user.id, action: 'typing', isTyping })
             })
-        } catch (e) {
-            // ignore
-        }
+        } catch (e) { }
     }
 
     const handleSubmitToken = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!problemType) {
-            toast({ title: "Select a valid issue", variant: "destructive" })
+            toast({ title: "Please select an issue type", variant: "destructive" })
             return
         }
-        // Move to chat view
         setStep(2)
     }
 
     const handleSendMessage = async () => {
-        if (!message.trim()) return
+        const trimmedMsg = message.trim()
+        if (!trimmedMsg) return
+        if (!isOnline) {
+            toast({ title: "No internet connection", variant: "destructive" })
+            return
+        }
 
-        // Stop typing indicator immediately
         if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
         sendTypingStatus(false)
         typingTimeoutRef.current = null
 
+        setIsSending(true)
         const payload = {
             userId: user.id,
-            message: message,
+            message: trimmedMsg,
             problemType: chats.length === 0 ? problemType : undefined
         }
-
-        // Optimistic update
-        const tempMsg = {
-            id: Date.now().toString(),
-            sender: 'user',
-            message: payload.problemType ? `[Issue: ${payload.problemType}] ${message}` : message,
-            timestamp: new Date().toISOString(),
-            read: false
-        }
-        setChats(prev => [...prev, tempMsg])
-        setMessage("")
 
         try {
             const res = await fetch('/api/support', {
@@ -157,130 +179,180 @@ export default function SupportPage() {
                 body: JSON.stringify(payload)
             })
 
-            if (res.ok) {
-                // Fetch fresh to ensure sync
-                fetchChats(user.id)
-            }
+            if (!res.ok) throw new Error("Failed to send")
+            setMessage("")
         } catch (err) {
-            toast({ title: "Failed to send", variant: "destructive" })
+            toast({
+                title: "Message failed to send",
+                description: "Trying to reconnect...",
+                variant: "destructive"
+            })
+        } finally {
+            setIsSending(false)
         }
     }
 
     if (!user) return null
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen bg-white flex flex-col h-screen overflow-hidden">
             {/* Header */}
-            <div className="bg-emerald-600 p-4 text-white flex items-center gap-4 shadow-lg sticky top-0 z-10 transition-all">
+            <div className="bg-emerald-600 p-4 text-white flex items-center gap-4 shadow-md z-10">
                 <button onClick={() => router.back()} className="hover:bg-white/20 p-2 rounded-full transition-colors">
                     <ArrowLeft className="h-6 w-6" />
                 </button>
-                <div className="flex-1">
-                    <h1 className="text-xl font-bold flex items-center gap-2">
-                        <HeadphonesIcon className="h-6 w-6" /> Customer Support
-                    </h1>
+                <div className="flex-1 flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-xl">
+                        <HeadphonesIcon className="h-6 w-6" />
+                    </div>
+                    <div>
+                        <h1 className="text-lg font-bold leading-tight">Support Center</h1>
+                        <div className="flex items-center gap-1.5">
+                            <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-300 animate-pulse' : 'bg-red-400'}`} />
+                            <span className="text-[10px] font-medium opacity-80 uppercase tracking-wider">
+                                {isOnline ? 'System Online' : 'Connecting...'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 p-4 pb-24 max-w-md mx-auto w-full">
+            <div className="flex-1 overflow-hidden max-w-2xl mx-auto w-full flex flex-col">
                 {step === 1 ? (
-                    <Card className="p-6 shadow-xl border-t-4 border-emerald-500 rounded-2xl animate-in slide-in-from-bottom-4 duration-500">
-                        <div className="text-center mb-8">
-                            <div className="h-20 w-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce duration-[2000ms]">
-                                <MessageCircle className="h-10 w-10 text-emerald-600" />
-                            </div>
-                            <h2 className="text-2xl font-bold text-gray-900">How can we help?</h2>
-                            <p className="text-gray-500 mt-2">Please select your issue type to connect with an agent.</p>
-                        </div>
-
-                        <form onSubmit={handleSubmitToken} className="space-y-6">
-                            <div className="space-y-2">
-                                <Label className="text-gray-700 font-semibold">Select Issue</Label>
-                                <Select onValueChange={setProblemType} value={problemType}>
-                                    <SelectTrigger className="h-12 border-gray-200 focus:ring-emerald-500 bg-gray-50/50">
-                                        <SelectValue placeholder="Choose a topic..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Login Problem">Login Problem</SelectItem>
-                                        <SelectItem value="Deposit Issue">Deposit Issue</SelectItem>
-                                        <SelectItem value="Withdrawal Issue">Withdrawal Issue</SelectItem>
-                                        <SelectItem value="Account Block">Account Block</SelectItem>
-                                        <SelectItem value="Other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-4 pt-4 border-t border-dashed border-gray-200">
-                                <div>
-                                    <Label className="text-gray-500 text-xs uppercase font-bold tracking-wider">User ID</Label>
-                                    <div className="bg-gray-100 p-3 rounded-lg font-mono text-gray-700 mt-1 select-all">{user.id}</div>
+                    <div className="flex-1 flex items-center justify-center p-6">
+                        <Card className="w-full p-8 shadow-2xl border-0 bg-gray-50 rounded-[2rem]">
+                            <div className="text-center mb-10">
+                                <div className="h-24 w-24 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3 shadow-lg">
+                                    <MessageCircle className="h-12 w-12 text-emerald-600 -rotate-3" />
                                 </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label className="text-gray-500 text-xs uppercase font-bold tracking-wider">Mobile</Label>
-                                        <div className="bg-gray-100 p-3 rounded-lg text-gray-700 mt-1 truncate">{user.email}</div>
-                                    </div>
-                                    <div>
-                                        <Label className="text-gray-500 text-xs uppercase font-bold tracking-wider">Name</Label>
-                                        <div className="bg-gray-100 p-3 rounded-lg text-gray-700 mt-1 truncate">{user.name}</div>
-                                    </div>
-                                </div>
+                                <h2 className="text-3xl font-black text-gray-900 leading-tight">Help & Support</h2>
+                                <p className="text-gray-500 mt-2 font-medium">How can we assist you today?</p>
                             </div>
 
-                            <Button type="submit" className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-lg font-semibold shadow-emerald-200 shadow-lg">
-                                Start Chat
-                            </Button>
-                        </form>
-                    </Card>
+                            <form onSubmit={handleSubmitToken} className="space-y-8">
+                                <div className="space-y-3">
+                                    <Label className="text-gray-400 text-xs uppercase font-black tracking-widest pl-1">Category</Label>
+                                    <Select onValueChange={setProblemType} value={problemType}>
+                                        <SelectTrigger className="h-14 border-0 bg-white shadow-sm rounded-2xl text-lg font-bold focus:ring-2 focus:ring-emerald-500">
+                                            <SelectValue placeholder="Select an issue..." />
+                                        </SelectTrigger>
+                                        <SelectContent className="rounded-2xl border-0 shadow-2xl">
+                                            <SelectItem value="Login Problem" className="h-12 font-semibold">Login Problem</SelectItem>
+                                            <SelectItem value="Deposit Issue" className="h-12 font-semibold">Deposit Issue</SelectItem>
+                                            <SelectItem value="Withdrawal Issue" className="h-12 font-semibold">Withdrawal Issue</SelectItem>
+                                            <SelectItem value="Account Block" className="h-12 font-semibold">Account Block</SelectItem>
+                                            <SelectItem value="Other" className="h-12 font-semibold">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="p-4 bg-white rounded-2xl space-y-3 shadow-sm">
+                                    <div className="flex justify-between items-center text-xs">
+                                        <span className="text-gray-400 font-bold uppercase tracking-wider">User Account</span>
+                                        <span className="font-mono bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">ACTIVE</span>
+                                    </div>
+                                    <p className="font-mono text-gray-600 font-bold truncate">{user.email}</p>
+                                </div>
+
+                                <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-lg font-black rounded-2xl shadow-xl shadow-emerald-100 transition-all active:scale-95">
+                                    Start Secure Chat
+                                </Button>
+                            </form>
+                        </Card>
+                    </div>
                 ) : (
-                    <div className="flex flex-col h-[calc(100vh-140px)]">
-                        {/* Chat Area */}
+                    <div className="flex-1 flex flex-col h-full bg-gray-50 relative">
+                        {!isOnline && (
+                            <div className="absolute top-0 left-0 right-0 bg-red-500 text-white text-[11px] py-1 px-4 flex items-center justify-center gap-2 z-20 animate-in fade-in slide-in-from-top-full">
+                                <WifiOff className="h-3 w-3" /> Waiting for network...
+                            </div>
+                        )}
+
+                        {/* Chat Messages */}
                         <div
                             ref={scrollRef}
-                            className="flex-1 overflow-y-auto space-y-4 p-4 bg-gray-100/50 rounded-2xl mb-4 border border-gray-200"
+                            className="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth"
                         >
                             {chats.length === 0 && (
-                                <div className="text-center text-gray-400 py-10">
-                                    <p>Start detailed conversation below...</p>
+                                <div className="h-full flex flex-col items-center justify-center text-center px-10">
+                                    <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm">
+                                        <MessageCircle className="h-8 w-8 text-gray-300" />
+                                    </div>
+                                    <p className="text-gray-400 font-bold text-sm">Our agent will connect with you shortly. Please explain your issue.</p>
                                 </div>
                             )}
 
-                            {chats.map((chat) => (
-                                <div key={chat.id} className={`flex ${chat.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                    <div
-                                        className={`max-w-[80%] p-3 rounded-2xl text-sm ${chat.sender === 'user'
-                                            ? 'bg-emerald-600 text-white rounded-tr-none'
-                                            : 'bg-white text-gray-800 border border-gray-200 shadow-sm rounded-tl-none'
-                                            }`}
-                                    >
-                                        <p>{chat.message}</p>
-                                        <p className={`text-[10px] mt-1 text-right ${chat.sender === 'user' ? 'text-emerald-100' : 'text-gray-400'}`}>
-                                            {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </p>
+                            {chats.map((chat, idx) => {
+                                const isUser = chat.sender === 'user'
+                                const showTime = idx === 0 || new Date(chat.timestamp).getTime() - new Date(chats[idx - 1].timestamp).getTime() > 300000 // 5 mins gap
+
+                                return (
+                                    <div key={chat.id} className="space-y-2">
+                                        {showTime && (
+                                            <div className="text-center py-4">
+                                                <span className="bg-gray-200/50 text-gray-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">
+                                                    {new Date(chat.timestamp).toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group items-end gap-2`}>
+                                            <div
+                                                className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm relative transition-all ${isUser
+                                                        ? 'bg-emerald-600 text-white rounded-br-none'
+                                                        : 'bg-white text-gray-800 border-0 rounded-bl-none'
+                                                    }`}
+                                            >
+                                                <p className="text-[15px] font-medium leading-relaxed whitespace-pre-wrap">{chat.message}</p>
+                                                <div className={`flex items-center justify-end gap-1 mt-1 ${isUser ? 'text-emerald-200' : 'text-gray-400'}`}>
+                                                    <span className="text-[9px] font-bold">
+                                                        {new Date(chat.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </span>
+                                                    {isUser && (
+                                                        chat.status === 'delivered' ? <CheckCheck className="h-3 w-3" /> : <Check className="h-3 w-3" />
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                )
+                            })}
+
                             {adminTyping && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white border border-gray-200 text-gray-500 text-xs py-2 px-3 rounded-2xl rounded-tl-none italic animate-pulse">
-                                        Admin is typing...
+                                <div className="flex justify-start animate-in slide-in-from-left-4 fade-in">
+                                    <div className="bg-white border-0 shadow-sm text-emerald-600 text-[11px] font-black py-2.5 px-4 rounded-2xl rounded-bl-none flex items-center gap-2">
+                                        <span className="flex gap-1">
+                                            <span className="h-1 w-1 bg-emerald-600 rounded-full animate-bounce" />
+                                            <span className="h-1 w-1 bg-emerald-600 rounded-full animate-bounce delay-100" />
+                                            <span className="h-1 w-1 bg-emerald-600 rounded-full animate-bounce delay-200" />
+                                        </span>
+                                        AGENT IS TYPING
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Input Area */}
-                        <div className="flex gap-2 items-center bg-white p-2 rounded-full border border-gray-200 shadow-lg">
-                            <Input
-                                value={message}
-                                onChange={(e) => handleTyping(e.target.value)}
-                                placeholder="Type your message..."
-                                className="flex-1 border-0 focus-visible:ring-0 bg-transparent h-10 pl-4"
-                                onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                            />
-                            <Button onClick={handleSendMessage} size="icon" className="h-10 w-10 rounded-full bg-emerald-600 hover:bg-emerald-700 shrink-0">
-                                <Send className="h-5 w-5" />
-                            </Button>
+                        {/* Input Footer */}
+                        <div className="p-4 bg-white border-t border-gray-100 pb-10">
+                            <div className="max-w-xl mx-auto flex items-center gap-3 bg-gray-50 p-2 rounded-2xl border border-gray-100 shadow-inner group focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all">
+                                <Input
+                                    value={message}
+                                    onChange={(e) => handleTyping(e.target.value)}
+                                    placeholder="Type your message..."
+                                    className="flex-1 border-0 focus-visible:ring-0 bg-transparent h-12 px-4 font-medium text-gray-800"
+                                    onKeyDown={(e) => e.key === 'Enter' && !isSending && handleSendMessage()}
+                                    disabled={!isOnline}
+                                />
+                                <Button
+                                    onClick={handleSendMessage}
+                                    disabled={!message.trim() || isSending || !isOnline}
+                                    className={`h-12 w-12 rounded-xl shrink-0 transition-all ${!message.trim() || isSending || !isOnline
+                                            ? 'bg-gray-200 text-gray-400'
+                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 active:scale-90'
+                                        }`}
+                                >
+                                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                                </Button>
+                            </div>
                         </div>
                     </div>
                 )}

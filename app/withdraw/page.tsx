@@ -31,10 +31,10 @@ export default function WithdrawPage() {
   const handleWithdraw = async () => {
     const amount = Number.parseFloat(formData.amount)
 
-    if (!amount || amount <= 0) {
+    if (!amount || amount < 1000) {
       toast({
-        title: "Invalid Amount",
-        description: "Please enter a valid withdrawal amount.",
+        title: "Minimum Withdrawal",
+        description: "Minimum withdrawal amount is ₹1000",
         variant: "destructive",
       })
       return
@@ -156,8 +156,8 @@ export default function WithdrawPage() {
                   type="button"
                   onClick={() => setFormData({ ...formData, bankOrUpi: "bank" })}
                   className={`flex-1 h-12 ${formData.bankOrUpi === "bank"
-                      ? "bg-orange-500 hover:bg-orange-600"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                     }`}
                 >
                   Bank Account
@@ -166,8 +166,8 @@ export default function WithdrawPage() {
                   type="button"
                   onClick={() => setFormData({ ...formData, bankOrUpi: "upi" })}
                   className={`flex-1 h-12 ${formData.bankOrUpi === "upi"
-                      ? "bg-orange-500 hover:bg-orange-600"
-                      : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                    ? "bg-orange-500 hover:bg-orange-600"
+                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
                     }`}
                 >
                   UPI ID
@@ -214,11 +214,19 @@ export default function WithdrawPage() {
 
         <Button
           onClick={handleWithdraw}
-          disabled={loading}
-          className="w-full h-12 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 font-bold text-lg shadow-md"
+          disabled={loading || (user?.wallet < 1000)}
+          className={`w-full h-12 font-bold text-lg shadow-md transition-all ${user?.wallet < 1000
+              ? "bg-gray-400 cursor-not-allowed"
+              : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+            }`}
         >
-          {loading ? "Processing..." : "Submit Withdrawal Request"}
+          {loading ? "Processing..." : user?.wallet < 1000 ? "Min ₹1000 Required" : "Submit Withdrawal Request"}
         </Button>
+        {user?.wallet < 1000 && (
+          <p className="text-center text-red-500 text-sm font-medium mt-2">
+            Minimum withdrawal amount is ₹1000
+          </p>
+        )}
       </div>
 
       <BottomNav active="wallet" />

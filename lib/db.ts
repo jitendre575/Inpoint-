@@ -33,7 +33,14 @@ export type User = {
     wallet: number;
     plans: any[];
     history: any[];
-    deposits?: any[];
+    deposits?: {
+        id: string;
+        amount: number;
+        method: string;
+        status: 'Pending' | 'Approved' | 'Rejected' | 'Processing';
+        date: string;
+        screenshot?: string;
+    }[];
     withdrawals?: any[];
     supportChats?: {
         id: string;
@@ -42,12 +49,16 @@ export type User = {
         timestamp: string;
         read: boolean;
         type?: 'text' | 'image';
+        status?: 'sent' | 'delivered';
     }[];
     lastTyping?: {
         sender: 'user' | 'admin';
         timestamp: string;
         isTyping: boolean;
     };
+    referralCode: string;
+    referredBy?: string;
+    referralRewards?: number;
     createdAt: string;
     lastLogin?: string;
 };

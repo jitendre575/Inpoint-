@@ -1,45 +1,47 @@
-
 import { NextResponse } from 'next/server';
-import { findUserByEmail, updateUser } from '@/lib/db';
-
+import { findUserByEmail, updateUser, getUsers } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, amount, method } = body;
+        const { email, amount, method, screenshot } = body;
 
         if (!email || !amount) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
         }
 
-        const user = findUserByEmail(email);
+        const users = await getUsers();
+        const user = users.find(u => u.email === email);
+
         if (!user) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
         const depositAmount = Number(amount);
 
-        // IMMEDIATE WALLET UPDATE (Automatic Deposit)
-        user.wallet = (user.wallet || 0) + depositAmount;
-
-        // Create Approved Deposit Record
+        // Create Pending Deposit Record (Not auto-approved anymore)
         const deposit = {
             id: Date.now().toString(),
             amount: depositAmount,
             method: method || 'Unknown',
-            status: 'Approved', // Auto-approved
-            date: new Date().toISOString()
+            status: 'Processing', // Changed from Approved
+            date: new Date().toISOString(),
+            screenshot: screenshot || null
         };
 
         if (!user.deposits) user.deposits = [];
-        user.deposits.push(deposit);
+        user.deposits.push(deposit as any);
 
-        updateUser(user);
+        await updateUser(user);
 
         // Remove password
         const { password: _, ...cleanUser } = user;
 
-        return NextResponse.json({ message: 'Deposit successful', deposit, user: cleanUser });
+        return NextResponse.json({
+            message: 'Deposit submitted for verification',
+            deposit,
+            user: cleanUser
+        });
     } catch (error) {
         console.error("Deposit Error:", error);
         return NextResponse.json({ message: 'Internal Error' }, { status: 500 });

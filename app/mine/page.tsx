@@ -5,9 +5,12 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { BottomNav } from "@/components/bottom-nav"
+import { Share2, Copy, LogOut, Shield, Settings, Gift, Headphones, Landmark, History, Wallet } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export default function MinePage() {
   const router = useRouter()
+  const { toast } = useToast()
   const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
@@ -18,7 +21,6 @@ export default function MinePage() {
       const dbUser = JSON.parse(currentUser)
       setUser(dbUser)
 
-      // Fetch fresh data
       fetch('/api/user/details', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -37,196 +39,117 @@ export default function MinePage() {
 
   if (!user) return null
 
-  const handleCopyId = () => {
-    navigator.clipboard.writeText(user.id || "1181139")
+  const referralLink = typeof window !== 'undefined' ? `${window.location.origin}/create-account?ref=${user.referralCode || user.id}` : ''
+
+  const handleCopyCode = (text: string, title: string) => {
+    navigator.clipboard.writeText(text)
+    toast({ title: `${title} copied to clipboard!` })
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem("currentUser")
+    router.push("/login")
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Header */}
-      <div className="bg-emerald-600 text-white p-6 pb-8">
-        <h1 className="text-center text-2xl font-bold">Mine</h1>
+    <div className="min-h-screen bg-gray-50 pb-32">
+      {/* Header Profile Section */}
+      <div className="bg-emerald-600 px-6 pt-12 pb-20 rounded-b-[3rem] shadow-xl relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+        <div className="relative z-10 flex flex-col items-center">
+          <div className="h-24 w-24 rounded-3xl bg-white p-1.5 shadow-2xl rotate-3 mb-4">
+            <div className="h-full w-full rounded-2xl bg-emerald-500 flex items-center justify-center text-white text-4xl font-black">
+              {user.name?.charAt(0) || "U"}
+            </div>
+          </div>
+          <h1 className="text-2xl font-black text-white mb-1">{user.name}</h1>
+          <div className="flex items-center gap-2 bg-black/20 px-4 py-1.5 rounded-full border border-white/20 backdrop-blur-md">
+            <span className="text-emerald-100 text-xs font-bold uppercase tracking-widest">ID: {user.id}</span>
+            <button onClick={() => handleCopyCode(user.id, "User ID")} className="text-white/60 hover:text-white transition-colors">
+              <Copy className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* User Profile Section */}
-      <div className="px-4 -mt-4">
-        <Card className="p-4 shadow-lg bg-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-14 w-14 rounded-full bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center overflow-hidden">
-                <div className="h-10 w-10 rounded-full bg-emerald-500 flex items-center justify-center">
-                  <svg className="h-6 w-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
+      <div className="px-5 -mt-10 space-y-6">
+        {/* Wallet Balances Grid */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="p-5 bg-white border-0 shadow-lg rounded-[2rem] flex flex-col justify-between h-40">
+            <div className="bg-emerald-100 h-10 w-10 rounded-2xl flex items-center justify-center mb-2">
+              <Wallet className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Balance</p>
+              <h2 className="text-2xl font-black text-gray-900">₹{user.wallet?.toFixed(0)}</h2>
+            </div>
+          </Card>
+          <Card className="p-5 bg-white border-0 shadow-lg rounded-[2rem] flex flex-col justify-between h-40">
+            <div className="bg-amber-100 h-10 w-10 rounded-2xl flex items-center justify-center mb-2">
+              <Gift className="h-5 w-5 text-amber-600" />
+            </div>
+            <div>
+              <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest mb-1">Referral</p>
+              <h2 className="text-2xl font-black text-gray-900">₹{user.referralRewards || 0}</h2>
+            </div>
+          </Card>
+        </div>
+
+        {/* Refer & Earn Mandatory Section */}
+        <Card className="p-6 bg-indigo-600 text-white border-0 shadow-xl rounded-[2rem] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-150 transition-transform duration-700" />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
               <div>
-                <p className="font-bold text-lg text-gray-900">{user.name || "User"}</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-sm text-gray-600">ID: {user.id || "000000"}</p>
-                  <button onClick={handleCopyId} className="text-gray-400 hover:text-gray-600">
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                      />
-                    </svg>
+                <h3 className="text-xl font-black mb-1">Refer & Earn ₹100</h3>
+                <p className="text-indigo-100 text-xs font-medium opacity-80">Instant bonus for every friend join</p>
+              </div>
+              <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Share2 className="h-6 w-6" />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-black/20 p-4 rounded-2xl border border-white/20">
+                <p className="text-[10px] text-indigo-200 font-black uppercase tracking-widest mb-2">Your link</p>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-xs font-mono font-bold truncate opacity-90">{referralLink}</p>
+                  <button
+                    onClick={() => handleCopyCode(referralLink, "Referral link")}
+                    className="bg-white text-indigo-600 p-2 rounded-xl hover:bg-indigo-50 active:scale-90 transition-all shadow-lg"
+                  >
+                    <Copy className="h-4 w-4" />
                   </button>
                 </div>
               </div>
             </div>
           </div>
         </Card>
-      </div>
 
-      <div className="p-4 space-y-4">
-        {/* InCoin Balance Card */}
-        <Card className="p-6 shadow-lg bg-emerald-600 text-white border-0">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-sm text-emerald-100 mb-1">Total balance</p>
-              <div className="flex items-center gap-2">
-                <span className="text-4xl font-bold">₹{user.wallet?.toFixed(2) || "0.00"}</span>
-              </div>
-            </div>
-            <Button onClick={() => router.push("/withdraw")} variant="ghost" className="bg-white/20 hover:bg-white/30 text-white rounded-full px-6">Withdraw</Button>
-          </div>
-        </Card>
+        {/* Functional Menu */}
+        <div className="space-y-3">
+          <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] pl-2 mb-2">Manage Account</h3>
 
-        {/* Withdrawal Card */}
-        <Card className="p-6 shadow-lg bg-yellow-500 text-white border-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Withdrawal</h2>
-            <Button onClick={() => router.push("/withdraw")} variant="ghost" className="bg-white/20 hover:bg-white/30 text-white rounded-full px-6">Manage</Button>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-              <p className="text-2xl font-extrabold mb-1">₹{
-                (user.withdrawals || [])
-                  .filter((w: any) => w.status === 'Pending')
-                  .reduce((acc: number, w: any) => acc + w.amount, 0)
-              }</p>
-              <p className="text-[10px] text-yellow-100 font-bold uppercase tracking-wider">Pending</p>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-              <p className="text-2xl font-extrabold mb-1">₹{
-                (user.withdrawals || [])
-                  .filter((w: any) => w.status === 'Completed' || w.status === 'Approved')
-                  .reduce((acc: number, w: any) => acc + w.amount, 0)
-              }</p>
-              <p className="text-[10px] text-yellow-100 font-bold uppercase tracking-wider">Successful</p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Deposit Card */}
-        <Card className="p-6 shadow-lg bg-blue-600 text-white border-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Deposit</h2>
-            <Button onClick={() => router.push("/deposit")} variant="ghost" className="bg-white/20 hover:bg-white/30 text-white rounded-full px-6">Add Cash</Button>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-              <p className="text-2xl font-extrabold mb-1">₹{
-                (user.deposits || [])
-                  .filter((d: any) => new Date(d.date).toDateString() === new Date().toDateString())
-                  .reduce((acc: number, d: any) => acc + d.amount, 0)
-              }</p>
-              <p className="text-[10px] text-blue-100 font-bold uppercase tracking-wider">Today</p>
-            </div>
-            <div className="bg-white/10 p-3 rounded-xl border border-white/10">
-              <p className="text-2xl font-extrabold mb-1">₹{
-                (user.deposits || []).reduce((acc: number, d: any) => acc + d.amount, 0)
-              }</p>
-              <p className="text-[10px] text-blue-100 font-bold uppercase tracking-wider">Total</p>
-            </div>
-          </div>
-        </Card>
-
-        {/* Common Functions */}
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Quick Links</h3>
-          <div className="grid grid-cols-4 gap-4">
-            <button className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Bills</span>
-            </button>
-            <button onClick={() => router.push("/deposit")} className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Deposit</span>
-            </button>
-            <button onClick={() => router.push("/withdraw")} className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Withdraw</span>
-            </button>
-            <button className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Support</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Other Functions */}
-        <div>
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Account Settings</h3>
-          <div className="grid grid-cols-4 gap-4">
-            <button onClick={() => router.push("/bonus")} className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center text-3xl">🎁</div>
-              <span className="text-sm text-gray-700 font-medium">Bonus</span>
-            </button>
-            <button onClick={() => router.push("/password")} className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Security</span>
-            </button>
-            <button onClick={() => router.push("/settings")} className="flex flex-col items-center gap-2">
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Settings</span>
-            </button>
-            <button
-              onClick={() => {
-                localStorage.removeItem("currentUser")
-                router.push("/login")
-              }}
-              className="flex flex-col items-center gap-2"
-            >
-              <div className="h-14 w-14 rounded-xl bg-white shadow-md flex items-center justify-center">
-                <svg className="h-7 w-7 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </div>
-              <span className="text-sm text-gray-700 font-medium">Logout</span>
-            </button>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: 'Deposit', icon: Landmark, color: 'text-blue-600', bg: 'bg-blue-50', path: '/deposit' },
+              { label: 'Withdraw', icon: History, color: 'text-orange-600', bg: 'bg-orange-50', path: '/withdraw' },
+              { label: 'Support', icon: Headphones, color: 'text-emerald-600', bg: 'bg-emerald-50', path: '/support' },
+              { label: 'Security', icon: Shield, color: 'text-purple-600', bg: 'bg-purple-50', path: '/password' },
+              { label: 'Settings', icon: Settings, color: 'text-gray-600', bg: 'bg-gray-50', path: '/settings' },
+              { label: 'Logout', icon: LogOut, color: 'text-red-500', bg: 'bg-red-50', action: handleLogout },
+            ].map((item, idx) => (
+              <button
+                key={idx}
+                onClick={item.action || (() => router.push(item.path!))}
+                className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm active:scale-[0.97] transition-all hover:bg-gray-50/50 text-left"
+              >
+                <div className={`h-10 w-10 ${item.bg} rounded-xl flex items-center justify-center shrink-0`}>
+                  <item.icon className={`h-5 w-5 ${item.color}`} />
+                </div>
+                <span className="font-bold text-gray-700 text-sm">{item.label}</span>
+              </button>
+            ))}
           </div>
         </div>
       </div>

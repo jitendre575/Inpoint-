@@ -1,8 +1,6 @@
-
 import { NextResponse } from 'next/server';
 import { getUsers, updateUser } from '@/lib/db';
 
-// POST: User sending a message or typing status
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -33,7 +31,6 @@ export async function POST(request: Request) {
             user.supportChats = [];
         }
 
-        // If it's a new ticket (problemType provided), add a system prefix
         let finalMessage = message;
         if (problemType) {
             finalMessage = `[Issue: ${problemType}] ${message}`;
@@ -45,12 +42,11 @@ export async function POST(request: Request) {
             message: finalMessage,
             timestamp: new Date().toISOString(),
             read: false,
-            type: type
+            type: type,
+            status: 'sent' as const // Added status
         };
 
         user.supportChats.push(newMessage);
-
-        // Clear user typing status when sent
         user.lastTyping = { sender: 'user', timestamp: new Date().toISOString(), isTyping: false };
 
         await updateUser(user);
@@ -61,7 +57,6 @@ export async function POST(request: Request) {
     }
 }
 
-// GET: User fetching their messages
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
