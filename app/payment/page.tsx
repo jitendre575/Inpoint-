@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Clock, Upload, CheckCircle2, AlertCircle, ArrowLeft, Loader2, IndianRupee, QrCode, Building2 } from "lucide-react"
+import { Clock, Upload, CheckCircle2, AlertCircle, ArrowLeft, Loader2, IndianRupee, QrCode, Building2, Shield } from "lucide-react"
 
 function PaymentContent() {
   const router = useRouter()
@@ -176,8 +176,8 @@ function PaymentContent() {
 
         <div className="flex flex-col gap-4 w-full max-w-xs">
           <div className={`flex items-center justify-center gap-2 font-black uppercase tracking-widest text-xs px-6 py-4 rounded-2xl shadow-sm border ${currentDepositStatus === 'Approved' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-              currentDepositStatus === 'Rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                'bg-white text-blue-600 border-neutral-100'
+            currentDepositStatus === 'Rejected' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+              'bg-white text-blue-600 border-neutral-100'
             }`}>
             {currentDepositStatus !== 'Approved' && currentDepositStatus !== 'Rejected' && <Loader2 className="h-4 w-4 animate-spin" />}
             Status: {currentDepositStatus}
@@ -229,8 +229,8 @@ function PaymentContent() {
                 key={method.id}
                 onClick={() => setSelectedMethod(method.id)}
                 className={`flex items-center justify-between p-5 rounded-3xl border-2 transition-all active:scale-[0.98] ${selectedMethod === method.id
-                    ? 'border-indigo-600 bg-indigo-50/30 ring-4 ring-indigo-50'
-                    : 'border-neutral-100 bg-white hover:bg-neutral-50'
+                  ? 'border-indigo-600 bg-indigo-50/30 ring-4 ring-indigo-50'
+                  : 'border-neutral-100 bg-white hover:bg-neutral-50'
                   }`}
               >
                 <div className="flex items-center gap-4">

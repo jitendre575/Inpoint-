@@ -11,7 +11,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
         }
 
-        const user = findUserByEmail(email);
+        const user = await findUserByEmail(email);
         if (!user) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
         user.wallet -= amount;
 
         // Create Withdraw Record
-        const withdrawal = {
+        const withdrawal: any = {
             id: Date.now().toString(),
             amount,
             bankDetails,
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
         if (!user.withdrawals) user.withdrawals = [];
         user.withdrawals.push(withdrawal);
 
-        updateUser(user);
+        await updateUser(user);
 
         // Remove password
         const { password: _, ...cleanUser } = user;

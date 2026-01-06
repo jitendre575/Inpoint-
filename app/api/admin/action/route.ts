@@ -20,7 +20,7 @@ export async function POST(request: Request) {
         }
 
         if (type === 'deposit') {
-            const deposit = user.deposits?.find((d: any) => d.id === transactionId);
+            const deposit = user.deposits?.find(d => d.id === transactionId);
             if (!deposit) return NextResponse.json({ message: 'Transaction not found' }, { status: 404 });
 
             // Allow changing status from Pending or Processing (if added later)
@@ -37,7 +37,7 @@ export async function POST(request: Request) {
             }
 
         } else if (type === 'withdraw') {
-            const withdrawal = user.withdrawals?.find((w: any) => w.id === transactionId);
+            const withdrawal = user.withdrawals?.find(w => w.id === transactionId);
             if (!withdrawal) return NextResponse.json({ message: 'Transaction not found' }, { status: 404 });
 
             if (withdrawal.status === 'Completed' || withdrawal.status === 'Failed') {

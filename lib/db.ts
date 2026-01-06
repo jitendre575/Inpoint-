@@ -25,6 +25,8 @@ if (typeof window === 'undefined' && !USE_FIREBASE && !IS_PRODUCTION) {
     }
 }
 
+export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected' | 'Processing' | 'Failed' | 'Completed';
+
 export type User = {
     id: string;
     name: string;
@@ -37,11 +39,17 @@ export type User = {
         id: string;
         amount: number;
         method: string;
-        status: 'Pending' | 'Approved' | 'Rejected' | 'Processing';
+        status: TransactionStatus;
         date: string;
         screenshot?: string;
     }[];
-    withdrawals?: any[];
+    withdrawals?: {
+        id: string;
+        amount: number;
+        bankDetails: any;
+        status: TransactionStatus;
+        date: string;
+    }[];
     supportChats?: {
         id: string;
         sender: 'user' | 'admin';
