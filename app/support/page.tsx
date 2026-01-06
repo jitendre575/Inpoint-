@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -298,8 +300,8 @@ export default function SupportPage() {
                                         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group items-end gap-2`}>
                                             <div
                                                 className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm relative transition-all ${isUser
-                                                        ? 'bg-emerald-600 text-white rounded-br-none'
-                                                        : 'bg-white text-gray-800 border-0 rounded-bl-none'
+                                                    ? 'bg-emerald-600 text-white rounded-br-none'
+                                                    : 'bg-white text-gray-800 border-0 rounded-bl-none'
                                                     }`}
                                             >
                                                 <p className="text-[15px] font-medium leading-relaxed whitespace-pre-wrap">{chat.message}</p>
@@ -346,8 +348,8 @@ export default function SupportPage() {
                                     onClick={handleSendMessage}
                                     disabled={!message.trim() || isSending || !isOnline}
                                     className={`h-12 w-12 rounded-xl shrink-0 transition-all ${!message.trim() || isSending || !isOnline
-                                            ? 'bg-gray-200 text-gray-400'
-                                            : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 active:scale-90'
+                                        ? 'bg-gray-200 text-gray-400'
+                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 active:scale-90'
                                         }`}
                                 >
                                     {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
