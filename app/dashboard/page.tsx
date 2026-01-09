@@ -303,7 +303,84 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="px-5 mt-10 mb-10">
+      {/* 6. Transaction History Tabbed Section */}
+      <div className="px-5 mt-12 pb-10">
+        <div className="flex items-center justify-between mb-6 px-2">
+          <h2 className="text-xl font-black text-neutral-900 tracking-tight">Transaction History</h2>
+          <div className="flex bg-neutral-100 p-1 rounded-xl">
+            <button
+              onClick={() => setHistoryTab('deposits')}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${historyTab === 'deposits' ? 'bg-white text-indigo-600 shadow-sm' : 'text-neutral-400'}`}
+            >
+              Deposits
+            </button>
+            <button
+              onClick={() => setHistoryTab('withdrawals')}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${historyTab === 'withdrawals' ? 'bg-white text-rose-600 shadow-sm' : 'text-neutral-400'}`}
+            >
+              Withdrawals
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {historyTab === 'deposits' ? (
+            (user.deposits || []).length > 0 ? (
+              user.deposits.slice().reverse().map((d: any) => (
+                <Card key={d.id} className="p-5 bg-white border-0 shadow-sm rounded-[2rem] flex items-center justify-between group hover:shadow-md transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
+                      <ArrowDownRight className="h-6 w-6 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-black text-neutral-800 tracking-tight">₹{d.amount}</p>
+                      <p className="text-[10px] text-neutral-400 font-bold uppercase">{new Date(d.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg ${d.status === 'Approved' ? 'bg-emerald-500 text-white' : d.status === 'Rejected' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+                      {d.status}
+                    </Badge>
+                    <p className="text-[8px] text-neutral-300 font-black uppercase mt-1">{d.method}</p>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="py-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-neutral-100">
+                <p className="text-[10px] text-neutral-300 font-black uppercase tracking-[0.2em]">No deposits found</p>
+              </div>
+            )
+          ) : (
+            (user.withdrawals || []).length > 0 ? (
+              user.withdrawals.slice().reverse().map((w: any) => (
+                <Card key={w.id} className="p-5 bg-white border-0 shadow-sm rounded-[2rem] flex items-center justify-between group hover:shadow-md transition-all">
+                  <div className="flex items-center gap-4">
+                    <div className="h-12 w-12 bg-rose-50 rounded-2xl flex items-center justify-center">
+                      <ArrowUpRight className="h-6 w-6 text-rose-600" />
+                    </div>
+                    <div>
+                      <p className="font-black text-neutral-800 tracking-tight">₹{w.amount}</p>
+                      <p className="text-[10px] text-neutral-400 font-bold uppercase">{new Date(w.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg ${w.status === 'Approved' || w.status === 'Completed' ? 'bg-emerald-500 text-white' : w.status === 'Rejected' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
+                      {w.status}
+                    </Badge>
+                    <p className="text-[8px] text-neutral-300 font-black uppercase mt-1">Withdraw</p>
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="py-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-neutral-100">
+                <p className="text-[10px] text-neutral-300 font-black uppercase tracking-[0.2em]">No withdrawals found</p>
+              </div>
+            )
+          )}
+        </div>
+      </div>
+
+      <div className="px-5 mt-4 mb-2">
         <DownloadAppButton className="w-full h-18 rounded-[2rem] bg-neutral-900 text-white border-0 py-6" />
       </div>
 

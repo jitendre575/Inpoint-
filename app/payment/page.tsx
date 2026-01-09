@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 import { Clock, Upload, CheckCircle2, AlertCircle, ArrowLeft, Loader2, IndianRupee, QrCode, Building2, Shield } from "lucide-react"
@@ -22,6 +23,7 @@ function PaymentContent() {
   const [currentDepositStatus, setCurrentDepositStatus] = useState("Processing")
   const [countdownStarted, setCountdownStarted] = useState(false)
   const [depositId, setDepositId] = useState<string | null>(null)
+  const [ifsc, setIfsc] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -130,6 +132,17 @@ function PaymentContent() {
       return
     }
 
+    if (!ifsc) {
+      toast({ title: "IFSC Code is mandatory", variant: "destructive" })
+      return
+    }
+
+    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
+    if (!ifscRegex.test(ifsc)) {
+      toast({ title: "Invalid IFSC format", description: "Format: 4 letters, 0, then 6 chars (e.g. SBIN0123456)", variant: "destructive" })
+      return
+    }
+
     setProcessing(true)
 
     try {
@@ -145,7 +158,8 @@ function PaymentContent() {
           email: currentUser.email,
           amount: parseFloat(amount),
           method: selectedMethod,
-          screenshot: screenshot
+          screenshot: screenshot,
+          ifsc: ifsc
         }),
       });
 
@@ -291,6 +305,18 @@ function PaymentContent() {
                 </div>
               </button>
             ))}
+          </div>
+
+          <div className="mt-8 space-y-2">
+            <Label htmlFor="ifsc" className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">Bank IFSC Code (Mandatory)</Label>
+            <Input
+              id="ifsc"
+              placeholder="e.g. SBIN0012345"
+              value={ifsc}
+              onChange={(e) => setIfsc(e.target.value.toUpperCase())}
+              maxLength={11}
+              className="h-14 rounded-2xl border-2 focus:border-indigo-500 font-black text-lg px-6 uppercase tracking-widest"
+            />
           </div>
         </Card>
 

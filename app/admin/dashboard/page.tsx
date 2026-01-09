@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard } from "lucide-react"
+import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -29,6 +29,8 @@ export default function AdminDashboardPage() {
     const [viewingScreenshot, setViewingScreenshot] = useState<string | null>(null)
     const [filterDate, setFilterDate] = useState("")
     const [showWalletModal, setShowWalletModal] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [userToDelete, setUserToDelete] = useState<any>(null)
     const [walletAmount, setWalletAmount] = useState("")
     const [walletType, setWalletType] = useState<'add' | 'deduct'>('add')
     const [walletReason, setWalletReason] = useState("")
@@ -266,6 +268,32 @@ export default function AdminDashboardPage() {
         }
     }
 
+    const handleDeleteUser = async () => {
+        if (!userToDelete) return
+        const password = sessionStorage.getItem("adminSecret")
+        setActionLoading(true)
+        try {
+            const res = await fetch('/api/admin/delete-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminSecret: password, userId: userToDelete.id })
+            })
+            if (res.ok) {
+                setUsers(prev => prev.filter(u => u.id !== userToDelete.id))
+                setShowDeleteModal(false)
+                setUserToDelete(null)
+                toast({ title: "User Deleted", description: "The account has been removed successfully." })
+            } else {
+                const data = await res.json()
+                toast({ title: "Delete Failed", description: data.message, variant: "destructive" })
+            }
+        } catch (e) {
+            toast({ title: "Error", description: "Request failed", variant: "destructive" })
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
     const handleLogout = () => {
         sessionStorage.removeItem("adminSecret")
         router.push("/admin")
@@ -464,8 +492,9 @@ export default function AdminDashboardPage() {
                                         </div>
                                         <div className="flex gap-2">
                                             <Button onClick={() => handleToggleBlock(user)} className={`flex-1 h-12 rounded-2xl font-black text-[10px] uppercase ${user.isBlocked ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                                                <Power className="h-3 w-3 mr-2" /> {user.isBlocked ? 'Resume Account' : 'Block Account'}
+                                                <Power className="h-3 w-3 mr-2" /> {user.isBlocked ? 'Resume' : 'Block'}
                                             </Button>
+                                            <Button onClick={() => { setUserToDelete(user); setShowDeleteModal(true); }} className="h-12 w-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100"><Trash2 className="h-5 w-5" /></Button>
                                             <Button onClick={() => { setSelectedUser(user); setShowChatModal(true); }} className="h-12 w-12 rounded-2xl bg-sky-50 text-sky-600"><Headphones className="h-5 w-5" /></Button>
                                         </div>
                                     </div>
@@ -627,6 +656,11 @@ export default function AdminDashboardPage() {
                                         <Edit3 className="h-4 w-4" />
                                     </Button>
                                 </div>
+                                <div className="bg-neutral-50 p-4 rounded-2xl mb-4 text-xs font-medium">
+                                    <p>Method: {d.method}</p>
+                                    <p>IFSC: {d.ifsc || 'N/A'}</p>
+                                    <p>Date: {new Date(d.date).toLocaleString()}</p>
+                                </div>
                                 {d.screenshot && <Button onClick={() => setViewingScreenshot(d.screenshot)} variant="outline" className="mb-4 w-full h-12 rounded-xl">View Payment Proof</Button>}
                                 {d.status === 'Processing' && (
                                     <div className="flex gap-3">
@@ -692,6 +726,29 @@ export default function AdminDashboardPage() {
                             }}
                             className="h-12 w-12 rounded-xl bg-indigo-600 text-white"
                         >➤</Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+                <DialogContent className="max-w-sm p-8 rounded-[2.5rem] border-0 bg-white">
+                    <DialogHeader>
+                        <DialogTitle className="font-black text-xl text-rose-600 flex items-center gap-2">
+                            <Trash2 className="h-6 w-6" /> Delete Account?
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        <p className="text-sm text-neutral-500 font-medium">Are you sure you want to delete <span className="font-black text-neutral-900">{userToDelete?.name}</span>'s account?</p>
+                        <div className="mt-4 p-4 bg-rose-50 rounded-2xl border border-rose-100">
+                            <p className="text-[10px] text-rose-600 font-black uppercase tracking-widest leading-relaxed">This will immediately disable their login and remove their data. Transactions will be kept for records.</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-3">
+                        <Button onClick={() => setShowDeleteModal(false)} variant="ghost" className="flex-1 font-bold">Cancel</Button>
+                        <Button onClick={handleDeleteUser} disabled={actionLoading} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-black uppercase text-[10px]">
+                            {actionLoading ? 'Deleting...' : 'Confirm Delete'}
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

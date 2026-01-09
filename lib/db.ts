@@ -79,6 +79,7 @@ export type User = {
         reason: string;
         date: string;
     }[];
+    isDeleted?: boolean;
 };
 
 
@@ -175,6 +176,25 @@ export const updateUser = async (updatedUser: User) => {
     }
 };
 
+export const deleteUser = async (userId: string) => {
+    if (USE_FIREBASE) {
+        try {
+            if (!db) throw new Error("Firebase not initialized");
+            // Soft delete
+            await setDoc(doc(db, "users", userId), { isDeleted: true }, { merge: true });
+        } catch (e: any) {
+            throw new Error(`Firebase Delete Error: ${e.message}`);
+        }
+    } else {
+        const users = await getUsers();
+        const index = users.findIndex((u) => u.id === userId);
+        if (index !== -1) {
+            users[index].isDeleted = true;
+            fs.writeFileSync(dbPath, JSON.stringify(users, null, 2), 'utf-8');
+        }
+    }
+};
+
 export const findUserByEmail = async (email: string): Promise<User | undefined> => {
     if (USE_FIREBASE) {
         try {
@@ -224,14 +244,16 @@ export const findUserByCredentials = async (identifier: string, password: string
             const users = await getUsers();
             return users.find((u) =>
                 (u.email === identifier || u.name === identifier) &&
-                verifyPassword(password, u.password)
+                verifyPassword(password, u.password) &&
+                !u.isDeleted
             );
         }
     } else {
         const users = await getUsers();
         return users.find((u) =>
-            (u.email === identifier || u.name === identifier || u.email === identifier) &&
-            verifyPassword(password, u.password)
+            (u.email === identifier || u.name === identifier) &&
+            verifyPassword(password, u.password) &&
+            !u.isDeleted
         );
     }
 };
