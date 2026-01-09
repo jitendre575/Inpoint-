@@ -31,10 +31,13 @@ export type User = {
     id: string;
     name: string;
     email: string;
+    phone?: string;
     password: string;
     wallet: number;
     plans: any[];
     history: any[];
+    profilePhoto?: string;
+    isBlocked?: boolean;
     deposits?: {
         id: string;
         amount: number;

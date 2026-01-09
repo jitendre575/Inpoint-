@@ -1,9 +1,10 @@
+
 import { NextResponse } from 'next/server';
 import { saveUser, findUserByEmail, User, hashPassword, getUsers, updateUser } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
-        const { name, email, password, referralCode: ref } = await request.json();
+        const { name, email, password, referralCode: ref, profilePhoto } = await request.json();
 
         if (!name || !email || !password) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
         }
 
         const userId = Math.random().toString(36).substring(2, 10).toUpperCase();
-        const generatedReferralCode = userId; // Using ID as referral code for simplicity and uniqueness
+        const generatedReferralCode = userId;
 
         const newUser: User = {
             id: userId,
@@ -29,18 +30,19 @@ export async function POST(request: Request) {
             withdrawals: [],
             referralCode: generatedReferralCode,
             referredBy: ref || undefined,
+            profilePhoto: profilePhoto || undefined,
             createdAt: new Date().toISOString(),
         };
 
         // Handle Referral Reward
         if (ref) {
             const allUsers = await getUsers();
-            const referrer = allUsers.find(u => u.referralCode === ref);
+            const referrer = allUsers.find(u => u.referralCode === ref || u.id === ref);
             if (referrer) {
+                // Instant ₹100 registration bonus for referrer
                 referrer.wallet = (referrer.wallet || 0) + 100;
                 referrer.referralRewards = (referrer.referralRewards || 0) + 100;
 
-                // Add to history
                 if (!referrer.history) referrer.history = [];
                 referrer.history.push({
                     id: Date.now().toString(),
@@ -63,6 +65,7 @@ export async function POST(request: Request) {
         }, { status: 201 });
 
     } catch (error: any) {
+        console.error("Register API Error:", error);
         return NextResponse.json({ message: error.message }, { status: 500 });
     }
 }
