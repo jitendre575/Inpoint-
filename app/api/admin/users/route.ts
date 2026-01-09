@@ -13,7 +13,8 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
-        const users = await getUsers();
+        const allUsers = await getUsers();
+        const users = allUsers.filter(u => !u.isDeleted);
         return NextResponse.json({ users });
     } catch (error) {
         return NextResponse.json({ message: 'Internal Error' }, { status: 500 });

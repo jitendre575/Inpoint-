@@ -207,7 +207,8 @@ export const findUserByEmail = async (email: string): Promise<User | undefined> 
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
                 const doc = querySnapshot.docs[0];
-                return { ...doc.data(), id: doc.data().id || doc.id } as User;
+                const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
+                return user.isDeleted ? undefined : user;
             }
             return undefined;
         } catch (e) {
@@ -216,7 +217,7 @@ export const findUserByEmail = async (email: string): Promise<User | undefined> 
         }
     } else {
         const users = await getUsers();
-        return users.find((u) => u.email === email);
+        return users.find((u) => u.email === email && !u.isDeleted);
     }
 };
 
@@ -233,7 +234,7 @@ export const findUserByCredentials = async (identifier: string, password: string
 
             for (const doc of querySnapshot.docs) {
                 const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
-                if (verifyPassword(password, user.password)) {
+                if (verifyPassword(password, user.password) && !user.isDeleted) {
                     return user;
                 }
             }

@@ -7,7 +7,7 @@ export async function POST(request: Request) {
         const { adminSecret, userId } = body;
 
         // Verify admin secret
-        if (adminSecret !== process.env.ADMIN_SECRET && adminSecret !== 'admin123') { // Fallback for dev
+        if (adminSecret !== "335524JI") {
             return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
         }
 
