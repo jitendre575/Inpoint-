@@ -18,6 +18,11 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'User not found' }, { status: 404 });
         }
 
+        // Update lastActive
+        user.lastActive = new Date().toISOString();
+        const { updateUser } = await import('@/lib/db');
+        await updateUser(user);
+
         // Return user without password
         const { password: _, ...userWithoutPass } = user;
 

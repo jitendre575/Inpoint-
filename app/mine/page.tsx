@@ -19,10 +19,13 @@ export default function MinePage() {
     const currentUser = localStorage.getItem("currentUser")
     if (!currentUser) {
       router.push("/login")
-    } else {
-      const dbUser = JSON.parse(currentUser)
-      setUser(dbUser)
+      return
+    }
 
+    const dbUser = JSON.parse(currentUser)
+    setUser(dbUser)
+
+    const refresh = () => {
       if (dbUser.id) {
         fetch('/api/user/details', {
           method: 'POST',
@@ -38,11 +41,14 @@ export default function MinePage() {
           })
           .catch(err => console.error("Failed to refresh user data", err))
       } else {
-        // If ID is missing, the session is likely invalid
         localStorage.removeItem("currentUser")
         router.push("/login")
       }
     }
+
+    refresh()
+    const poll = setInterval(refresh, 5000)
+    return () => clearInterval(poll)
   }, [router])
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

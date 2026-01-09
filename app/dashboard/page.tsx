@@ -39,6 +39,12 @@ export default function DashboardPage() {
         setShowPlansModal(true)
         sessionStorage.setItem("hasSeenPlansModal", "true")
       }
+
+      const poll = setInterval(() => {
+        if (dbUser.id) refreshUserData(dbUser.id);
+      }, 5000);
+
+      return () => clearInterval(poll);
     }
   }, [router])
 
@@ -51,6 +57,28 @@ export default function DashboardPage() {
       })
       const data = await res.json()
       if (data.user) {
+        // Notification check
+        if (user) {
+          // Check for deposit status changes
+          data.user.deposits?.forEach((d: any) => {
+            const prevD = user.deposits?.find((p: any) => p.id === d.id);
+            if (prevD && prevD.status !== d.status) {
+              toast({ title: "Deposit Status Update", description: `Your deposit of ₹${d.amount} is now ${d.status}.` });
+            }
+          });
+          // Check for withdrawal status changes
+          data.user.withdrawals?.forEach((w: any) => {
+            const prevW = user.withdrawals?.find((p: any) => p.id === w.id);
+            if (prevW && prevW.status !== w.status) {
+              toast({ title: "Withdrawal Status Update", description: `Your withdrawal of ₹${w.amount} is now ${w.status}.` });
+            }
+          });
+          // Check for new chat messages
+          const newAdminChats = (data.user.supportChats?.filter((c: any) => c.sender === 'admin' && !c.read).length || 0) - (user.supportChats?.filter((c: any) => c.sender === 'admin' && !c.read).length || 0);
+          if (newAdminChats > 0) {
+            toast({ title: "New Support Message", description: "You have a new message from support." });
+          }
+        }
         setUser(data.user)
         localStorage.setItem("currentUser", JSON.stringify(data.user))
       }

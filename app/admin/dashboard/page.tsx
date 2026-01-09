@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3 } from "lucide-react"
+import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -27,6 +27,13 @@ export default function AdminDashboardPage() {
     const [actionLoading, setActionLoading] = useState(false)
     const [adminMessage, setAdminMessage] = useState("")
     const [viewingScreenshot, setViewingScreenshot] = useState<string | null>(null)
+    const [filterDate, setFilterDate] = useState("")
+    const [showWalletModal, setShowWalletModal] = useState(false)
+    const [walletAmount, setWalletAmount] = useState("")
+    const [walletType, setWalletType] = useState<'add' | 'deduct'>('add')
+    const [walletReason, setWalletReason] = useState("")
+    const [notifications, setNotifications] = useState<any[]>([])
+    const prevUsersRef = useRef<any[]>([])
 
     const fetchingRef = useRef(false)
 
@@ -40,7 +47,7 @@ export default function AdminDashboardPage() {
         load()
         const interval = setInterval(() => {
             fetchUsers(true, controller.signal)
-        }, 15000)
+        }, 5000)
 
         return () => {
             clearInterval(interval)
@@ -70,7 +77,31 @@ export default function AdminDashboardPage() {
             if (res.ok) {
                 const data = await res.json()
                 if (data.users) {
+                    // Real-time notification logic
+                    if (prevUsersRef.current.length > 0) {
+                        data.users.forEach((u: any) => {
+                            const prevU = prevUsersRef.current.find(p => p.id === u.id);
+                            if (prevU) {
+                                // Check for new chat messages
+                                const newChats = (u.supportChats?.length || 0) - (prevU.supportChats?.length || 0);
+                                if (newChats > 0) {
+                                    toast({ title: "New Message", description: `User ${u.name} sent a message.` });
+                                }
+                                // Check for new deposits
+                                const newDeposits = (u.deposits?.length || 0) - (prevU.deposits?.length || 0);
+                                if (newDeposits > 0) {
+                                    toast({ title: "New Deposit Request", description: `User ${u.name} requested a deposit.` });
+                                }
+                                // Check for new withdrawals
+                                const newWithdraws = (u.withdrawals?.length || 0) - (prevU.withdrawals?.length || 0);
+                                if (newWithdraws > 0) {
+                                    toast({ title: "New Withdrawal Request", description: `User ${u.name} requested a withdrawal.` });
+                                }
+                            }
+                        });
+                    }
                     setUsers(data.users)
+                    prevUsersRef.current = data.users
                 }
             } else if (!silent) {
                 // If not silent and auth fails, kick back to login
@@ -178,6 +209,37 @@ export default function AdminDashboardPage() {
         }
     }
 
+    const handleEditWallet = async () => {
+        const password = sessionStorage.getItem("adminSecret")
+        setActionLoading(true)
+        try {
+            const res = await fetch('/api/admin/edit-wallet', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    adminSecret: password,
+                    userId: selectedUser.id,
+                    amount: walletAmount,
+                    type: walletType,
+                    reason: walletReason
+                })
+            })
+            if (res.ok) {
+                const data = await res.json()
+                setUsers(prev => prev.map(u => u.id === data.user.id ? data.user : u))
+                setSelectedUser(data.user)
+                setShowWalletModal(false)
+                setWalletAmount("")
+                setWalletReason("")
+                toast({ title: "Success", description: `Wallet ${walletType === 'add' ? 'credited' : 'debited'} successfully.` })
+            }
+        } catch (e) {
+            toast({ title: "Error", description: "Failed to update wallet", variant: "destructive" })
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
     const handleLogout = () => {
         sessionStorage.removeItem("adminSecret")
         router.push("/admin")
@@ -185,16 +247,24 @@ export default function AdminDashboardPage() {
 
     const stats = {
         total: users.length,
-        active: users.filter(u => u.plans?.some((p: any) => p.status === 'active')).length,
-        inactive: users.filter(u => !u.plans?.some((p: any) => p.status === 'active')).length,
+        active: users.filter(u => {
+            if (!u.lastActive) return false;
+            const diff = Date.now() - new Date(u.lastActive).getTime();
+            return diff < 60000; // Active in last 1 minute
+        }).length,
+        inactive: users.filter(u => u.plans?.length === 0).length,
         totalWallet: users.reduce((acc, u) => acc + (u.wallet || 0), 0)
     }
 
-    const filteredUsers = users.filter((u) =>
-        u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.id.includes(searchTerm)
-    )
+    const filteredUsers = users.filter((u) => {
+        const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.id.includes(searchTerm);
+
+        const matchesDate = !filterDate || (u.createdAt && u.createdAt.split('T')[0] === filterDate);
+
+        return matchesSearch && matchesDate;
+    })
 
     const activeUser = selectedUser ? users.find(u => u.id === selectedUser.id) || selectedUser : null;
 
@@ -203,12 +273,21 @@ export default function AdminDashboardPage() {
             <header className="bg-neutral-900 text-white shadow-2xl sticky top-0 z-50">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <Shield className="h-6 w-6 text-white" />
+                        <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden p-1.5">
+                            <img src="/icon.svg" alt="Logo" className="h-full w-full object-contain" />
                         </div>
-                        <h1 className="text-xl font-black uppercase tracking-tight">Admin<span className="text-emerald-500">Dashboard</span></h1>
+                        <h1 className="text-xl font-black uppercase tracking-tight">Inpoint<span className="text-emerald-500">Rose</span></h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        <div className="hidden md:flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
+                            <Calendar className="h-4 w-4 text-emerald-400" />
+                            <input
+                                type="date"
+                                value={filterDate}
+                                onChange={(e) => setFilterDate(e.target.value)}
+                                className="bg-transparent text-sm font-bold focus:outline-none [color-scheme:dark]"
+                            />
+                        </div>
                         <Button onClick={handleLogout} variant="destructive" className="font-bold">Logout</Button>
                     </div>
                 </div>
@@ -263,11 +342,20 @@ export default function AdminDashboardPage() {
                                 <Card key={user.id} className={`p-6 border-0 shadow-xl rounded-[2.5rem] transition-all relative overflow-hidden ${user.isBlocked ? 'bg-rose-50 ring-2 ring-rose-200' : activePlan ? 'bg-emerald-50/10' : 'bg-white'}`}>
                                     <div className="flex justify-between items-start mb-6 px-1">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-14 w-14 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm">
+                                            <div className="h-14 w-14 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm relative">
                                                 {user.profilePhoto ? <img src={user.profilePhoto} className="h-full w-full object-cover" /> : <div className="text-xl font-black text-neutral-400">{user.name[0]}</div>}
+                                                {/* Online Status Indicator */}
+                                                <div className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${stats.active > 0 && user.lastActive && (Date.now() - new Date(user.lastActive).getTime() < 60000) ? 'bg-emerald-500' : 'bg-neutral-300'}`} />
                                             </div>
                                             <div>
-                                                <h3 className="font-black text-neutral-900 text-lg leading-tight">{user.name}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="font-black text-neutral-900 text-lg leading-tight">{user.name}</h3>
+                                                    {(user.supportChats?.filter((c: any) => c.sender === 'user' && !c.read).length || 0) > 0 && (
+                                                        <Badge className="bg-rose-500 text-white animate-bounce h-5 px-1.5 min-w-[20px] flex items-center justify-center text-[10px] rounded-full shadow-lg border-2 border-white">
+                                                            {user.supportChats.filter((c: any) => c.sender === 'user' && !c.read).length}
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-neutral-400 font-bold">{user.email}</p>
                                             </div>
                                         </div>
@@ -278,14 +366,35 @@ export default function AdminDashboardPage() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-4 mb-6">
-                                        <div className="p-4 bg-[#F8F9FD] rounded-2xl">
+                                        <div className="p-4 bg-[#F8F9FD] rounded-2xl relative group cursor-pointer" onClick={() => { setSelectedUser(user); setShowWalletModal(true); }}>
                                             <p className="text-[10px] text-neutral-400 font-black uppercase mb-1">Wallet</p>
-                                            <p className="text-lg font-black text-emerald-600">₹{user.wallet.toFixed(0)}</p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-lg font-black text-emerald-600">₹{user.wallet.toFixed(0)}</p>
+                                                <Edit3 className="h-3 w-3 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            </div>
                                         </div>
                                         <div className="p-4 bg-[#F8F9FD] rounded-2xl">
                                             <p className="text-[10px] text-neutral-400 font-black uppercase mb-1">Referral</p>
                                             <p className="text-lg font-black text-indigo-600">{user.referralCode || 'N/A'}</p>
                                         </div>
+                                    </div>
+
+                                    {/* Quick Transaction Summary */}
+                                    <div className="mb-6 px-1 space-y-2">
+                                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest pl-1">Recent Transactions</p>
+                                        {[...(user.deposits || []), ...(user.withdrawals || [])]
+                                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                            .slice(0, 2)
+                                            .map((t, i) => (
+                                                <div key={i} className="flex items-center justify-between text-[11px] font-bold bg-white/50 p-2 rounded-xl border border-neutral-100/50">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`h-2 w-2 rounded-full ${t.status === 'Approved' || t.status === 'Completed' ? 'bg-emerald-500' : t.status === 'Rejected' ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                                                        <span className="text-neutral-600">{t.method ? 'Deposit' : 'Withdraw'}</span>
+                                                    </div>
+                                                    <span className={t.method ? 'text-emerald-600' : 'text-rose-600'}>₹{t.amount}</span>
+                                                </div>
+                                            ))}
+                                        {[...(user.deposits || []), ...(user.withdrawals || [])].length === 0 && <p className="text-[10px] text-neutral-300 italic pl-1">No transactions yet</p>}
                                     </div>
 
                                     <div className="space-y-3">
@@ -314,6 +423,73 @@ export default function AdminDashboardPage() {
                 )}
             </main>
 
+            {/* Wallet Edit Modal */}
+            <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
+                <DialogContent className="max-w-md p-8 rounded-[3rem] border-0 bg-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl font-black flex items-center gap-3">
+                            <Wallet className="h-7 w-7 text-emerald-500" /> Wallet Manager
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 pt-4">
+                        <div className="flex bg-neutral-100 p-1.5 rounded-2xl">
+                            <button
+                                onClick={() => setWalletType('add')}
+                                className={`flex-1 py-3 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all ${walletType === 'add' ? 'bg-white shadow-sm text-emerald-600' : 'text-neutral-400'}`}
+                            >
+                                <Plus className="h-4 w-4" /> Add Balance
+                            </button>
+                            <button
+                                onClick={() => setWalletType('deduct')}
+                                className={`flex-1 py-3 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all ${walletType === 'deduct' ? 'bg-white shadow-sm text-rose-600' : 'text-neutral-400'}`}
+                            >
+                                <Minus className="h-4 w-4" /> Deduct
+                            </button>
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest px-2">Enter Amount (₹)</p>
+                            <Input
+                                type="number"
+                                placeholder="0.00"
+                                value={walletAmount}
+                                onChange={(e) => setWalletAmount(e.target.value)}
+                                className="h-16 rounded-2xl border-2 focus:border-indigo-500 font-black text-2xl px-6"
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest px-2">Reason for modification</p>
+                            <Input
+                                placeholder="e.g. Compensation, Withdrawal adjustment..."
+                                value={walletReason}
+                                onChange={(e) => setWalletReason(e.target.value)}
+                                className="h-14 rounded-2xl border-2 focus:border-indigo-500 font-bold"
+                            />
+                        </div>
+
+                        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
+                            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center border border-amber-100 shrink-0">
+                                <Shield className="h-5 w-5 text-amber-500" />
+                            </div>
+                            <p className="text-[10px] text-amber-700 font-bold leading-relaxed uppercase">Important: This action is permanent and will be logged in user's history.</p>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-xs" onClick={() => setShowWalletModal(false)}>Cancel</Button>
+                            <Button
+                                onClick={handleEditWallet}
+                                disabled={actionLoading || !walletAmount}
+                                className={`flex-1 h-14 rounded-2xl font-black uppercase text-xs shadow-xl ${walletType === 'add' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+                            >
+                                {actionLoading ? 'Saving...' : `Confirm ${walletType === 'add' ? 'Credit' : 'Debit'}`}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Existing Modals... */}
             {/* Withdraw Modal with Amount Edit */}
             <Dialog open={showWithdrawModal} onOpenChange={setShowWithdrawModal}>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8 rounded-[3rem] border-0 bg-white">
@@ -356,10 +532,30 @@ export default function AdminDashboardPage() {
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8 rounded-[3rem] border-0 bg-white">
                     <DialogHeader className="mb-6">
                         <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                            <Landmark className="h-7 w-7 text-emerald-500" /> Deposit Controls
+                            <Landmark className="h-7 w-7 text-emerald-500" /> User Transaction Hub
                         </DialogTitle>
                     </DialogHeader>
+
+                    {/* Wallet Adjustment History */}
+                    {(activeUser?.walletHistory || []).length > 0 && (
+                        <div className="mb-10">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 mb-4 px-2">Wallet Manual Adjustments</h3>
+                            <div className="space-y-3">
+                                {activeUser.walletHistory.slice().reverse().map((h: any, i: number) => (
+                                    <div key={i} className={`p-4 rounded-2xl border flex justify-between items-center ${h.type === 'add' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
+                                        <div>
+                                            <p className="font-bold text-sm">{h.reason}</p>
+                                            <p className="text-[10px] uppercase font-black opacity-50">{new Date(h.date).toLocaleString()}</p>
+                                        </div>
+                                        <p className={`font-black ${h.type === 'add' ? 'text-emerald-600' : 'text-rose-600'}`}>{h.type === 'add' ? '+' : '-'}₹{h.amount}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
                     <div className="space-y-6">
+                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 mb-4 px-2">Deposit History</h3>
                         {(activeUser?.deposits || []).slice().reverse().map((d: any) => (
                             <Card key={d.id} className="p-6 border border-neutral-100 shadow-sm rounded-3xl">
                                 <div className="flex justify-between items-center mb-4">

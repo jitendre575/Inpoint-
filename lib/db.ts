@@ -72,6 +72,13 @@ export type User = {
     referralRewards?: number;
     createdAt: string;
     lastLogin?: string;
+    lastActive?: string;
+    walletHistory?: {
+        amount: number;
+        type: 'add' | 'deduct';
+        reason: string;
+        date: string;
+    }[];
 };
 
 
