@@ -101,7 +101,8 @@ export const getUsers = async (): Promise<User[]> => {
             const querySnapshot = await getDocs(collection(db, "users"));
             const users: User[] = [];
             querySnapshot.forEach((doc: any) => {
-                users.push(doc.data() as User);
+                const userData = doc.data();
+                users.push({ ...userData, id: userData.id || doc.id } as User);
             });
             return users;
         } catch (e) {
@@ -178,7 +179,8 @@ export const findUserByEmail = async (email: string): Promise<User | undefined> 
             const q = query(collection(db, "users"), where("email", "==", email));
             const querySnapshot = await getDocs(q);
             if (!querySnapshot.empty) {
-                return querySnapshot.docs[0].data() as User;
+                const doc = querySnapshot.docs[0];
+                return { ...doc.data(), id: doc.data().id || doc.id } as User;
             }
             return undefined;
         } catch (e) {
@@ -203,7 +205,7 @@ export const findUserByCredentials = async (identifier: string, password: string
             const querySnapshot = await getDocs(q);
 
             for (const doc of querySnapshot.docs) {
-                const user = doc.data() as User;
+                const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
                 if (verifyPassword(password, user.password)) {
                     return user;
                 }

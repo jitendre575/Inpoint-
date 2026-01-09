@@ -23,19 +23,25 @@ export default function MinePage() {
       const dbUser = JSON.parse(currentUser)
       setUser(dbUser)
 
-      fetch('/api/user/details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: dbUser.id })
-      })
-        .then(res => res.json())
-        .then(data => {
-          if (data.user) {
-            setUser(data.user)
-            localStorage.setItem("currentUser", JSON.stringify(data.user))
-          }
+      if (dbUser.id) {
+        fetch('/api/user/details', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: dbUser.id })
         })
-        .catch(err => console.error("Failed to refresh user data", err))
+          .then(res => res.json())
+          .then(data => {
+            if (data.user) {
+              setUser(data.user)
+              localStorage.setItem("currentUser", JSON.stringify(data.user))
+            }
+          })
+          .catch(err => console.error("Failed to refresh user data", err))
+      } else {
+        // If ID is missing, the session is likely invalid
+        localStorage.removeItem("currentUser")
+        router.push("/login")
+      }
     }
   }, [router])
 
@@ -117,7 +123,7 @@ export default function MinePage() {
           <h1 className="text-3xl font-black text-white mt-6 mb-2 tracking-tight">{user.name}</h1>
           <div className="flex gap-2">
             <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-2xl border border-white/10 backdrop-blur-xl">
-              <span className="text-neutral-300 text-[10px] font-black uppercase tracking-widest">UID: {user.id.slice(0, 8)}</span>
+              <span className="text-neutral-300 text-[10px] font-black uppercase tracking-widest">UID: {user.id?.slice(0, 8) || "N/A"}</span>
               <button onClick={() => handleCopyCode(user.id, "User ID")} className="text-white/40 hover:text-white transition-colors">
                 <Copy className="h-3.5 w-3.5" />
               </button>

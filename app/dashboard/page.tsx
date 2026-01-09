@@ -27,7 +27,12 @@ export default function DashboardPage() {
       const dbUser = JSON.parse(currentUser)
       setUser(dbUser)
 
-      refreshUserData(dbUser.id)
+      if (dbUser.id) {
+        refreshUserData(dbUser.id)
+      } else {
+        localStorage.removeItem("currentUser")
+        router.push("/login")
+      }
 
       const hasSeenModal = sessionStorage.getItem("hasSeenPlansModal")
       if (!hasSeenModal) {
