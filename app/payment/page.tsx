@@ -20,6 +20,8 @@ function PaymentContent() {
   const [isUploading, setIsUploading] = useState(false)
   const [step, setStep] = useState<"SELECT" | "CONFIRM">("SELECT")
   const [currentDepositStatus, setCurrentDepositStatus] = useState("Processing")
+  const [countdownStarted, setCountdownStarted] = useState(false)
+  const [depositId, setDepositId] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -30,23 +32,40 @@ function PaymentContent() {
   }, [searchParams])
 
   useEffect(() => {
-    if (timeLeft <= 0 && step === "SELECT") {
-      toast({
-        title: "Session Expired",
-        description: "Payment session expired. Redirecting to home.",
-        variant: "destructive",
-      })
-      router.push("/dashboard")
-      return
-    }
-
-    if (step === "SELECT") {
+    if (step === "SELECT" || countdownStarted) {
       const timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1)
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            if (countdownStarted) handleAutoSuccess();
+            return 0;
+          }
+          return prev - 1;
+        })
       }, 1000)
       return () => clearInterval(timer)
     }
-  }, [timeLeft, router, toast, step])
+  }, [timeLeft, router, toast, step, countdownStarted])
+
+  const handleAutoSuccess = async () => {
+    setCurrentDepositStatus("Approved");
+    setStep("CONFIRM");
+    toast({ title: "Payment Successful!", description: `₹${amount} has been added to your wallet.` });
+
+    // Update status in DB
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("currentUser") || "{}")
+      if (!currentUser.id || !depositId) return;
+
+      await fetch('/api/user/deposit/update-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: currentUser.id, depositId, status: 'Approved' })
+      });
+    } catch (err) {
+      console.error("Auto-success DB update failed", err);
+    }
+  }
 
   // Poll for status update when in CONFIRM step
   useEffect(() => {
@@ -133,8 +152,10 @@ function PaymentContent() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Deposit failed');
 
+      setDepositId(data.deposit.id);
       localStorage.setItem("currentUser", JSON.stringify(data.user));
-      setStep("CONFIRM")
+      setCountdownStarted(true);
+      setTimeLeft(90); // 1.5 minutes countdown after upload/submission
     } catch (error: any) {
       toast({
         title: "Submission Failed",
@@ -216,6 +237,31 @@ function PaymentContent() {
       </div>
 
       <div className="p-6 space-y-6 -mt-6">
+        {/* Real-time Amount Display below Header */}
+        <Card className="p-6 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-0 shadow-2xl rounded-[2rem] flex items-center justify-between overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
+          <div className="relative z-10">
+            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-1">Payable Amount</p>
+            <h2 className="text-4xl font-black tracking-tight">₹{amount}</h2>
+          </div>
+          <div className="h-14 w-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20">
+            <IndianRupee className="h-8 w-8 text-white" />
+          </div>
+        </Card>
+
+        {countdownStarted && (
+          <Card className="p-6 bg-amber-500 text-white border-0 shadow-xl rounded-[2rem] animate-pulse">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <Clock className="h-7 w-7" />
+              </div>
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-amber-100">Verifying Payment</p>
+                <p className="text-xl font-black">Auto-success in {formatTime(timeLeft)}</p>
+              </div>
+            </div>
+          </Card>
+        )}
         <Card className="p-8 shadow-2xl border-0 bg-white rounded-[2.5rem]">
           <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 pl-2">Selection Logic</h3>
 

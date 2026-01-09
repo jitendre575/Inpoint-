@@ -82,20 +82,46 @@ export default function AdminDashboardPage() {
                         data.users.forEach((u: any) => {
                             const prevU = prevUsersRef.current.find(p => p.id === u.id);
                             if (prevU) {
-                                // Check for new chat messages
-                                const newChats = (u.supportChats?.length || 0) - (prevU.supportChats?.length || 0);
-                                if (newChats > 0) {
-                                    toast({ title: "New Message", description: `User ${u.name} sent a message.` });
-                                }
                                 // Check for new deposits
                                 const newDeposits = (u.deposits?.length || 0) - (prevU.deposits?.length || 0);
                                 if (newDeposits > 0) {
-                                    toast({ title: "New Deposit Request", description: `User ${u.name} requested a deposit.` });
+                                    const latestDeposit = u.deposits[u.deposits.length - 1];
+                                    toast({
+                                        title: "New Deposit Request",
+                                        description: `User ${u.name} requested ₹${latestDeposit.amount}.`
+                                    });
+                                    setNotifications(prev => [...prev, {
+                                        id: Date.now().toString(),
+                                        title: "New Deposit",
+                                        message: `₹${latestDeposit.amount} from ${u.name}`,
+                                        date: new Date().toISOString()
+                                    }]);
                                 }
                                 // Check for new withdrawals
                                 const newWithdraws = (u.withdrawals?.length || 0) - (prevU.withdrawals?.length || 0);
                                 if (newWithdraws > 0) {
-                                    toast({ title: "New Withdrawal Request", description: `User ${u.name} requested a withdrawal.` });
+                                    const latestWithdraw = u.withdrawals[u.withdrawals.length - 1];
+                                    toast({
+                                        title: "New Withdrawal Request",
+                                        description: `User ${u.name} requested ₹${latestWithdraw.amount}.`
+                                    });
+                                    setNotifications(prev => [...prev, {
+                                        id: Date.now().toString(),
+                                        title: "New Withdrawal",
+                                        message: `₹${latestWithdraw.amount} from ${u.name}`,
+                                        date: new Date().toISOString()
+                                    }]);
+                                }
+                                // Check for new chat messages
+                                const newChats = (u.supportChats?.length || 0) - (prevU.supportChats?.length || 0);
+                                if (newChats > 0) {
+                                    toast({ title: "New Message", description: `User ${u.name} sent a message.` });
+                                    setNotifications(prev => [...prev, {
+                                        id: Date.now().toString(),
+                                        title: "New Message",
+                                        message: `From ${u.name}`,
+                                        date: new Date().toISOString()
+                                    }]);
                                 }
                             }
                         });
@@ -288,6 +314,40 @@ export default function AdminDashboardPage() {
                                 className="bg-transparent text-sm font-bold focus:outline-none [color-scheme:dark]"
                             />
                         </div>
+
+                        <div className="relative group cursor-pointer" onClick={() => setNotifications([])}>
+                            <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 hover:bg-white/20 transition-all relative">
+                                <Bell className="h-5 w-5 text-neutral-300" />
+                                {notifications.length > 0 && (
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-neutral-900 animate-bounce">
+                                        {notifications.length}
+                                    </span>
+                                )}
+                            </div>
+                            {/* Dropdown for Notifications */}
+                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all transform origin-top-right py-2 z-[100] border border-neutral-100">
+                                <div className="px-4 py-2 border-b border-neutral-50 flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-neutral-400 uppercase">Notifications</span>
+                                    <button onClick={() => setNotifications([])} className="text-[10px] text-indigo-600 font-bold">Clear All</button>
+                                </div>
+                                <div className="max-h-64 overflow-y-auto">
+                                    {notifications.length === 0 ? (
+                                        <div className="px-4 py-6 text-center">
+                                            <p className="text-[10px] text-neutral-300 font-bold italic">No new alerts</p>
+                                        </div>
+                                    ) : (
+                                        notifications.slice().reverse().map((n) => (
+                                            <div key={n.id} className="px-4 py-3 border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
+                                                <p className="text-[11px] font-black text-neutral-900">{n.title}</p>
+                                                <p className="text-[10px] text-neutral-500 font-medium">{n.message}</p>
+                                                <p className="text-[8px] text-neutral-300 mt-1 uppercase font-black">{new Date(n.date).toLocaleTimeString()}</p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
                         <Button onClick={handleLogout} variant="destructive" className="font-bold">Logout</Button>
                     </div>
                 </div>
