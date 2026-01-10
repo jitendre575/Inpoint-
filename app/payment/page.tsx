@@ -23,7 +23,7 @@ function PaymentContent() {
   const [currentDepositStatus, setCurrentDepositStatus] = useState("Processing")
   const [countdownStarted, setCountdownStarted] = useState(false)
   const [depositId, setDepositId] = useState<string | null>(null)
-  const [ifsc, setIfsc] = useState("")
+  const [utr, setUtr] = useState("")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -132,14 +132,14 @@ function PaymentContent() {
       return
     }
 
-    if (!ifsc) {
-      toast({ title: "IFSC Code is mandatory", variant: "destructive" })
+
+    if (!utr) {
+      toast({ title: "UTR Number is mandatory", variant: "destructive" })
       return
     }
 
-    const ifscRegex = /^[A-Z]{4}0[A-Z0-9]{6}$/;
-    if (!ifscRegex.test(ifsc)) {
-      toast({ title: "Invalid IFSC format", description: "Format: 4 letters, 0, then 6 chars (e.g. SBIN0123456)", variant: "destructive" })
+    if (utr.length < 12) {
+      toast({ title: "Invalid UTR", description: "UTR must be at least 12 digits.", variant: "destructive" })
       return
     }
 
@@ -159,7 +159,7 @@ function PaymentContent() {
           amount: parseFloat(amount),
           method: selectedMethod,
           screenshot: screenshot,
-          ifsc: ifsc
+          utr: utr
         }),
       });
 
@@ -251,15 +251,26 @@ function PaymentContent() {
       </div>
 
       <div className="p-6 space-y-6 -mt-6">
-        {/* Real-time Amount Display below Header */}
-        <Card className="p-6 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-0 shadow-2xl rounded-[2rem] flex items-center justify-between overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <div className="relative z-10">
-            <p className="text-[10px] font-black uppercase tracking-widest text-indigo-200 mb-1">Payable Amount</p>
-            <h2 className="text-4xl font-black tracking-tight">₹{amount}</h2>
-          </div>
-          <div className="h-14 w-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20">
-            <IndianRupee className="h-8 w-8 text-white" />
+        {/* Real-time Amount Display with QR Code */}
+        <Card className="p-10 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-0 shadow-2xl rounded-[3rem] overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full -ml-32 -mb-32 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col items-center text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-200 mb-2">Payable Amount</p>
+            <h2 className="text-5xl font-black tracking-tighter mb-8">₹{amount}</h2>
+
+            <div className="relative p-0 bg-white rounded-[2.5rem] shadow-2xl transform group-hover:scale-105 transition-transform duration-500 overflow-hidden">
+              <img
+                src="/qr-static.jpg"
+                alt="Payment QR"
+                className="w-64 h-64 object-contain"
+              />
+            </div>
+
+            <p className="mt-6 text-[10px] text-indigo-200 font-black uppercase tracking-widest opacity-80">
+              Scan QR or use methods below
+            </p>
           </div>
         </Card>
 
@@ -276,6 +287,8 @@ function PaymentContent() {
             </div>
           </Card>
         )}
+
+        {/* Selection Logic Card */}
         <Card className="p-8 shadow-2xl border-0 bg-white rounded-[2.5rem]">
           <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 pl-2">Selection Logic</h3>
 
@@ -307,20 +320,78 @@ function PaymentContent() {
             ))}
           </div>
 
+          {selectedMethod === 'qr' && (
+            <div className="mt-8 flex flex-col items-center animate-in fade-in zoom-in duration-500">
+              <div className="relative p-4 bg-white rounded-[2rem] shadow-xl border-4 border-indigo-50">
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=7378086507@ybl%26pn=InpointRose%26cu=INR%26am=${amount}`}
+                  alt="Payment QR"
+                  className="w-64 h-64 rounded-xl"
+                />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-neutral-100">
+                  <img src="https://www.gstatic.com/images/branding/product/1x/gpay_32dp.png" className="h-6 w-6" alt="GPay" />
+                </div>
+              </div>
+              <p className="mt-4 text-[10px] text-neutral-400 font-black uppercase tracking-widest text-center px-4">
+                Scan this QR code using GPay, PhonePe or any UPI app to pay ₹{amount}
+              </p>
+            </div>
+          )}
+
+          {selectedMethod === 'upi' && (
+            <div className="mt-8 p-6 bg-indigo-50 rounded-3xl border border-indigo-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-3">UPI ID (Copy & Pay)</p>
+              <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-indigo-50">
+                <span className="font-mono font-bold text-indigo-600">7378086507@ybl</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText("7378086507@ybl");
+                    toast({ title: "UPI ID Copied!" });
+                  }}
+                  className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 active:scale-90 transition-all"
+                >
+                  <QrCode className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {selectedMethod === 'bank' && (
+            <div className="mt-8 p-6 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-3">Bank Details</p>
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-2xl shadow-sm border border-emerald-50">
+                  <p className="text-[9px] text-neutral-400 font-black uppercase mb-1">Account Holder</p>
+                  <p className="font-bold text-neutral-800 uppercase">Inpoint Rose Grow Pvt Ltd</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-emerald-50 text-center">
+                    <p className="text-[9px] text-neutral-400 font-black uppercase mb-1">A/C Number</p>
+                    <p className="font-mono font-bold text-neutral-800">50200056784321</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-emerald-50 text-center">
+                    <p className="text-[9px] text-neutral-400 font-black uppercase mb-1">IFSC Code</p>
+                    <p className="font-mono font-bold text-neutral-800">HDFC0001234</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="mt-8 space-y-2">
-            <Label htmlFor="ifsc" className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">Bank IFSC Code (Mandatory)</Label>
+            <Label htmlFor="utr" className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">UTR/Ref Number (Mandatory)</Label>
             <Input
-              id="ifsc"
-              placeholder="e.g. SBIN0012345"
-              value={ifsc}
-              onChange={(e) => setIfsc(e.target.value.toUpperCase())}
-              maxLength={11}
-              className="h-14 rounded-2xl border-2 focus:border-indigo-500 font-black text-lg px-6 uppercase tracking-widest"
+              id="utr"
+              placeholder="12 Digit Transaction ID"
+              value={utr}
+              onChange={(e) => setUtr(e.target.value.replace(/[^0-9]/g, ''))}
+              maxLength={12}
+              className="h-14 rounded-2xl border-2 focus:border-indigo-500 font-black text-lg px-6 tracking-widest"
             />
           </div>
         </Card>
 
-        {/* Upload Proof */}
+        {/* Upload Proof Card */}
         <Card className="p-8 shadow-2xl border-0 bg-white rounded-[2.5rem]">
           <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 pl-2">Verification Proof</h3>
 
@@ -359,7 +430,7 @@ function PaymentContent() {
 
         <Button
           onClick={handleSubmitPayment}
-          disabled={processing || isUploading || !selectedMethod || !screenshot}
+          disabled={processing || isUploading || !selectedMethod || !screenshot || !utr}
           className="w-full h-18 py-6 bg-indigo-600 hover:bg-indigo-700 text-white rounded-[2rem] shadow-2xl shadow-indigo-600/20 font-black text-xl uppercase tracking-widest transition-all active:scale-95 disabled:bg-neutral-200 disabled:shadow-none"
         >
           {processing ? (
@@ -373,8 +444,8 @@ function PaymentContent() {
         <p className="text-center text-[10px] text-neutral-400 font-black uppercase tracking-widest flex items-center justify-center gap-2">
           <Shield className="h-3 w-3" /> Secure Crypto-Layer Encryption
         </p>
-      </div>
-    </div>
+      </div >
+    </div >
   )
 }
 

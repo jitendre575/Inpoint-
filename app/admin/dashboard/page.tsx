@@ -658,7 +658,7 @@ export default function AdminDashboardPage() {
                                 </div>
                                 <div className="bg-neutral-50 p-4 rounded-2xl mb-4 text-xs font-medium">
                                     <p>Method: {d.method}</p>
-                                    <p>IFSC: {d.ifsc || 'N/A'}</p>
+                                    <p>UTR: {d.utr || 'N/A'}</p>
                                     <p>Date: {new Date(d.date).toLocaleString()}</p>
                                 </div>
                                 {d.screenshot && <Button onClick={() => setViewingScreenshot(d.screenshot)} variant="outline" className="mb-4 w-full h-12 rounded-xl">View Payment Proof</Button>}

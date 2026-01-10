@@ -4,7 +4,7 @@ import { findUserByEmail, updateUser, getUsers } from '@/lib/db';
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { email, amount, method, screenshot, ifsc } = body;
+        const { email, amount, method, screenshot, utr } = body;
 
         if (!email || !amount) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
             status: 'Processing', // Changed from Approved
             date: new Date().toISOString(),
             screenshot: screenshot || null,
-            ifsc: ifsc || null
+            utr: utr || null
         };
 
         if (!user.deposits) user.deposits = [];
