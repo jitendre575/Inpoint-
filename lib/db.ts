@@ -195,63 +195,24 @@ export const deleteUser = async (userId: string) => {
 };
 
 export const findUserByEmail = async (email: string): Promise<User | undefined> => {
-    if (USE_FIREBASE) {
-        try {
-            if (!db) {
-                console.error("Firebase not initialized");
-                return undefined;
-            }
-            const { query, where, collection, getDocs } = await import('firebase/firestore');
-            const q = query(collection(db, "users"), where("email", "==", email));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                const doc = querySnapshot.docs[0];
-                const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
-                return user;
-            }
-            return undefined;
-        } catch (e) {
-            console.error("Firebase query error:", e);
-            return undefined;
-        }
-    } else {
-        const users = await getUsers();
-        return users.find((u) => u.email === email);
-    }
+    const users = await getUsers();
+    return users.find((u) => u.email === email);
+};
+
+export const findUserByPhone = async (phone: string): Promise<User | undefined> => {
+    const users = await getUsers();
+    return users.find((u) => u.phone === phone);
+};
+
+export const findUserByIdentifier = async (identifier: string): Promise<User | undefined> => {
+    const users = await getUsers();
+    return users.find((u) => u.email === identifier || u.phone === identifier || u.name === identifier);
 };
 
 export const findUserByCredentials = async (identifier: string, password: string): Promise<User | undefined> => {
-    if (USE_FIREBASE) {
-        try {
-            if (!db) {
-                console.error("Firebase not initialized");
-                return undefined;
-            }
-            const { query, where, collection, getDocs } = await import('firebase/firestore');
-            const q = query(collection(db, "users"), where("email", "==", identifier));
-            const querySnapshot = await getDocs(q);
-
-            for (const doc of querySnapshot.docs) {
-                const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
-                if (verifyPassword(password, user.password)) {
-                    return user;
-                }
-            }
-            return undefined;
-        } catch (e) {
-            console.error("Firebase query error:", e);
-            // Fallback to scanning all
-            const users = await getUsers();
-            return users.find((u) =>
-                (u.email === identifier || u.name === identifier) &&
-                verifyPassword(password, u.password)
-            );
-        }
-    } else {
-        const users = await getUsers();
-        return users.find((u) =>
-            (u.email === identifier || u.name === identifier) &&
-            verifyPassword(password, u.password)
-        );
+    const user = await findUserByIdentifier(identifier);
+    if (user && verifyPassword(password, user.password)) {
+        return user;
     }
+    return undefined;
 };

@@ -1,6 +1,6 @@
 
 import { NextResponse } from 'next/server';
-import { saveUser, findUserByEmail, User, hashPassword, getUsers, updateUser } from '@/lib/db';
+import { saveUser, findUserByEmail, findUserByPhone, User, hashPassword, getUsers, updateUser } from '@/lib/db';
 
 export async function POST(request: Request) {
     try {
@@ -10,9 +10,16 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
         }
 
-        const existingUser = await findUserByEmail(email);
-        if (existingUser) {
-            return NextResponse.json({ message: 'User already exists' }, { status: 400 });
+        const [existingEmail, existingPhone] = await Promise.all([
+            findUserByEmail(email),
+            findUserByPhone(phone)
+        ]);
+
+        if (existingEmail) {
+            return NextResponse.json({ message: 'Email address already registered' }, { status: 400 });
+        }
+        if (existingPhone) {
+            return NextResponse.json({ message: 'Mobile number already registered' }, { status: 400 });
         }
 
         const userId = Math.random().toString(36).substring(2, 10).toUpperCase();
@@ -30,8 +37,8 @@ export async function POST(request: Request) {
             deposits: [],
             withdrawals: [],
             referralCode: generatedReferralCode,
-            referredBy: ref || undefined,
-            profilePhoto: profilePhoto || undefined,
+            referredBy: ref || null,
+            profilePhoto: profilePhoto || null,
             createdAt: new Date().toISOString(),
         };
 

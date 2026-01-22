@@ -38,7 +38,7 @@ export default function HomePage() {
       if (currentUser) {
         router.replace("/dashboard")
       } else {
-        router.push("/login")
+        router.push("/create-account")
       }
     }
   }, [isChecking, isMobile, router])
