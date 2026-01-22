@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { db } from './firebase';
-import { collection, getDocs, doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, setDoc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 // Mode detection - Use Firebase if configured, otherwise local FS (dev only)
 const USE_FIREBASE = !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -79,7 +79,6 @@ export type User = {
         reason: string;
         date: string;
     }[];
-    isDeleted?: boolean;
 };
 
 
@@ -180,8 +179,8 @@ export const deleteUser = async (userId: string) => {
     if (USE_FIREBASE) {
         try {
             if (!db) throw new Error("Firebase not initialized");
-            // Soft delete
-            await setDoc(doc(db, "users", userId), { isDeleted: true }, { merge: true });
+            // Hard delete - Permanent removal
+            await deleteDoc(doc(db, "users", userId));
         } catch (e: any) {
             throw new Error(`Firebase Delete Error: ${e.message}`);
         }
@@ -189,7 +188,7 @@ export const deleteUser = async (userId: string) => {
         const users = await getUsers();
         const index = users.findIndex((u) => u.id === userId);
         if (index !== -1) {
-            users[index].isDeleted = true;
+            users.splice(index, 1);
             fs.writeFileSync(dbPath, JSON.stringify(users, null, 2), 'utf-8');
         }
     }
@@ -208,7 +207,7 @@ export const findUserByEmail = async (email: string): Promise<User | undefined> 
             if (!querySnapshot.empty) {
                 const doc = querySnapshot.docs[0];
                 const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
-                return user.isDeleted ? undefined : user;
+                return user;
             }
             return undefined;
         } catch (e) {
@@ -217,7 +216,7 @@ export const findUserByEmail = async (email: string): Promise<User | undefined> 
         }
     } else {
         const users = await getUsers();
-        return users.find((u) => u.email === email && !u.isDeleted);
+        return users.find((u) => u.email === email);
     }
 };
 
@@ -234,7 +233,7 @@ export const findUserByCredentials = async (identifier: string, password: string
 
             for (const doc of querySnapshot.docs) {
                 const user = { ...doc.data(), id: doc.data().id || doc.id } as User;
-                if (verifyPassword(password, user.password) && !user.isDeleted) {
+                if (verifyPassword(password, user.password)) {
                     return user;
                 }
             }
@@ -245,16 +244,14 @@ export const findUserByCredentials = async (identifier: string, password: string
             const users = await getUsers();
             return users.find((u) =>
                 (u.email === identifier || u.name === identifier) &&
-                verifyPassword(password, u.password) &&
-                !u.isDeleted
+                verifyPassword(password, u.password)
             );
         }
     } else {
         const users = await getUsers();
         return users.find((u) =>
             (u.email === identifier || u.name === identifier) &&
-            verifyPassword(password, u.password) &&
-            !u.isDeleted
+            verifyPassword(password, u.password)
         );
     }
 };

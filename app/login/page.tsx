@@ -1,13 +1,13 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
+import { Mail, Lock, ArrowRight, Loader2, Sparkles, User, Fingerprint } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -15,8 +15,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
+    setIsLoaded(true)
     const currentUser = localStorage.getItem("currentUser")
     if (currentUser) {
       router.replace("/dashboard")
@@ -40,28 +42,18 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed');
       }
 
-      // Store user to localStorage for session management (simple approach)
       localStorage.setItem("currentUser", JSON.stringify(data.user));
 
       toast({
-        title: "Login Successful",
-        description: "Welcome back!",
+        title: "Success",
+        description: "Successfully logged into your account.",
+        className: "bg-emerald-50 border-emerald-100 text-emerald-900"
       })
-
-      // Check for bonus in history to show toast
-      const hasBonus = data.user.history.some((h: any) => h.type === 'bonus' && new Date(h.date).getTime() > Date.now() - 10000);
-      // Only show if recent, but here we just rely on standard flow.
-      if (hasBonus && data.user.wallet === 50) {
-        toast({
-          title: "Welcome Bonus! 🎁",
-          description: "₹50 has been added to your wallet as a first-time login gift!",
-        })
-      }
 
       router.push("/dashboard")
     } catch (error: any) {
       toast({
-        title: "Login Failed",
+        title: "Login Error",
         description: error.message,
         variant: "destructive",
       })
@@ -71,101 +63,126 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center p-4">
-      {/* Animated Gradient Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-emerald-700 to-rose-900">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(244,63,94,0.15),transparent_50%)]" />
+    <div className="min-h-screen relative flex items-center justify-center p-4 bg-[#F8FAFC] font-sans selection:bg-indigo-100 selection:text-indigo-600">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-50/50 rounded-full blur-[120px] -mr-40 -mt-20 animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-sky-50/50 rounded-full blur-[120px] -ml-40 -mb-20 animate-pulse delay-700" />
       </div>
 
-      {/* Floating Shapes */}
-      <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-500/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-20 right-10 w-96 h-96 bg-rose-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
-      <div className="absolute top-1/2 left-1/3 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl animate-pulse delay-500" />
+      <div className={`relative w-full max-w-[440px] z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
 
-      {/* Glassmorphism Card */}
-      <div className="relative w-full max-w-md z-10">
-        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 md:p-10">
-          {/* Logo & Header */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-400 to-rose-500 shadow-lg mb-6 relative">
-              <div className="absolute inset-0 bg-white/20 rounded-2xl backdrop-blur-sm" />
-              <svg className="h-10 w-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+        {/* Brand Logo */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 bg-white rounded-2xl shadow-xl shadow-indigo-100 flex items-center justify-center mb-4 border border-indigo-50 group hover:rotate-12 transition-transform duration-500">
+            <div className="w-10 h-10 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl flex items-center justify-center p-2 shadow-inner">
+              <Fingerprint className="text-white w-full h-full" />
             </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-tight">
-              Welcome Back
-            </h1>
-            <p className="text-emerald-100/80 text-sm md:text-base">
-              Login to your investment account
-            </p>
           </div>
-
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div>
-              <Label htmlFor="email" className="text-white/90 font-medium text-sm">
-                Email / Mobile
-              </Label>
-              <Input
-                id="email"
-                type="text"
-                placeholder="Enter your email or mobile"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password" className="text-white/90 font-medium text-sm">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="mt-2 h-12 bg-white/10 border-white/20 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-emerald-400 transition-all backdrop-blur-sm"
-                required
-              />
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base shadow-lg transition-all duration-300 border-0"
-              disabled={loading}
-            >
-              {loading ? "Logging in..." : "Login"}
-            </Button>
-
-            <div className="text-center pt-2">
-              <p className="text-white/60 text-sm mb-4">Don't have an account?</p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/create-account")}
-                className="w-full h-12 bg-white/5 border-white/20 text-white hover:bg-white/10 hover:text-white font-semibold text-base transition-all duration-300"
-              >
-                Create Account
-              </Button>
-            </div>
-          </form>
-
-
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Inpoint<span className="text-indigo-600">Rose</span></h1>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-1">Institutional Grade Trading</p>
         </div>
 
-        {/* Decorative Elements */}
-        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-rose-400 to-amber-400 rounded-full blur-2xl opacity-40 animate-pulse" />
-        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-br from-emerald-400 to-cyan-400 rounded-full blur-2xl opacity-40 animate-pulse delay-700" />
+        {/* Login Card */}
+        <div className="bg-white rounded-[2.5rem] shadow-[0_20px_50px_rgba(79,70,229,0.1)] border border-slate-100 p-8 md:p-10 relative overflow-hidden">
+          {/* Subtle Glow inside card */}
+          <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full blur-3xl -tr-10 -rt-10" />
+
+          <div className="relative">
+            <div className="mb-8">
+              <h2 className="text-2xl font-black text-slate-900">Welcome Back</h2>
+              <p className="text-slate-400 font-medium text-sm mt-1">Please enter your credentials to login.</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-slate-500 font-bold text-xs uppercase tracking-wider ml-1">
+                  Email / Username
+                </Label>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                    <User className="h-5 w-5" />
+                  </div>
+                  <Input
+                    id="email"
+                    type="text"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-14 pl-12 pr-4 bg-slate-50/50 border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all font-semibold"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between items-center px-1">
+                  <Label htmlFor="password" className="text-slate-500 font-bold text-xs uppercase tracking-wider">
+                    Password
+                  </Label>
+                  <button type="button" className="text-xs font-bold text-indigo-600 hover:text-indigo-700 transition-colors">
+                    Forgot Password?
+                  </button>
+                </div>
+                <div className="relative group">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-600 transition-colors">
+                    <Lock className="h-5 w-5" />
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-14 pl-12 pr-4 bg-slate-50/50 border-slate-100 rounded-2xl focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-600 transition-all font-semibold"
+                    required
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-14 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-2xl shadow-xl shadow-indigo-100 hover:shadow-indigo-200 transition-all duration-300 group overflow-hidden"
+                disabled={loading}
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2 uppercase tracking-widest text-xs">
+                  {loading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <>
+                      Secure Login
+                      <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Button>
+            </form>
+
+            <div className="mt-10 text-center">
+              <p className="text-slate-400 font-medium text-sm">
+                Don't have an account?{' '}
+                <button
+                  onClick={() => router.push("/create-account")}
+                  className="text-indigo-600 font-black hover:text-indigo-800 transition-colors underline decoration-2 underline-offset-4"
+                >
+                  Create for free
+                </button>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="mt-8 flex items-center justify-center gap-6 text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-amber-400" /> Secure Encryption
+          </div>
+          <div className="w-1 h-1 bg-slate-200 rounded-full" />
+          <div className="flex items-center gap-1.5">
+            <Fingerprint className="h-3 w-3 text-indigo-400" /> Privacy First
+          </div>
+        </div>
       </div>
     </div>
   )

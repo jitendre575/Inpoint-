@@ -732,22 +732,30 @@ export default function AdminDashboardPage() {
 
             {/* Delete Confirmation Modal */}
             <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-                <DialogContent className="max-w-sm p-8 rounded-[2.5rem] border-0 bg-white">
+                <DialogContent className="max-w-md p-8 rounded-[2.5rem] border-0 bg-white">
                     <DialogHeader>
-                        <DialogTitle className="font-black text-xl text-rose-600 flex items-center gap-2">
-                            <Trash2 className="h-6 w-6" /> Delete Account?
+                        <DialogTitle className="font-black text-2xl text-rose-600 flex items-center gap-3">
+                            <Trash2 className="h-7 w-7" /> Permanent Deletion
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="py-4">
-                        <p className="text-sm text-neutral-500 font-medium">Are you sure you want to delete <span className="font-black text-neutral-900">{userToDelete?.name}</span>'s account?</p>
-                        <div className="mt-4 p-4 bg-rose-50 rounded-2xl border border-rose-100">
-                            <p className="text-[10px] text-rose-600 font-black uppercase tracking-widest leading-relaxed">This will immediately disable their login and remove their data. Transactions will be kept for records.</p>
+                    <div className="py-6">
+                        <p className="text-lg text-neutral-900 font-black mb-2">Are you sure you want to permanently delete this user?</p>
+                        <p className="text-sm text-neutral-500 font-medium mb-4">Account: <span className="text-neutral-900 font-bold">{userToDelete?.name}</span> ({userToDelete?.email})</p>
+
+                        <div className="mt-4 p-5 bg-rose-50 rounded-3xl border border-rose-100 flex gap-4">
+                            <div className="h-10 w-10 bg-rose-100 rounded-xl flex items-center justify-center shrink-0">
+                                <Shield className="h-5 w-5 text-rose-600" />
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-xs text-rose-700 font-black uppercase tracking-wider">Irreversible Action</p>
+                                <p className="text-[11px] text-rose-600 font-bold leading-relaxed">This action cannot be undone. All profile data, wallet balance, transaction history, and support records will be permanently removed from the database.</p>
+                            </div>
                         </div>
                     </div>
                     <div className="flex gap-3">
-                        <Button onClick={() => setShowDeleteModal(false)} variant="ghost" className="flex-1 font-bold">Cancel</Button>
-                        <Button onClick={handleDeleteUser} disabled={actionLoading} className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-black uppercase text-[10px]">
-                            {actionLoading ? 'Deleting...' : 'Confirm Delete'}
+                        <Button onClick={() => setShowDeleteModal(false)} variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-xs">Cancel</Button>
+                        <Button onClick={handleDeleteUser} disabled={actionLoading} className="flex-1 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black uppercase text-xs shadow-xl shadow-rose-200">
+                            {actionLoading ? 'Puting down users...' : 'Permanently Delete'}
                         </Button>
                     </div>
                 </DialogContent>
