@@ -4,9 +4,9 @@ import { saveUser, findUserByEmail, User, hashPassword, getUsers, updateUser } f
 
 export async function POST(request: Request) {
     try {
-        const { name, email, password, referralCode: ref, profilePhoto } = await request.json();
+        const { name, email, password, phone, referralCode: ref, profilePhoto } = await request.json();
 
-        if (!name || !email || !password) {
+        if (!name || !email || !password || !phone) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
         }
 
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
             id: userId,
             name,
             email,
+            phone,
             password: hashPassword(password),
             wallet: 0,
             plans: [],

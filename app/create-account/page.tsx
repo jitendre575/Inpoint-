@@ -1,59 +1,83 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, Suspense, useRef } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Users, Camera, User as UserIcon, ShieldCheck } from "lucide-react"
+import { User, Mail, Lock, Phone, ArrowRight, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 
-function RegisterContent() {
+function RegisterForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    mobileNumber: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  })
+
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [refCode, setRefCode] = useState("")
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser")
     if (currentUser) {
       router.replace("/dashboard")
     }
+  }, [router])
 
-    const ref = searchParams.get("ref")
-    if (ref) {
-      setRefCode(ref)
-    }
-  }, [router, searchParams])
+  const validate = () => {
+    const newErrors: Record<string, string> = {}
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setProfilePhoto(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+    if (formData.fullName.length < 2) newErrors.fullName = "Name is too short"
+    if (!/^\d{10}$/.test(formData.mobileNumber)) newErrors.mobileNumber = "Enter a valid 10-digit number"
+    if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Enter a valid email address"
+    if (formData.password.length < 6) newErrors.password = "Password must be at least 6 characters"
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = "Passwords do not match"
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    // Clear error for this field
+    if (errors[name]) {
+      setErrors(prev => {
+        const next = { ...prev }
+        delete next[name]
+        return next
+      })
     }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!validate()) return
+
     setLoading(true)
+    const ref = searchParams.get("ref")
 
     try {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, referralCode: refCode, profilePhoto })
+        body: JSON.stringify({
+          name: formData.fullName,
+          email: formData.email,
+          phone: formData.mobileNumber,
+          password: formData.password,
+          referralCode: ref
+        })
       });
 
       const data = await res.json();
@@ -64,7 +88,7 @@ function RegisterContent() {
 
       toast({
         title: "Account Created!",
-        description: "You can now login with your credentials.",
+        description: "Your account has been set up successfully.",
       })
 
       router.push("/login")
@@ -80,110 +104,152 @@ function RegisterContent() {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-900 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Premium Background */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] -mr-48 -mt-48" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] -ml-48 -mb-48" />
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      {/* Background shape */}
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-50" />
+        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50" />
+      </div>
 
-      <div className="relative w-full max-w-lg z-10">
-        <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 p-10 rounded-[3rem] shadow-2xl shadow-black/50">
-          <div className="text-center mb-10">
-            <h1 className="text-4xl font-black text-white mb-3 tracking-tighter italic">Join Inpoint<span className="text-emerald-500">.</span></h1>
-            <p className="text-neutral-400 font-bold uppercase tracking-widest text-[10px]">Start your high-yield journey</p>
+      <div className="w-full max-w-md relative z-10">
+        {/* Logo Section */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#5842F4] rounded-2xl shadow-lg shadow-indigo-200 mb-4 animate-in fade-in zoom-in duration-500">
+            <Lock className="w-8 h-8 text-white" />
           </div>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Account</h1>
+          <p className="text-slate-500 text-sm mt-1">Join InpointRose trading platform today</p>
+        </div>
 
-          <form onSubmit={handleRegister} className="space-y-6">
-            {/* Profile Photo Upload */}
-            <div className="flex flex-col items-center mb-8">
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="h-28 w-28 rounded-[2.5rem] bg-neutral-800 border-2 border-dashed border-neutral-600 flex items-center justify-center cursor-pointer hover:border-emerald-500 transition-all overflow-hidden relative group"
-              >
-                {profilePhoto ? (
-                  <img src={profilePhoto} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="text-neutral-500 flex flex-col items-center gap-1 group-hover:text-emerald-400">
-                    <Camera className="h-8 w-8" />
-                    <span className="text-[10px] font-black uppercase">Upload</span>
-                  </div>
-                )}
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <Camera className="h-6 w-6 text-white" />
-                </div>
-              </div>
-              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
-              <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest mt-3">Profile Photo Required</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-neutral-300 text-[10px] font-black uppercase tracking-widest ml-1">Full Name</Label>
-                <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
-                  <Input
-                    placeholder="Enter Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="h-14 pl-12 bg-white/5 border-white/10 text-white placeholder:text-neutral-600 rounded-2xl focus:bg-white/10 transition-all font-bold"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-neutral-300 text-[10px] font-black uppercase tracking-widest ml-1">Referral Code</Label>
-                <div className="relative">
-                  <Users className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-500" />
-                  <Input
-                    placeholder="Optional"
-                    value={refCode}
-                    onChange={(e) => setRefCode(e.target.value)}
-                    className="h-14 pl-12 bg-white/5 border-white/10 text-white placeholder:text-neutral-600 rounded-2xl focus:bg-white/10 transition-all font-bold"
-                  />
-                </div>
-              </div>
-            </div>
-
+        {/* Card */}
+        <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/60 border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <form onSubmit={handleRegister} className="space-y-5">
+            {/* Full Name */}
             <div className="space-y-2">
-              <Label className="text-neutral-300 text-[10px] font-black uppercase tracking-widest ml-1">Email / Mobile</Label>
-              <Input
-                type="text"
-                placeholder="Enter Email or Phone Number"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-14 bg-white/5 border-white/10 text-white placeholder:text-neutral-600 rounded-2xl focus:bg-white/10 transition-all font-bold"
-                required
-              />
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Full Name</Label>
+              <div className="relative group">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Input
+                  name="fullName"
+                  placeholder="John Doe"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.fullName ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                />
+                {errors.fullName && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.fullName}</p>}
+              </div>
             </div>
 
+            {/* Mobile Number */}
             <div className="space-y-2">
-              <Label className="text-neutral-300 text-[10px] font-black uppercase tracking-widest ml-1">Password</Label>
-              <Input
-                type="password"
-                placeholder="Secure Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-14 bg-white/5 border-white/10 text-white placeholder:text-neutral-600 rounded-2xl focus:bg-white/10 transition-all font-bold"
-                required
-              />
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Mobile Number</Label>
+              <div className="relative group">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Input
+                  name="mobileNumber"
+                  placeholder="9876543210"
+                  type="tel"
+                  value={formData.mobileNumber}
+                  onChange={handleChange}
+                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.mobileNumber ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                />
+                {errors.mobileNumber && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.mobileNumber}</p>}
+              </div>
+            </div>
+
+            {/* Email Address */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Email Address</Label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Input
+                  name="email"
+                  placeholder="name@example.com"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.email ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                />
+                {errors.email && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.email}</p>}
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Password</Label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Input
+                  name="password"
+                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`h-12 pl-12 pr-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.password ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+                {errors.password && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.password}</p>}
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Confirm Password</Label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Input
+                  name="confirmPassword"
+                  placeholder="••••••••"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.confirmPassword ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                />
+                {errors.confirmPassword && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.confirmPassword}</p>}
+              </div>
             </div>
 
             <Button
               type="submit"
-              className="w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-2xl shadow-emerald-500/20 transition-all active:scale-95 disabled:bg-neutral-800"
               disabled={loading}
+              className="w-full h-14 bg-[#5842F4] hover:bg-[#4731e0] text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2 mt-2"
             >
-              {loading ? "Establishing Protocol..." : "Create Account"}
+              {loading ? (
+                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  Create Account
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </Button>
           </form>
 
-          <p className="text-center mt-8 text-neutral-500 text-xs font-bold">
-            Already a member? <Link href="/login" className="text-emerald-500 hover:text-emerald-400 ml-1">Sign In</Link>
-          </p>
+          <div className="mt-8 text-center">
+            <p className="text-slate-500 text-sm font-medium">
+              Already have an account?
+              <Link href="/login" className="text-[#5842F4] hover:text-[#4731e0] ml-1 font-bold underline-offset-4 hover:underline transition-all">
+                Login
+              </Link>
+            </p>
+          </div>
+        </div>
 
-          <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-neutral-700" />
-            <span className="text-[9px] font-black text-neutral-700 uppercase tracking-widest">End-to-End SSL Encrypted</span>
+        {/* Support Section */}
+        <div className="mt-8 text-center flex items-center justify-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Secure Server</span>
+          </div>
+          <div className="w-1 h-1 bg-slate-300 rounded-full" />
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">256-bit AES</span>
           </div>
         </div>
       </div>
@@ -193,8 +259,12 @@ function RegisterContent() {
 
 export default function CreateAccountPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-neutral-900 flex items-center justify-center"><div className="animate-spin h-10 w-10 border-4 border-emerald-500 border-t-transparent rounded-full" /></div>}>
-      <RegisterContent />
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="animate-spin h-10 w-10 border-4 border-[#5842F4] border-t-transparent rounded-full" />
+      </div>
+    }>
+      <RegisterForm />
     </Suspense>
   )
 }
