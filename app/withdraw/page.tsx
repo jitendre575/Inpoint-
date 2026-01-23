@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card } from "@/components/ui/card"
 import { BottomNav } from "@/components/bottom-nav"
 import { useToast } from "@/hooks/use-toast"
+import { ArrowLeft, Wallet, Landmark, QrCode, ShieldCheck, Timer, ChevronRight } from "lucide-react"
 
 export default function WithdrawPage() {
   const router = useRouter()
@@ -19,6 +20,7 @@ export default function WithdrawPage() {
     name: "",
     bankOrUpi: "bank",
     accountNumber: "",
+    ifsc: "",
   })
 
   useEffect(() => {
@@ -32,34 +34,21 @@ export default function WithdrawPage() {
     const amount = Number.parseFloat(formData.amount)
 
     if (!amount || amount < 1000) {
-      toast({
-        title: "Minimum Withdrawal",
-        description: "Minimum withdrawal amount is ₹1000",
-        variant: "destructive",
-      })
+      toast({ title: "Min Withdrawal", description: "Minimum withdrawal amount is ₹1000", variant: "destructive" })
       return
     }
 
     if (user && amount > user.wallet) {
-      toast({
-        title: "Insufficient Balance",
-        description: "You do not have enough balance to withdraw this amount.",
-        variant: "destructive",
-      })
+      toast({ title: "Insufficient Balance", description: "You do not have enough balance.", variant: "destructive" })
       return
     }
 
-    if (!formData.name || !formData.accountNumber) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      })
+    if (!formData.name || !formData.accountNumber || (formData.bankOrUpi === 'bank' && !formData.ifsc)) {
+      toast({ title: "Missing Information", description: "Please fill in all required fields.", variant: "destructive" })
       return
     }
 
     setLoading(true)
-
     try {
       const res = await fetch('/api/user/withdraw', {
         method: 'POST',
@@ -70,29 +59,20 @@ export default function WithdrawPage() {
           bankDetails: {
             name: formData.name,
             type: formData.bankOrUpi,
-            accountNumber: formData.accountNumber
+            accountNumber: formData.accountNumber,
+            ifsc: formData.bankOrUpi === 'bank' ? formData.ifsc : undefined
           }
         })
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Withdraw failed');
-
-      // Update Local Storage
       localStorage.setItem("currentUser", JSON.stringify(data.user));
 
-      toast({
-        title: "Withdrawal Requested",
-        description: "Your withdrawal request is pending approval.",
-      })
-
+      toast({ title: "Request Sent", description: "Your withdrawal request is pending approval." })
       router.push("/dashboard")
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: error.message, variant: "destructive" })
     } finally {
       setLoading(false)
     }
@@ -101,130 +81,145 @@ export default function WithdrawPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-b-[2rem] shadow-lg">
-        <div className="flex items-center gap-4 mb-4">
-          <Button onClick={() => router.back()} variant="ghost" className="text-white hover:bg-white/20 p-2">
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </Button>
-          <h1 className="text-2xl font-bold">Withdraw Money</h1>
-        </div>
+    <div className="min-h-screen bg-[#FDFCFF] pb-32 font-sans selection:bg-theme-lavender selection:text-theme-purple">
+      {/* Dynamic Header */}
+      <div className="bg-[#1A0B2E] text-white px-6 pt-16 pb-24 relative overflow-hidden rounded-b-[4rem] shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-theme-purple/20 rounded-full -mr-20 -mt-20 blur-[100px]" />
 
-        <Card className="bg-white/10 backdrop-blur-sm border-white/20 p-5">
-          <p className="text-orange-100 text-sm mb-1">Available Balance</p>
-          <p className="text-3xl font-bold">₹{user.wallet?.toFixed(2) || "0.00"}</p>
+        <div className="relative z-10 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 backdrop-blur-md">
+              <ArrowLeft className="h-6 w-6 text-theme-violet cursor-pointer" onClick={() => router.back()} />
+            </div>
+            <div>
+              <p className="text-theme-lavender/40 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Elite Settlement</p>
+              <h1 className="text-2xl font-black tracking-tighter">Withdraw Capital</h1>
+            </div>
+          </div>
+          <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+            <ShieldCheck className="h-6 w-6 text-theme-gold" />
+          </div>
+        </div>
+      </div>
+
+      <div className="px-5 -mt-10 relative z-20">
+        <Card className="bg-white/95 backdrop-blur-3xl shadow-xl shadow-theme-purple/5 border border-theme-lavender rounded-[3rem] p-10 overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-theme-lavender/50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-1000" />
+
+          <div className="relative">
+            <p className="text-theme-purple/40 text-[10px] font-black uppercase tracking-[0.2em] mb-2 px-2">Total Redeemable</p>
+            <h2 className="text-5xl font-black text-[#2D1A4A] tracking-tighter italic mb-1">₹{user.wallet?.toLocaleString()}</h2>
+            <div className="flex items-center gap-2 text-theme-gold font-black text-[10px] uppercase tracking-widest px-1">
+              <Timer className="h-3 w-3" />
+              <span>Next Settlement available in 24h</span>
+            </div>
+          </div>
         </Card>
       </div>
 
-      <div className="p-6 space-y-4">
-        <Card className="p-6 shadow-lg">
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="amount" className="text-gray-700 font-medium">
-                Withdrawal Amount
-              </Label>
-              <Input
-                id="amount"
-                type="number"
-                placeholder="Enter amount"
-                value={formData.amount}
-                onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                className="mt-2 h-12 text-base"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="name" className="text-gray-700 font-medium">
-                Account Holder Name
-              </Label>
-              <Input
-                id="name"
-                type="text"
-                placeholder="Enter your name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="mt-2 h-12 text-base"
-              />
-            </div>
-
-            <div>
-              <Label className="text-gray-700 font-medium">Payment Method</Label>
-              <div className="flex gap-3 mt-2">
-                <Button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, bankOrUpi: "bank" })}
-                  className={`flex-1 h-12 ${formData.bankOrUpi === "bank"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                    }`}
-                >
-                  Bank Account
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, bankOrUpi: "upi" })}
-                  className={`flex-1 h-12 ${formData.bankOrUpi === "upi"
-                    ? "bg-orange-500 hover:bg-orange-600"
-                    : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                    }`}
-                >
-                  UPI ID
-                </Button>
+      <div className="p-5 space-y-6 mt-6">
+        <Card className="p-8 bg-white border border-theme-purple/5 shadow-[0_16px_32px_rgba(109,40,217,0.04)] rounded-[3rem]">
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="amount" className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Withdraw Amount</Label>
+              <div className="relative group">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-theme-purple/30 font-black text-lg">₹</span>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="Min 1000"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  className="h-16 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 font-black text-xl"
+                />
               </div>
             </div>
 
-            <div>
-              <Label htmlFor="accountNumber" className="text-gray-700 font-medium">
-                {formData.bankOrUpi === "bank" ? "Account Number" : "UPI ID"}
-              </Label>
-              <Input
-                id="accountNumber"
-                type="text"
-                placeholder={formData.bankOrUpi === "bank" ? "Enter account number" : "Enter UPI ID"}
-                value={formData.accountNumber}
-                onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
-                className="mt-2 h-12 text-base"
-              />
+            <div className="space-y-2">
+              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Channel</Label>
+              <div className="flex p-1.5 bg-theme-lavender rounded-3xl gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, bankOrUpi: "bank" })}
+                  className={`flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${formData.bankOrUpi === "bank" ? "bg-white text-theme-purple shadow-sm" : "text-theme-purple/30"}`}
+                >
+                  <Landmark className="h-4 w-4" /> Bank
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, bankOrUpi: "upi" })}
+                  className={`flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${formData.bankOrUpi === "upi" ? "bg-white text-theme-purple shadow-sm" : "text-theme-purple/30"}`}
+                >
+                  <QrCode className="h-4 w-4" /> UPI ID
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Beneficiary Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Verify your passbook name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="h-14 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 font-bold"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="accountNumber" className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">
+                  {formData.bankOrUpi === "bank" ? "Account Identifier" : "Virtual Payment Address"}
+                </Label>
+                <Input
+                  id="accountNumber"
+                  placeholder={formData.bankOrUpi === "bank" ? "Account Number" : "name@upi"}
+                  value={formData.accountNumber}
+                  onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
+                  className="h-14 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 font-bold"
+                />
+              </div>
+
+              {formData.bankOrUpi === "bank" && (
+                <div className="space-y-2">
+                  <Label htmlFor="ifsc" className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">IFSC Designation</Label>
+                  <Input
+                    id="ifsc"
+                    placeholder="Bank Branch Code"
+                    value={formData.ifsc}
+                    onChange={(e) => setFormData({ ...formData, ifsc: e.target.value.toUpperCase() })}
+                    className="h-14 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 font-black uppercase"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </Card>
 
-        <Card className="p-5 bg-orange-50 border-orange-200">
-          <div className="flex gap-3">
-            <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
-              <svg className="h-5 w-5 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-orange-900 mb-1">Processing Time</p>
-              <p className="text-xs text-orange-700 leading-relaxed">
-                Withdrawal requests are typically processed within 24-48 hours.
-              </p>
-            </div>
+        {/* Info Alert */}
+        <div className="px-4 py-6 bg-theme-gold/5 border border-theme-gold/10 rounded-[2.5rem] flex gap-5">
+          <div className="h-12 w-12 bg-white rounded-2xl flex items-center justify-center shrink-0 border border-theme-gold/10">
+            <Timer className="h-6 w-6 text-theme-gold animate-pulse" />
           </div>
-        </Card>
+          <div>
+            <p className="text-[10px] font-black text-theme-gold uppercase tracking-[0.2em] mb-1">Standard Processing</p>
+            <p className="text-theme-gold/60 text-xs font-bold leading-relaxed">Typical audit timeline is 24 to 48 hours for institutional security.</p>
+          </div>
+        </div>
 
         <Button
           onClick={handleWithdraw}
           disabled={loading || (user?.wallet < 1000)}
-          className={`w-full h-12 font-bold text-lg shadow-md transition-all ${user?.wallet < 1000
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600"
+          className={`w-full h-18 text-white font-black rounded-3xl shadow-2xl transition-all border-0 text-lg active:scale-95 disabled:opacity-50 ${user?.wallet < 1000
+            ? "bg-slate-200 text-slate-400"
+            : "bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple shadow-theme-purple/20"
             }`}
         >
-          {loading ? "Processing..." : user?.wallet < 1000 ? "Min ₹1000 Required" : "Submit Withdrawal Request"}
+          {loading ? "Establishing Link..." : user?.wallet < 1000 ? "Minimum ₹1000 Required" : "Submit Request"}
         </Button>
         {user?.wallet < 1000 && (
-          <p className="text-center text-red-500 text-sm font-medium mt-2">
-            Minimum withdrawal amount is ₹1000
+          <p className="text-center text-rose-500 text-[10px] font-black uppercase tracking-widest">
+            Portfolio must meet ₹1000 threshold for liquidity.
           </p>
         )}
       </div>

@@ -1,12 +1,12 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
 import "./globals.css"
 import { SupportFloatingButton } from "@/components/support-floating-button"
 
-const geist = Geist({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   display: 'swap',
   preload: true
@@ -45,20 +45,7 @@ export const metadata: Metadata = {
     images: [`${process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app"}/images/inpoint-rose-grow-og.png`],
   },
   icons: {
-    icon: [
-      {
-        url: "/images/inpoint-rose-grow-icon.png",
-        media: "(prefers-color-scheme: light)",
-      },
-      {
-        url: "/images/inpoint-rose-grow-icon.png",
-        media: "(prefers-color-scheme: dark)",
-      },
-      {
-        url: "/icon.svg",
-        type: "image/svg+xml",
-      },
-    ],
+    icon: "/images/inpoint-rose-grow-icon.png",
     apple: "/images/inpoint-rose-grow-icon.png",
   },
 }
@@ -70,7 +57,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geist.className} antialiased`} suppressHydrationWarning>
+      <body className={`${jakarta.className} antialiased`} suppressHydrationWarning>
         {children}
         <Toaster />
         <Analytics />

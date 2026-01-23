@@ -16,17 +16,26 @@ export async function POST(request: Request) {
         // Update login time
         user.lastLogin = new Date().toISOString();
 
-        // Check first login logic (Wallet +50) - Only if wallet is 0 and no history/plans? 
-        // Or check a specific flag. Let's assume if it's the first time lastLogin was undefined (before we set it above? No, we set it now).
-        // Actually, let's keep it simple. If wallet is 0, give bonus.
-        if (user.wallet === 0 && user.plans.length === 0) {
-            user.wallet = 50;
+        let bonusMessage = null;
+
+        // New Bonus Logic: Credit only once on first login
+        if (!user.bonusClaimed) {
+            const isPromoJR007 = user.promoCode === "JR007";
+            const bonusAmount = isPromoJR007 ? 299 : 149;
+
+            user.wallet = (user.wallet || 0) + bonusAmount;
+            user.bonusClaimed = true;
+
+            bonusMessage = isPromoJR007 ? "₹299 Bonus Added" : "₹149 Welcome Bonus Added";
+
             // Add to history
             user.history.push({
+                id: Date.now().toString(),
                 type: 'bonus',
-                amount: 50,
+                amount: bonusAmount,
                 date: new Date().toISOString(),
-                description: 'Welcome Bonus'
+                status: 'Completed',
+                description: isPromoJR007 ? 'Promo Code JR007 Bonus' : 'Welcome Bonus'
             });
         }
 
@@ -35,7 +44,7 @@ export async function POST(request: Request) {
         // Return user without password
         const { password: _, ...userWithoutPass } = user;
 
-        return NextResponse.json({ message: 'Login successful', user: userWithoutPass });
+        return NextResponse.json({ message: 'Login successful', user: userWithoutPass, bonusMessage });
     } catch (error) {
         return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
     }

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { User, Mail, Lock, Phone, ArrowRight, Eye, EyeOff } from "lucide-react"
+import { User, Mail, Lock, Phone, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 function RegisterForm() {
@@ -21,6 +21,7 @@ function RegisterForm() {
     email: "",
     password: "",
     confirmPassword: "",
+    promoCode: "",
   })
 
   const [showPassword, setShowPassword] = useState(false)
@@ -50,7 +51,6 @@ function RegisterForm() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    // Clear error for this field
     if (errors[name]) {
       setErrors(prev => {
         const next = { ...prev }
@@ -76,180 +76,151 @@ function RegisterForm() {
           email: formData.email,
           phone: formData.mobileNumber,
           password: formData.password,
-          referralCode: ref
+          referralCode: ref,
+          promoCode: formData.promoCode
         })
       });
 
       const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-      if (!res.ok) {
-        throw new Error(data.message || 'Registration failed');
-      }
-
-      toast({
-        title: "Account Created!",
-        description: "Your account has been set up successfully.",
-      })
-
+      toast({ title: "Account Created!", description: "Your account has been set up successfully." })
       router.push("/login")
     } catch (error: any) {
-      toast({
-        title: "Registration Failed",
-        description: error.message,
-        variant: "destructive",
-      })
+      toast({ title: "Registration Failed", description: error.message, variant: "destructive" })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      {/* Background shape */}
-      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-100 rounded-full blur-3xl opacity-50" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50" />
-      </div>
+    <div className="min-h-screen bg-[#0F071F] flex items-center justify-center p-4 overflow-hidden relative selection:bg-theme-violet selection:text-white">
+      {/* Background Glows */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-theme-purple/20 rounded-full blur-[120px] -mr-40 -mt-20 animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-theme-violet/10 rounded-full blur-[100px] -ml-20 -mb-20" />
 
-      <div className="w-full max-w-md relative z-10">
+      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         {/* Logo Section */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#5842F4] rounded-2xl shadow-lg shadow-indigo-200 mb-4 animate-in fade-in zoom-in duration-500">
-            <Lock className="w-8 h-8 text-white" />
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-theme-purple/20 to-theme-violet/20 backdrop-blur-xl rounded-[2rem] border-2 border-theme-violet/30 shadow-[0_0_30px_rgba(124,58,237,0.2)] mb-6 animate-in zoom-in duration-700">
+            <User className="w-10 h-10 text-theme-violet" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Account</h1>
-          <p className="text-slate-500 text-sm mt-1">Join InpointRose trading platform today</p>
+          <h1 className="text-4xl font-black text-white tracking-tighter">Join the <span className="text-theme-violet italic">Elite</span></h1>
+          <p className="text-theme-lavender/40 text-sm font-medium mt-2">Create your account and unlock daily payouts.</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white p-8 rounded-[2rem] shadow-xl shadow-slate-200/60 border border-slate-100 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="bg-white/95 backdrop-blur-2xl p-8 rounded-[3.5rem] shadow-[0_32px_80px_rgba(109,40,217,0.15)] border border-theme-lavender">
           <form onSubmit={handleRegister} className="space-y-5">
             {/* Full Name */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Full Name</Label>
+              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Display Name</Label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
                 <Input
                   name="fullName"
-                  placeholder="John Doe"
+                  placeholder="e.g. Rahul Sharma"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.fullName ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                  className={`h-14 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.fullName ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
                 />
-                {errors.fullName && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.fullName}</p>}
               </div>
             </div>
 
-            {/* Mobile Number */}
+            {/* Mobile */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Mobile Number</Label>
+              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Mobile Number</Label>
               <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
                 <Input
                   name="mobileNumber"
-                  placeholder="9876543210"
+                  placeholder="10-digit number"
                   type="tel"
                   value={formData.mobileNumber}
                   onChange={handleChange}
-                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.mobileNumber ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                  className={`h-14 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.mobileNumber ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
                 />
-                {errors.mobileNumber && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.mobileNumber}</p>}
               </div>
             </div>
 
             {/* Email Address */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Email Address</Label>
+              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Email Address</Label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
                 <Input
                   name="email"
                   placeholder="name@example.com"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.email ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                  className={`h-14 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.email ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
                 />
-                {errors.email && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.email}</p>}
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Field */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Password</Label>
+              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Access Password</Label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
                 <Input
                   name="password"
-                  placeholder="••••••••"
+                  placeholder="Secure password"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`h-12 pl-12 pr-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.password ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                  className={`h-14 pl-12 pr-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.password ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                >
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-purple/30 hover:text-theme-purple transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
-                {errors.password && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.password}</p>}
               </div>
             </div>
 
-            {/* Confirm Password */}
+            {/* Promo Code with Gold Highlight */}
             <div className="space-y-2">
-              <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wider ml-1">Confirm Password</Label>
+              <Label className="text-[10px] font-black text-theme-gold uppercase tracking-[0.2em] ml-2">Referrer Code (Optional)</Label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-[#5842F4] transition-colors" />
+                <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-gold opacity-40 group-focus-within:opacity-100 transition-opacity" />
                 <Input
-                  name="confirmPassword"
-                  placeholder="••••••••"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.confirmPassword}
+                  name="promoCode"
+                  placeholder="e.g. JR007"
+                  value={formData.promoCode}
                   onChange={handleChange}
-                  className={`h-12 pl-12 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-indigo-50 border-2 transition-all ${errors.confirmPassword ? 'border-red-400 focus:ring-red-50' : 'group-hover:border-slate-300'}`}
+                  className="h-14 pl-12 rounded-2xl border-theme-gold/20 bg-theme-gold/[0.02] focus:ring-8 focus:ring-theme-gold/5 border-2 transition-all font-bold group-hover:border-theme-gold/30"
                 />
-                {errors.confirmPassword && <p className="text-[10px] text-red-500 font-medium mt-1 ml-1">{errors.confirmPassword}</p>}
               </div>
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-14 bg-[#5842F4] hover:bg-[#4731e0] text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex items-center justify-center gap-2 mt-2"
+              className="w-full h-16 bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white font-black rounded-[1.5rem] shadow-2xl shadow-theme-purple/20 transition-all border-0 active:scale-95 disabled:opacity-70 mt-4 text-lg"
             >
-              {loading ? (
-                <div className="h-5 w-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  Create Account
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
+              {loading ? "Establishing Account..." : "Confirm & Join"}
             </Button>
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-slate-500 text-sm font-medium">
-              Already have an account?
-              <Link href="/login" className="text-[#5842F4] hover:text-[#4731e0] ml-1 font-bold underline-offset-4 hover:underline transition-all">
-                Login
+            <p className="text-theme-purple/40 text-[11px] font-black uppercase tracking-widest">
+              Already verified?
+              <Link href="/login" className="text-theme-violet hover:text-theme-purple ml-2 font-black transition-all">
+                Sign In
               </Link>
             </p>
           </div>
         </div>
 
-        {/* Support Section */}
-        <div className="mt-8 text-center flex items-center justify-center gap-6">
+        {/* Security Footer */}
+        <div className="mt-10 flex items-center justify-center gap-6 opacity-40">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">Secure Server</span>
+            <div className="w-2 h-2 bg-theme-gold rounded-full animate-pulse" />
+            <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Secure Node</span>
           </div>
-          <div className="w-1 h-1 bg-slate-300 rounded-full" />
+          <div className="w-1 h-1 bg-theme-violet rounded-full" />
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.1em]">256-bit AES</span>
+            <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">End-to-End Encrypted</span>
           </div>
         </div>
       </div>
@@ -259,11 +230,7 @@ function RegisterForm() {
 
 export default function CreateAccountPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin h-10 w-10 border-4 border-[#5842F4] border-t-transparent rounded-full" />
-      </div>
-    }>
+    <Suspense fallback={<div className="min-h-screen bg-[#0F071F] flex items-center justify-center"><div className="animate-spin h-12 w-12 border-4 border-theme-violet border-t-transparent rounded-full" /></div>}>
       <RegisterForm />
     </Suspense>
   )

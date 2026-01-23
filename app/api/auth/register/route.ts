@@ -4,7 +4,7 @@ import { saveUser, findUserByEmail, findUserByPhone, User, hashPassword, getUser
 
 export async function POST(request: Request) {
     try {
-        const { name, email, password, phone, referralCode: ref, profilePhoto } = await request.json();
+        const { name, email, password, phone, referralCode: ref, profilePhoto, promoCode } = await request.json();
 
         if (!name || !email || !password || !phone) {
             return NextResponse.json({ message: 'Missing fields' }, { status: 400 });
@@ -39,6 +39,8 @@ export async function POST(request: Request) {
             referralCode: generatedReferralCode,
             referredBy: ref || null,
             profilePhoto: profilePhoto || null,
+            promoCode: promoCode || null,
+            bonusClaimed: false,
             createdAt: new Date().toISOString(),
         };
 

@@ -17,7 +17,7 @@ export default function SupportPage() {
     const { toast } = useToast()
     const [user, setUser] = useState<any>(null)
     const [step, setStep] = useState<1 | 2>(1)
-    const [problemType, setProblemType] = useState("")
+    const [supportForm, setSupportForm] = useState({ userId: "", phone: "" })
     const [message, setMessage] = useState("")
     const [chats, setChats] = useState<any[]>([])
     const [loading, setLoading] = useState(false)
@@ -146,10 +146,10 @@ export default function SupportPage() {
         } catch (e) { }
     }
 
-    const handleSubmitToken = async (e: React.FormEvent) => {
+    const handleSubmitSupportForm = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!problemType) {
-            toast({ title: "Please select an issue type", variant: "destructive" })
+        if (!supportForm.userId || !supportForm.phone) {
+            toast({ title: "Please fill all details", variant: "destructive" })
             return
         }
         setStep(2)
@@ -171,7 +171,7 @@ export default function SupportPage() {
         const payload = {
             userId: user.id,
             message: trimmedMsg,
-            problemType: chats.length === 0 ? problemType : undefined
+            problemType: chats.length === 0 ? `ID: ${supportForm.userId} | Phone: ${supportForm.phone}` : undefined
         }
 
         try {
@@ -198,22 +198,24 @@ export default function SupportPage() {
 
     return (
         <div className="min-h-screen bg-white flex flex-col h-screen overflow-hidden">
-            {/* Header */}
-            <div className="bg-emerald-600 p-4 text-white flex items-center gap-4 shadow-md z-10">
-                <button onClick={() => router.back()} className="hover:bg-white/20 p-2 rounded-full transition-colors">
+            {/* Premium Support Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white flex items-center gap-4 shadow-xl z-10 rounded-b-[2.5rem]">
+                <button onClick={() => router.back()} className="h-12 w-12 bg-white/10 rounded-2xl flex items-center justify-center hover:bg-white/20 transition-all active:scale-90">
                     <ArrowLeft className="h-6 w-6" />
                 </button>
-                <div className="flex-1 flex items-center gap-3">
-                    <div className="bg-white/20 p-2 rounded-xl">
-                        <HeadphonesIcon className="h-6 w-6" />
+                <div className="flex-1 flex items-center gap-4">
+                    <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
+                        <HeadphonesIcon className="h-8 w-8 text-blue-100" />
                     </div>
                     <div>
-                        <h1 className="text-lg font-bold leading-tight">Support Center</h1>
-                        <div className="flex items-center gap-1.5">
-                            <span className={`h-2 w-2 rounded-full ${isOnline ? 'bg-emerald-300 animate-pulse' : 'bg-red-400'}`} />
-                            <span className="text-[10px] font-medium opacity-80 uppercase tracking-wider">
-                                {isOnline ? 'System Online' : 'Connecting...'}
-                            </span>
+                        <h1 className="text-xl font-black tracking-tight leading-none mb-1">Live Support</h1>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-red-400'}`} />
+                                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-100">
+                                    {isOnline ? 'Active Desk' : 'Offline'}
+                                </span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -221,46 +223,57 @@ export default function SupportPage() {
 
             <div className="flex-1 overflow-hidden max-w-2xl mx-auto w-full flex flex-col">
                 {step === 1 ? (
-                    <div className="flex-1 flex items-center justify-center p-6">
-                        <Card className="w-full p-8 shadow-2xl border-0 bg-gray-50 rounded-[2rem]">
-                            <div className="text-center mb-10">
-                                <div className="h-24 w-24 bg-emerald-100 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3 shadow-lg">
-                                    <MessageCircle className="h-12 w-12 text-emerald-600 -rotate-3" />
-                                </div>
-                                <h2 className="text-3xl font-black text-gray-900 leading-tight">Help & Support</h2>
-                                <p className="text-gray-500 mt-2 font-medium">How can we assist you today?</p>
+                    <div className="flex-1 flex flex-col items-center p-6 overflow-y-auto">
+                        <div className="w-full max-w-sm">
+                            <div className="relative mb-8 mt-4">
+                                <div className="absolute inset-0 bg-blue-100 rounded-[3rem] blur-3xl opacity-60 -z-10" />
+                                <img
+                                    src="/support-hero.png"
+                                    alt="Support Agent"
+                                    className="w-full h-64 object-contain animate-in fade-in zoom-in duration-1000"
+                                />
                             </div>
 
-                            <form onSubmit={handleSubmitToken} className="space-y-8">
-                                <div className="space-y-3">
-                                    <Label className="text-gray-400 text-xs uppercase font-black tracking-widest pl-1">Category</Label>
-                                    <Select onValueChange={setProblemType} value={problemType}>
-                                        <SelectTrigger className="h-14 border-0 bg-white shadow-sm rounded-2xl text-lg font-bold focus:ring-2 focus:ring-emerald-500">
-                                            <SelectValue placeholder="Select an issue..." />
-                                        </SelectTrigger>
-                                        <SelectContent className="rounded-2xl border-0 shadow-2xl">
-                                            <SelectItem value="Login Problem" className="h-12 font-semibold">Login Problem</SelectItem>
-                                            <SelectItem value="Deposit Issue" className="h-12 font-semibold">Deposit Issue</SelectItem>
-                                            <SelectItem value="Withdrawal Issue" className="h-12 font-semibold">Withdrawal Issue</SelectItem>
-                                            <SelectItem value="Account Block" className="h-12 font-semibold">Account Block</SelectItem>
-                                            <SelectItem value="Other" className="h-12 font-semibold">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                            <div className="text-center mb-8 px-4">
+                                <h2 className="text-3xl font-black text-slate-900 leading-tight">Welcome to <span className="text-blue-600">Help Desk</span></h2>
+                                <p className="text-slate-500 mt-2 font-bold text-sm">Please verify your details to start the conversion with our official agent.</p>
+                            </div>
 
-                                <div className="p-4 bg-white rounded-2xl space-y-3 shadow-sm">
-                                    <div className="flex justify-between items-center text-xs">
-                                        <span className="text-gray-400 font-bold uppercase tracking-wider">User Account</span>
-                                        <span className="font-mono bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">ACTIVE</span>
+                            <Card className="p-8 shadow-2xl shadow-blue-900/5 border-0 bg-white rounded-[3rem]">
+                                <form onSubmit={handleSubmitSupportForm} className="space-y-6">
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] ml-2">Your User ID</Label>
+                                        <Input
+                                            placeholder="Enter your UID"
+                                            value={supportForm.userId}
+                                            onChange={(e) => setSupportForm(prev => ({ ...prev, userId: e.target.value }))}
+                                            className="h-14 border-2 border-slate-50 bg-slate-50/50 rounded-2xl text-lg font-bold focus:bg-white focus:border-blue-500 transition-all px-6"
+                                        />
                                     </div>
-                                    <p className="font-mono text-gray-600 font-bold truncate">{user.email}</p>
-                                </div>
 
-                                <Button type="submit" className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-lg font-black rounded-2xl shadow-xl shadow-emerald-100 transition-all active:scale-95">
-                                    Start Secure Chat
-                                </Button>
-                            </form>
-                        </Card>
+                                    <div className="space-y-2">
+                                        <Label className="text-slate-400 text-[10px] uppercase font-black tracking-[0.2em] ml-2">Phone Number</Label>
+                                        <Input
+                                            placeholder="Enter 10-digit number"
+                                            value={supportForm.phone}
+                                            onChange={(e) => setSupportForm(prev => ({ ...prev, phone: e.target.value.replace(/\D/g, '') }))}
+                                            maxLength={10}
+                                            className="h-14 border-2 border-slate-50 bg-slate-50/50 rounded-2xl text-lg font-bold focus:bg-white focus:border-blue-500 transition-all px-6"
+                                        />
+                                    </div>
+
+                                    <Button type="submit" className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-500/20 transition-all active:scale-95 text-xs uppercase tracking-[0.2em]">
+                                        Initialize Support
+                                    </Button>
+                                </form>
+                            </Card>
+
+                            <div className="mt-8 flex justify-center gap-6 opacity-40">
+                                <div className="h-1.5 w-1.5 bg-slate-400 rounded-full" />
+                                <div className="h-1.5 w-1.5 bg-slate-400 rounded-full" />
+                                <div className="h-1.5 w-1.5 bg-slate-400 rounded-full" />
+                            </div>
+                        </div>
                     </div>
                 ) : (
                     <div className="flex-1 flex flex-col h-full bg-gray-50 relative">
@@ -276,11 +289,15 @@ export default function SupportPage() {
                             className="flex-1 overflow-y-auto p-4 space-y-6 scroll-smooth"
                         >
                             {chats.length === 0 && (
-                                <div className="h-full flex flex-col items-center justify-center text-center px-10">
-                                    <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm">
-                                        <MessageCircle className="h-8 w-8 text-gray-300" />
+                                <div className="h-full flex flex-col items-center justify-center text-center px-10 py-12">
+                                    <div className="relative mb-6">
+                                        <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50" />
+                                        <div className="h-20 w-20 bg-white rounded-[1.5rem] flex items-center justify-center relative shadow-xl border border-blue-50">
+                                            <MessageCircle className="h-10 w-10 text-blue-500" />
+                                        </div>
                                     </div>
-                                    <p className="text-gray-400 font-bold text-sm">Our agent will connect with you shortly. Please explain your issue.</p>
+                                    <h3 className="text-xl font-black text-slate-800 mb-2">Initialize Conversation</h3>
+                                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest leading-relaxed">System is connecting you to a live representative. <br />Please wait a moment.</p>
                                 </div>
                             )}
 
@@ -299,9 +316,9 @@ export default function SupportPage() {
                                         )}
                                         <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} group items-end gap-2`}>
                                             <div
-                                                className={`max-w-[85%] px-4 py-3 rounded-2xl shadow-sm relative transition-all ${isUser
-                                                    ? 'bg-emerald-600 text-white rounded-br-none'
-                                                    : 'bg-white text-gray-800 border-0 rounded-bl-none'
+                                                className={`max-w-[85%] px-5 py-4 rounded-[1.8rem] shadow-sm relative transition-all ${isUser
+                                                    ? 'bg-blue-600 text-white rounded-br-none'
+                                                    : 'bg-white text-slate-800 border border-slate-100 rounded-bl-none'
                                                     }`}
                                             >
                                                 <p className="text-[15px] font-medium leading-relaxed whitespace-pre-wrap">{chat.message}</p>
@@ -321,13 +338,13 @@ export default function SupportPage() {
 
                             {adminTyping && (
                                 <div className="flex justify-start animate-in slide-in-from-left-4 fade-in">
-                                    <div className="bg-white border-0 shadow-sm text-emerald-600 text-[11px] font-black py-2.5 px-4 rounded-2xl rounded-bl-none flex items-center gap-2">
+                                    <div className="bg-white border border-blue-100 shadow-sm text-blue-600 text-[10px] font-black py-3 px-5 rounded-[1.5rem] rounded-bl-none flex items-center gap-3">
                                         <span className="flex gap-1">
-                                            <span className="h-1 w-1 bg-emerald-600 rounded-full animate-bounce" />
-                                            <span className="h-1 w-1 bg-emerald-600 rounded-full animate-bounce delay-100" />
-                                            <span className="h-1 w-1 bg-emerald-600 rounded-full animate-bounce delay-200" />
+                                            <span className="h-1.5 w-1.5 bg-blue-600 rounded-full animate-bounce" />
+                                            <span className="h-1.5 w-1.5 bg-blue-600 rounded-full animate-bounce delay-100" />
+                                            <span className="h-1.5 w-1.5 bg-blue-600 rounded-full animate-bounce delay-200" />
                                         </span>
-                                        AGENT IS TYPING
+                                        AGENT IS TYPING...
                                     </div>
                                 </div>
                             )}
@@ -347,12 +364,12 @@ export default function SupportPage() {
                                 <Button
                                     onClick={handleSendMessage}
                                     disabled={!message.trim() || isSending || !isOnline}
-                                    className={`h-12 w-12 rounded-xl shrink-0 transition-all ${!message.trim() || isSending || !isOnline
-                                        ? 'bg-gray-200 text-gray-400'
-                                        : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 active:scale-90'
+                                    className={`h-14 w-14 rounded-2xl shrink-0 transition-all ${!message.trim() || isSending || !isOnline
+                                        ? 'bg-slate-200 text-slate-400'
+                                        : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-500/20 active:scale-95'
                                         }`}
                                 >
-                                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                                    {isSending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-6 w-6" />}
                                 </Button>
                             </div>
                         </div>

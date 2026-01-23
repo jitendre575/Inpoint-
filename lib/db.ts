@@ -70,6 +70,8 @@ export type User = {
     referralCode: string;
     referredBy?: string;
     referralRewards?: number;
+    promoCode?: string;
+    bonusClaimed?: boolean;
     createdAt: string;
     lastLogin?: string;
     lastActive?: string;

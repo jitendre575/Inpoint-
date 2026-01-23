@@ -50,6 +50,8 @@ export async function POST(request: Request) {
                 timestamp: new Date().toISOString(),
                 isTyping: !!isTyping
             };
+        } else if (action === 'clear') {
+            user.supportChats = [];
         }
 
         await updateUser(user);

@@ -45,10 +45,10 @@ export function SupportFloatingButton() {
     return (
         <a
             href="/support"
-            className="fixed bottom-24 right-5 z-50 h-14 w-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 border-2 border-white/20"
+            className="fixed bottom-24 right-5 z-50 h-16 w-16 bg-gradient-to-br from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white rounded-[2rem] shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-90 border-4 border-white"
             title="Customer Support"
         >
-            <HeadphonesIcon className="h-6 w-6" />
+            <HeadphonesIcon className="h-8 w-8" />
         </a>
     )
 }

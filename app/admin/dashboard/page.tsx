@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2, Lock } from "lucide-react"
+import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2, Lock, User, Phone, Trash } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -294,6 +294,24 @@ export default function AdminDashboardPage() {
         }
     }
 
+    const handleClearChat = async () => {
+        if (!activeUser) return
+        const password = sessionStorage.getItem("adminSecret")
+        try {
+            const res = await fetch('/api/admin/support', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ adminSecret: password, userId: activeUser.id, action: 'clear' })
+            })
+            if (res.ok) {
+                toast({ title: "Chat Cleared", description: "All messages for this user have been removed." })
+                fetchUsers(true)
+            }
+        } catch (e) {
+            toast({ title: "Error", description: "Failed to clear chat", variant: "destructive" })
+        }
+    }
+
     const handleLogout = () => {
         sessionStorage.removeItem("adminSecret")
         router.push("/admin")
@@ -323,18 +341,18 @@ export default function AdminDashboardPage() {
     const activeUser = selectedUser ? users.find(u => u.id === selectedUser.id) || selectedUser : null;
 
     return (
-        <div className="min-h-screen bg-[#F0F2F5] pb-20 font-sans">
-            <header className="bg-neutral-900 text-white shadow-2xl sticky top-0 z-50">
+        <div className="min-h-screen bg-[#FDFCFF] pb-20 font-sans">
+            <header className="bg-[#1A0B2E] text-white shadow-2xl sticky top-0 z-50 border-b border-white/5">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-lg overflow-hidden p-1.5">
-                            <img src="/icon.svg" alt="Logo" className="h-full w-full object-contain" />
+                        <div className="h-10 w-10 bg-gradient-to-br from-theme-purple to-theme-violet rounded-xl flex items-center justify-center p-2.5 shadow-lg shadow-theme-purple/20">
+                            <Shield className="h-full w-full text-white" />
                         </div>
-                        <h1 className="text-xl font-black uppercase tracking-tight">Inpoint<span className="text-emerald-500">Rose</span></h1>
+                        <h1 className="text-xl font-black uppercase tracking-tight">Inpoint<span className="text-theme-gold">Rose</span></h1>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
-                            <Calendar className="h-4 w-4 text-emerald-400" />
+                            <Calendar className="h-4 w-4 text-theme-gold" />
                             <input
                                 type="date"
                                 value={filterDate}
@@ -385,10 +403,10 @@ export default function AdminDashboardPage() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                     {[
-                        { label: 'Total Users', value: stats.total, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
-                        { label: 'Active Users', value: stats.active, icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                        { label: 'Inactive Users', value: stats.inactive, icon: XCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-                        { label: 'Global Wallet', value: `₹${stats.totalWallet.toLocaleString()}`, icon: Wallet, color: 'text-amber-600', bg: 'bg-amber-50' },
+                        { label: 'Total Users', value: stats.total, icon: Users, color: 'text-theme-purple', bg: 'bg-theme-lavender' },
+                        { label: 'Active Users', value: stats.active, icon: Activity, color: 'text-theme-violet', bg: 'bg-theme-lavender' },
+                        { label: 'Inactive Users', value: stats.inactive, icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
+                        { label: 'Global Wallet', value: `₹${stats.totalWallet.toLocaleString()}`, icon: Wallet, color: 'text-theme-gold', bg: 'bg-theme-gold/10' },
                     ].map((stat, i) => (
                         <Card key={i} className="p-6 border-0 shadow-lg bg-white rounded-3xl flex items-center gap-4">
                             <div className={`${stat.bg} h-14 w-14 rounded-2xl flex items-center justify-center`}>
@@ -427,24 +445,23 @@ export default function AdminDashboardPage() {
                         {filteredUsers.map((user) => {
                             const activePlan = user.plans?.find((p: any) => p.status === 'active');
                             return (
-                                <Card key={user.id} className={`p-6 border-0 shadow-xl rounded-[2.5rem] transition-all relative overflow-hidden ${user.isBlocked ? 'bg-rose-50 ring-2 ring-rose-200' : activePlan ? 'bg-emerald-50/10' : 'bg-white'}`}>
+                                <Card key={user.id} className={`p-6 border border-theme-purple/5 shadow-xl rounded-[2.5rem] transition-all relative overflow-hidden ${user.isBlocked ? 'bg-rose-50 ring-2 ring-rose-200' : activePlan ? 'bg-theme-lavender group hover:border-theme-gold/20' : 'bg-white'}`}>
                                     <div className="flex justify-between items-start mb-6 px-1">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-14 w-14 rounded-full bg-neutral-100 flex items-center justify-center overflow-hidden border-2 border-white shadow-sm relative">
-                                                {user.profilePhoto ? <img src={user.profilePhoto} className="h-full w-full object-cover" /> : <div className="text-xl font-black text-neutral-400">{user.name[0]}</div>}
-                                                {/* Online Status Indicator */}
-                                                <div className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${stats.active > 0 && user.lastActive && (Date.now() - new Date(user.lastActive).getTime() < 60000) ? 'bg-emerald-500' : 'bg-neutral-300'}`} />
+                                            <div className="h-14 w-14 rounded-full bg-theme-lavender flex items-center justify-center overflow-hidden border-2 border-white shadow-sm relative">
+                                                {user.profilePhoto ? <img src={user.profilePhoto} className="h-full w-full object-cover" /> : <div className="text-xl font-black text-theme-purple">{user.name[0]}</div>}
+                                                <div className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${stats.active > 0 && user.lastActive && (Date.now() - new Date(user.lastActive).getTime() < 60000) ? 'bg-theme-gold' : 'bg-neutral-300'}`} />
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2">
-                                                    <h3 className="font-black text-neutral-900 text-lg leading-tight">{user.name}</h3>
+                                                    <h3 className="font-black text-[#2D1A4A] text-lg leading-tight">{user.name}</h3>
                                                     {(user.supportChats?.filter((c: any) => c.sender === 'user' && !c.read).length || 0) > 0 && (
-                                                        <Badge className="bg-rose-500 text-white animate-bounce h-5 px-1.5 min-w-[20px] flex items-center justify-center text-[10px] rounded-full shadow-lg border-2 border-white">
+                                                        <Badge className="bg-theme-violet text-white animate-bounce h-5 px-1.5 min-w-[20px] flex items-center justify-center text-[10px] rounded-full shadow-lg border-2 border-white">
                                                             {user.supportChats.filter((c: any) => c.sender === 'user' && !c.read).length}
                                                         </Badge>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-neutral-400 font-bold">{user.email}</p>
+                                                <p className="text-xs text-theme-purple/30 font-bold">{user.email}</p>
                                                 <div className="flex items-center gap-1.5 mt-1 bg-amber-50 px-2.5 py-1 rounded-lg w-fit border border-amber-100/50">
                                                     <Lock className="h-3 w-3 text-amber-600" />
                                                     <p className="text-[10px] font-black text-amber-900 tracking-wider">
@@ -611,10 +628,25 @@ export default function AdminDashboardPage() {
                                         <Edit3 className="h-4 w-4" />
                                     </Button>
                                 </div>
-                                <div className="bg-neutral-50 p-4 rounded-2xl mb-6 text-sm font-medium">
-                                    <p>Account: {w.bankDetails?.accountNumber}</p>
-                                    <p>Name: {w.bankDetails?.name}</p>
-                                    <p>IFSC: {w.bankDetails?.ifsc}</p>
+                                <div className="bg-neutral-50 p-4 rounded-2xl mb-6 text-xs font-bold uppercase tracking-wider space-y-1">
+                                    <div className="flex justify-between border-b pb-1 border-neutral-200/50 mb-1">
+                                        <span className="text-neutral-400">Method</span>
+                                        <span className="text-indigo-600">{w.bankDetails?.type === 'bank' ? 'Bank Transfer' : 'UPI Payment'}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-neutral-400">Name</span>
+                                        <span className="text-neutral-900">{w.bankDetails?.name}</span>
+                                    </div>
+                                    <div className="flex justify-between">
+                                        <span className="text-neutral-400">{w.bankDetails?.type === 'bank' ? 'A/C Number' : 'UPI Address'}</span>
+                                        <span className="text-neutral-900">{w.bankDetails?.accountNumber}</span>
+                                    </div>
+                                    {w.bankDetails?.type === 'bank' && (
+                                        <div className="flex justify-between">
+                                            <span className="text-neutral-400">IFSC Code</span>
+                                            <span className="text-emerald-600 font-black">{w.bankDetails?.ifsc}</span>
+                                        </div>
+                                    )}
                                 </div>
                                 {w.status === 'Pending' && (
                                     <div className="flex gap-3">
@@ -709,12 +741,37 @@ export default function AdminDashboardPage() {
 
             {/* Chat Modal */}
             <Dialog open={showChatModal} onOpenChange={setShowChatModal}>
-                <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 border-0 rounded-[2.5rem] bg-white overflow-hidden shadow-2xl">
-                    <div className="p-6 bg-neutral-900 text-white">
-                        <h2 className="font-black text-xl">Support Chat</h2>
-                        <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{activeUser?.name}</p>
+                <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 border-0 rounded-[3rem] bg-white overflow-hidden shadow-2xl">
+                    <div className="p-6 bg-neutral-900 text-white flex items-center justify-between">
+                        <div>
+                            <h2 className="font-black text-xl flex items-center gap-2">
+                                <Headphones className="h-5 w-5 text-emerald-500" /> Support Desk
+                            </h2>
+                            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{activeUser?.name}</p>
+                        </div>
+                        <Button
+                            onClick={handleClearChat}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 border-rose-500/50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider px-3"
+                        >
+                            <Trash className="h-3 w-3 mr-1.5" /> Clear Chat
+                        </Button>
                     </div>
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-neutral-50 min-h-[300px]">
+
+                    {/* User Info Bar */}
+                    <div className="bg-neutral-100 px-6 py-3 flex items-center justify-between border-b border-neutral-200">
+                        <div className="flex items-center gap-2">
+                            <User className="h-3 w-3 text-neutral-400" />
+                            <span className="text-[10px] font-black text-neutral-500 uppercase">UID: {activeUser?.id?.slice(0, 12)}...</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Phone className="h-3 w-3 text-neutral-400" />
+                            <span className="text-[10px] font-black text-neutral-500">{activeUser?.phone || 'N/A'}</span>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50 min-h-[350px]">
                         {(activeUser?.supportChats || []).map((chat: any) => (
                             <div key={chat.id} className={`flex ${chat.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[80%] p-4 rounded-2xl text-sm ${chat.sender === 'admin' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-neutral-800 border-0 border-neutral-100 rounded-tl-none shadow-sm'}`}>

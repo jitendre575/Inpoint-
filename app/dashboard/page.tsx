@@ -5,88 +5,49 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PlansModal } from "@/components/plans-modal"
-import { BottomNav } from "@/components/bottom-nav"
-import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Users, Gift, UserCircle, Bell, Timer, CheckCircle2 } from "lucide-react"
+import {
+  ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Users, Gift,
+  UserCircle, Bell, Timer, ShieldCheck, Zap, Headphones,
+  Star, Info, ChevronRight, Trophy
+} from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { BottomNav } from "@/components/bottom-nav"
 
 export default function DashboardPage() {
   const router = useRouter()
   const { toast } = useToast()
   const [user, setUser] = useState<any>(null)
   const [showPlansModal, setShowPlansModal] = useState(false)
-  const [historyTab, setHistoryTab] = useState<'deposits' | 'withdrawals'>('deposits')
   const [isClaiming, setIsClaiming] = useState<number | null>(null)
+  const [historyTab, setHistoryTab] = useState<'deposits' | 'withdrawals'>('deposits')
 
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser")
     if (!currentUser) {
       router.push("/login")
-    } else {
-      const dbUser = JSON.parse(currentUser)
-      setUser(dbUser)
-
-      if (dbUser.id) {
-        refreshUserData(dbUser.id)
-      } else {
-        localStorage.removeItem("currentUser")
-        router.push("/login")
-      }
-
-      const hasSeenModal = sessionStorage.getItem("hasSeenPlansModal")
-      if (!hasSeenModal) {
-        setShowPlansModal(true)
-        sessionStorage.setItem("hasSeenPlansModal", "true")
-      }
-
-      const poll = setInterval(() => {
-        if (dbUser.id) refreshUserData(dbUser.id);
-      }, 5000);
-
-      return () => clearInterval(poll);
+      return
     }
+    const userData = JSON.parse(currentUser)
+    setUser(userData)
+    refreshUserData(userData.id)
   }, [router])
 
   const refreshUserData = async (userId: string) => {
     try {
-      const res = await fetch('/api/user/details', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      })
-      const data = await res.json()
-      if (data.user) {
-        // Notification check
-        if (user) {
-          // Check for deposit status changes
-          data.user.deposits?.forEach((d: any) => {
-            const prevD = user.deposits?.find((p: any) => p.id === d.id);
-            if (prevD && prevD.status !== d.status) {
-              toast({ title: "Deposit Status Update", description: `Your deposit of ₹${d.amount} is now ${d.status}.` });
-            }
-          });
-          // Check for withdrawal status changes
-          data.user.withdrawals?.forEach((w: any) => {
-            const prevW = user.withdrawals?.find((p: any) => p.id === w.id);
-            if (prevW && prevW.status !== w.status) {
-              toast({ title: "Withdrawal Status Update", description: `Your withdrawal of ₹${w.amount} is now ${w.status}.` });
-            }
-          });
-          // Check for new chat messages
-          const newAdminChats = (data.user.supportChats?.filter((c: any) => c.sender === 'admin' && !c.read).length || 0) - (user.supportChats?.filter((c: any) => c.sender === 'admin' && !c.read).length || 0);
-          if (newAdminChats > 0) {
-            toast({ title: "New Support Message", description: "You have a new message from support." });
-          }
-        }
+      const res = await fetch(`/api/user?userId=${userId}`)
+      if (res.ok) {
+        const data = await res.json()
         setUser(data.user)
         localStorage.setItem("currentUser", JSON.stringify(data.user))
       }
-    } catch (err) {
-      console.error("Failed to refresh user data", err)
+    } catch (e) {
+      console.error("Failed to refresh user data")
     }
   }
 
   const handleClaimBonus = async (planIndex: number) => {
+    if (!user) return
     setIsClaiming(planIndex)
     try {
       const res = await fetch('/api/user/claim-bonus', {
@@ -97,13 +58,12 @@ export default function DashboardPage() {
       const data = await res.json()
       if (res.ok) {
         toast({ title: "Bonus Claimed!", description: `₹${data.amount} added to your wallet.` })
-        setUser(data.user)
-        localStorage.setItem("currentUser", JSON.stringify(data.user))
+        refreshUserData(user.id)
       } else {
-        toast({ title: "Claim failed", description: data.message, variant: "destructive" })
+        toast({ title: "Claim Failed", description: data.message, variant: "destructive" })
       }
-    } catch (err) {
-      toast({ title: "Error", description: "Something went wrong", variant: "destructive" })
+    } catch (e) {
+      toast({ title: "Error", description: "Internal Server Error", variant: "destructive" })
     } finally {
       setIsClaiming(null)
     }
@@ -114,74 +74,77 @@ export default function DashboardPage() {
   const claimablePlans = user.plans?.filter((p: any) => new Date() >= new Date(p.nextClaimAt)) || []
 
   return (
-    <div className="min-h-screen bg-[#F8F9FD] pb-32">
-      {/* 1. Dynamic Header */}
-      <div className="bg-neutral-900 text-white px-6 pt-16 pb-28 relative overflow-hidden rounded-b-[3.5rem] shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full -mr-20 -mt-20 blur-[100px]" />
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/10 rounded-full -ml-32 -mb-32 blur-[80px]" />
+    <div className="min-h-screen bg-[#FDFCFF] pb-32 font-sans selection:bg-theme-lavender selection:text-theme-purple">
+      {/* 1. Dynamic Luxury Header */}
+      <div className="bg-gradient-to-b from-[#1A0B2E] to-[#2D1A4A] text-white px-6 pt-16 pb-32 relative overflow-hidden rounded-b-[4rem] shadow-2xl">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-theme-purple/20 rounded-full -mr-20 -mt-20 blur-[120px] animate-pulse" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-theme-gold/5 rounded-full -ml-32 -mb-32 blur-[100px]" />
 
         <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-700">
             <div
               onClick={() => router.push('/mine')}
-              className="h-14 w-14 rounded-2xl overflow-hidden bg-neutral-800 border-2 border-white/10 shadow-xl cursor-pointer"
+              className="h-16 w-16 rounded-[2rem] overflow-hidden bg-white/10 border-2 border-white/20 shadow-2xl cursor-pointer group"
             >
               {user.profilePhoto ? (
-                <img src={user.profilePhoto} className="h-full w-full object-cover" />
+                <img src={user.profilePhoto} className="h-full w-full object-cover group-hover:scale-110 transition-transform" />
               ) : (
-                <div className="h-full w-full flex items-center justify-center text-emerald-400 font-black text-xl bg-neutral-800">
+                <div className="h-full w-full flex items-center justify-center text-theme-gold font-black text-2xl bg-white/5 uppercase">
                   {user.name?.charAt(0)}
                 </div>
               )}
             </div>
             <div>
-              <p className="text-neutral-400 text-[10px] font-black uppercase tracking-widest mb-0.5">Welcome Back</p>
-              <h1 className="text-xl font-black tracking-tight">{user.name}</h1>
+              <p className="text-theme-lavender/60 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Elite Investor</p>
+              <h1 className="text-2xl font-black tracking-tighter leading-none">{user.name}</h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <button className="h-12 w-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 relative">
-              <Bell className="h-5 w-5 text-neutral-300" />
-              {(claimablePlans.length > 0) && <span className="absolute top-3 right-3 h-2.5 w-2.5 bg-amber-500 rounded-full border-2 border-neutral-900" />}
+          <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4 duration-700">
+            <button className="h-14 w-14 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 relative active:scale-95 transition-all">
+              <Bell className="h-6 w-6 text-theme-lavender" />
+              {(claimablePlans.length > 0) && <span className="absolute top-4 right-4 h-2.5 w-2.5 bg-theme-gold rounded-full border-2 border-[#2D1A4A]" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. Wallet Matrix */}
-      <div className="px-5 -mt-16 relative z-20">
-        <Card className="bg-white shadow-2xl shadow-neutral-200 border-0 rounded-[2.5rem] p-8 overflow-hidden relative group">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-indigo-50 rounded-full -mr-16 -mt-16 group-hover:bg-indigo-100 transition-all duration-700" />
+      {/* 2. Glassmorphism Wallet Card */}
+      <div className="px-5 -mt-20 relative z-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+        <Card className="bg-white/95 backdrop-blur-3xl shadow-[0_32px_80px_rgba(109,40,217,0.12)] border border-theme-lavender rounded-[3rem] p-10 overflow-hidden relative group">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-theme-lavender/50 rounded-full -mr-16 -mt-16 group-hover:scale-110 transition-transform duration-1000" />
 
           <div className="relative z-10">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
-                <Wallet className="h-4 w-4 text-emerald-600" />
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Active Wallet</span>
+            <div className="flex justify-between items-center mb-8">
+              <div className="flex items-center gap-2.5 bg-theme-lavender/40 px-4 py-2 rounded-2xl border border-theme-purple/10">
+                <Wallet className="h-5 w-5 text-theme-purple" />
+                <span className="text-[11px] font-black text-theme-purple uppercase tracking-widest">Available Balance</span>
               </div>
-              <Badge variant="outline" className="text-emerald-600 border-emerald-200 font-black">Verified</Badge>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 bg-theme-gold/10 rounded-full border border-theme-gold/20">
+                <ShieldCheck className="h-3.5 w-3.5 text-theme-gold" />
+                <span className="text-[9px] font-black text-theme-gold uppercase tracking-widest">Secured</span>
+              </div>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-5xl font-black text-neutral-900 tracking-tighter mb-1">₹{user.wallet?.toLocaleString()}</h2>
-              <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+            <div className="mb-10">
+              <h2 className="text-6xl font-black text-[#2D1A4A] tracking-tighter mb-2 italic">₹{user.wallet?.toLocaleString()}</h2>
+              <div className="flex items-center gap-2 text-theme-purple font-black text-sm uppercase tracking-tighter">
                 <TrendingUp className="h-4 w-4" />
-                <span>+₹{(user.referralRewards || 0).toFixed(0)} rewards earned</span>
+                <span>+₹{(user.referralRewards || 0).toFixed(0)} Network Rewards</span>
               </div>
             </div>
 
             <div className="flex gap-4">
               <Button
                 onClick={() => router.push("/deposit")}
-                className="flex-1 h-14 bg-neutral-900 hover:bg-neutral-800 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 shadow-xl shadow-neutral-900/10"
+                className="flex-1 h-16 bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white border-0 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all active:scale-95 shadow-xl shadow-theme-purple/20 group"
               >
                 Deposit
               </Button>
               <Button
                 onClick={() => router.push("/withdraw")}
                 variant="outline"
-                className="flex-1 h-14 rounded-2xl border-2 border-neutral-100 font-black text-xs uppercase tracking-widest hover:bg-neutral-50 transition-all"
+                className="flex-1 h-16 rounded-2xl border-2 border-theme-lavender font-black text-xs uppercase tracking-[0.2em] hover:bg-theme-lavender text-theme-purple transition-all active:scale-95 shadow-sm"
               >
                 Withdraw
               </Button>
@@ -191,82 +154,88 @@ export default function DashboardPage() {
       </div>
 
       {/* 3. Action Grid */}
-      <div className="px-5 mt-8 grid grid-cols-4 gap-4">
+      <div className="px-5 mt-10 grid grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-200">
         {[
-          { label: 'Plans', icon: Gift, color: 'text-indigo-600', bg: 'bg-indigo-50', action: () => setShowPlansModal(true) },
-          { label: 'Team', icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50', path: '/team' },
-          { label: 'Bonus', icon: StarIcon, color: 'text-amber-600', bg: 'bg-amber-50', path: '/bonus' },
-          { label: 'Profile', icon: UserCircle, color: 'text-neutral-600', bg: 'bg-neutral-50', path: '/mine' },
+          { label: 'Plans', icon: Gift, color: 'text-theme-purple', bg: 'bg-theme-lavender', action: () => setShowPlansModal(true) },
+          { label: 'Network', icon: Users, color: 'text-theme-violet', bg: 'bg-theme-lavender', path: '/team' },
+          { label: 'Rewards', icon: Star, color: 'text-theme-gold', bg: 'bg-theme-gold/10', path: '/bonus' },
+          { label: 'Profile', icon: UserCircle, color: 'text-theme-purple', bg: 'bg-theme-lavender', path: '/mine' },
         ].map((item, idx) => (
           <button
             key={idx}
             onClick={item.action || (() => router.push(item.path!))}
-            className="flex flex-col items-center gap-2 group"
+            className="flex flex-col items-center gap-3 group animate-in zoom-in-50 duration-500"
+            style={{ animationDelay: `${idx * 100}ms` }}
           >
-            <div className={`h-16 w-16 ${item.bg} rounded-2xl flex items-center justify-center transition-all group-hover:shadow-lg group-active:scale-90 border border-transparent group-hover:border-white shadow-sm`}>
-              <item.icon className={`h-7 w-7 ${item.color}`} />
+            <div className={`h-16 w-16 ${item.bg} border border-theme-purple/5 rounded-[1.8rem] flex items-center justify-center transition-all group-hover:shadow-xl group-hover:shadow-theme-purple/10 group-active:scale-90 group-hover:-translate-y-1`}>
+              <item.icon className={`h-8 w-8 ${item.color}`} />
             </div>
-            <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">{item.label}</span>
+            <span className="text-[10px] font-black text-theme-lavender-foreground/60 uppercase tracking-widest leading-none">{item.label}</span>
           </button>
         ))}
       </div>
 
-      {/* 4. Claim Bonus Alert */}
+      {/* 4. Claim Bonus Card */}
       {claimablePlans.length > 0 && (
-        <div className="px-5 mt-8">
-          <Card className="p-6 bg-amber-500 text-white border-0 shadow-xl shadow-amber-500/20 rounded-[2rem] relative overflow-hidden animate-pulse">
+        <div className="px-5 mt-10 animate-in bounce-in duration-700">
+          <Card className="p-8 bg-gradient-to-r from-theme-gold to-yellow-500 text-theme-indigo border-0 shadow-2xl shadow-theme-gold/30 rounded-[3rem] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full blur-3xl -mr-12 -mt-12 group-hover:bg-white/30 transition-all duration-700" />
             <div className="flex items-center justify-between relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <Timer className="h-7 w-7 text-white" />
+              <div className="flex items-center gap-5">
+                <div className="h-14 w-14 bg-white/30 rounded-[1.5rem] flex items-center justify-center backdrop-blur-md border border-white/20 shadow-lg">
+                  <Star className="h-8 w-8 text-theme-indigo animate-spin-slow" />
                 </div>
                 <div>
-                  <h3 className="font-black text-lg">Daily Bonus Ready!</h3>
-                  <p className="text-amber-100 text-xs font-bold opacity-80 uppercase tracking-widest">Claim your investment rewards</p>
+                  <h3 className="font-black text-xl leading-tight">Payout Ready!</h3>
+                  <p className="text-theme-indigo/70 text-xs font-bold uppercase tracking-widest">Claim your rewards now</p>
                 </div>
               </div>
-              <ArrowUpRight className="h-6 w-6 text-white/50" />
+              <Button onClick={() => handleClaimBonus(user.plans.indexOf(claimablePlans[0]))} className="h-12 bg-white text-theme-indigo hover:bg-theme-lavender rounded-xl font-black text-xs uppercase tracking-widest shadow-xl border-0">
+                Claim
+              </Button>
             </div>
           </Card>
         </div>
       )}
 
-      {/* 5. Active Investments */}
-      <div className="px-5 mt-10">
-        <div className="flex items-center justify-between mb-6 px-2">
-          <h2 className="text-xl font-black text-neutral-900 tracking-tight">Active Investments</h2>
+      {/* 5. Active Portfolios */}
+      <div className="px-5 mt-12">
+        <div className="flex items-center justify-between mb-8 px-4">
+          <div>
+            <h2 className="text-2xl font-black text-[#2D1A4A] tracking-tight">Active Portfolios</h2>
+            <p className="text-[10px] text-theme-purple/40 font-black uppercase tracking-widest mt-0.5">Your Growth Engines</p>
+          </div>
           <Button
             onClick={() => setShowPlansModal(true)}
-            className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl px-4 py-1.5 h-auto text-xs font-black uppercase tracking-widest border-0"
+            className="text-theme-purple bg-white hover:bg-theme-lavender rounded-2xl px-5 py-2 h-auto text-[10px] font-black uppercase tracking-widest border-2 border-theme-lavender transition-all shadow-sm"
           >
-            New Plan
+            Manage
           </Button>
         </div>
 
         {user.plans && user.plans.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {user.plans.map((plan: any, idx: number) => {
               const isClaimable = new Date() >= new Date(plan.nextClaimAt);
               return (
-                <Card key={idx} className={`p-6 bg-white border-0 shadow-xl shadow-neutral-200/50 rounded-[2.5rem] relative overflow-hidden ${isClaimable ? 'ring-2 ring-emerald-500 ring-offset-2' : ''}`}>
-                  <div className="flex justify-between items-start mb-6">
+                <Card key={idx} className={`p-8 bg-white border border-theme-purple/5 shadow-[0_20px_40px_rgba(109,40,217,0.05)] rounded-[3rem] relative overflow-hidden transition-all hover:shadow-xl ${isClaimable ? 'ring-4 ring-theme-gold ring-offset-4 ring-offset-[#FDFCFF]' : ''}`}>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-theme-lavender/30 rounded-full -mr-12 -mt-12" />
+                  <div className="flex justify-between items-start mb-8 relative z-10">
                     <div>
-                      <h4 className="font-black text-neutral-900 text-lg mb-1">{plan.name}</h4>
-                      <p className="text-neutral-400 text-[10px] font-black uppercase tracking-[0.2em]">Invested: ₹{plan.amount}</p>
+                      <h4 className="font-black text-[#2D1A4A] text-xl tracking-tight mb-1">{plan.name}</h4>
+                      <p className="text-theme-purple/40 text-[10px] font-black uppercase tracking-[0.2em] leading-none">Investment: ₹{plan.amount}</p>
                     </div>
-                    <div className="bg-neutral-50 px-3 py-1 rounded-xl">
-                      <span className="text-xs font-black text-indigo-600 uppercase tracking-tighter">Ongoing</span>
-                    </div>
+                    <Badge className="bg-theme-lavender text-theme-purple border-theme-purple/10 font-black text-[9px] uppercase px-3 py-1 rounded-full">Yielding</Badge>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 mb-6">
-                    <div className="p-4 bg-neutral-50 rounded-2xl">
-                      <p className="text-emerald-600 font-black text-xl">₹{plan.dailyReturn}</p>
-                      <p className="text-[10px] text-neutral-400 font-bold uppercase">Base Return</p>
+                  <div className="grid grid-cols-2 gap-4 mb-8">
+                    <div className="p-5 bg-[#F8F7FF] rounded-[2rem] border border-theme-purple/5">
+                      <p className="text-theme-purple font-black text-2xl truncate">₹{plan.dailyReturn}</p>
+                      <p className="text-[9px] text-theme-purple/40 font-black uppercase tracking-widest mt-1">Daily Yield</p>
                     </div>
-                    <div className="p-4 bg-amber-50 rounded-2xl">
-                      <p className="text-amber-600 font-black text-xl">₹{plan.bonusPerDay || 0}</p>
-                      <p className="text-[10px] text-neutral-400 font-bold uppercase">Bonus Reward</p>
+                    <div className="p-5 bg-theme-gold/5 rounded-[2rem] border border-theme-gold/10">
+                      <p className="text-theme-gold font-black text-2xl truncate">₹{plan.bonusPerDay || 0}</p>
+                      <p className="text-[9px] text-theme-gold/50 font-black uppercase tracking-widest mt-1">Extra Bonus</p>
                     </div>
                   </div>
 
@@ -274,14 +243,14 @@ export default function DashboardPage() {
                     <Button
                       onClick={() => handleClaimBonus(idx)}
                       disabled={isClaiming === idx}
-                      className="w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/20"
+                      className="w-full h-16 bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white border-0 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-theme-purple/20 active:scale-95 transition-all"
                     >
-                      {isClaiming === idx ? "Processing..." : "Claim Today's Bonus"}
+                      {isClaiming === idx ? "Processing..." : "Claim Your Yield"}
                     </Button>
                   ) : (
-                    <div className="flex items-center justify-center gap-2 py-4 px-6 bg-neutral-100 rounded-2xl text-neutral-400">
+                    <div className="flex items-center justify-center gap-3 py-5 px-6 bg-[#F8F7FF] rounded-2xl text-theme-purple/40 border border-theme-purple/5">
                       <Timer className="h-4 w-4" />
-                      <span className="text-[10px] font-black uppercase tracking-widest">Next claim in {Math.max(0, Math.ceil((new Date(plan.nextClaimAt).getTime() - new Date().getTime()) / 3600000))} Hours</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest">Next Payout in {Math.max(0, Math.ceil((new Date(plan.nextClaimAt).getTime() - new Date().getTime()) / 3600000))} Hours</span>
                     </div>
                   )}
                 </Card>
@@ -289,108 +258,108 @@ export default function DashboardPage() {
             })}
           </div>
         ) : (
-          <Card className="p-12 border-0 shadow-lg bg-white rounded-[3rem] text-center">
-            <div className="h-20 w-20 bg-neutral-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-              <TrendingUp className="h-10 w-10 text-neutral-300" />
+          <Card className="p-16 border-0 shadow-2xl shadow-theme-purple/5 bg-white rounded-[4rem] text-center group">
+            <div className="h-24 w-24 bg-theme-lavender rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border border-theme-purple/10 group-hover:rotate-12 transition-transform duration-500">
+              <TrendingUp className="h-12 w-12 text-theme-purple/30" />
             </div>
-            <h3 className="text-xl font-black text-neutral-900 mb-2">No Active Portfolio</h3>
-            <p className="text-neutral-400 text-sm font-medium mb-8">Start your first investment to earn daily returns with 30% bonus.</p>
-            <Button onClick={() => setShowPlansModal(true)} className="bg-indigo-600 hover:bg-indigo-700 h-14 rounded-2xl px-10 font-black text-xs uppercase tracking-widest shadow-xl shadow-indigo-600/20">
-              Pick a Plan
+            <h3 className="text-2xl font-black text-[#2D1A4A] mb-3 tracking-tight">Empty Portfolio</h3>
+            <p className="text-theme-purple/40 text-sm font-medium mb-10 max-w-[200px] mx-auto leading-relaxed">Diversify your assets to unlock elite 30% bonus growth.</p>
+            <Button onClick={() => setShowPlansModal(true)} className="bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white border-0 h-16 rounded-2xl px-12 font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-theme-purple/20 active:scale-95 transition-all group">
+              <span>Acquire Capital</span>
+              <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </Card>
         )}
       </div>
 
-      {/* 6. Transaction History Tabbed Section */}
-      <div className="px-5 mt-12 pb-10">
-        <div className="flex items-center justify-between mb-6 px-2">
-          <h2 className="text-xl font-black text-neutral-900 tracking-tight">Transaction History</h2>
-          <div className="flex bg-neutral-100 p-1 rounded-xl">
+      {/* 6. Ledger Table */}
+      <div className="px-5 mt-20 pb-10">
+        <div className="flex items-center justify-between mb-8 px-4">
+          <div>
+            <h2 className="text-2xl font-black text-[#2D1A4A] tracking-tight">Asset Ledger</h2>
+            <p className="text-[10px] text-theme-purple/40 font-black uppercase tracking-widest mt-0.5">Financial Activity</p>
+          </div>
+          <div className="flex bg-theme-lavender p-1.5 rounded-2xl border border-theme-purple/5">
             <button
               onClick={() => setHistoryTab('deposits')}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${historyTab === 'deposits' ? 'bg-white text-indigo-600 shadow-sm' : 'text-neutral-400'}`}
+              className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${historyTab === 'deposits' ? 'bg-white text-theme-purple shadow-sm' : 'text-theme-purple/40'}`}
             >
-              Deposits
+              Income
             </button>
             <button
               onClick={() => setHistoryTab('withdrawals')}
-              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${historyTab === 'withdrawals' ? 'bg-white text-rose-600 shadow-sm' : 'text-neutral-400'}`}
+              className={`px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${historyTab === 'withdrawals' ? 'bg-white text-rose-500 shadow-sm' : 'text-theme-purple/40'}`}
             >
-              Withdrawals
+              Payout
             </button>
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {historyTab === 'deposits' ? (
             (user.deposits || []).length > 0 ? (
               user.deposits.slice().reverse().map((d: any) => (
-                <Card key={d.id} className="p-5 bg-white border-0 shadow-sm rounded-[2rem] flex items-center justify-between group hover:shadow-md transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
-                      <ArrowDownRight className="h-6 w-6 text-emerald-600" />
+                <Card key={d.id} className="p-6 bg-white border-0 shadow-sm rounded-[2.5rem] flex items-center justify-between group hover:shadow-md transition-all">
+                  <div className="flex items-center gap-5">
+                    <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-100 transition-colors shadow-sm">
+                      <ArrowDownRight className="h-7 w-7 text-emerald-600" />
                     </div>
                     <div>
-                      <p className="font-black text-neutral-800 tracking-tight">₹{d.amount}</p>
-                      <p className="text-[10px] text-neutral-400 font-bold uppercase">{new Date(d.date).toLocaleDateString()}</p>
+                      <p className="font-black text-[#2D1A4A] text-lg tracking-tighter leading-none mb-1">₹{d.amount}</p>
+                      <p className="text-[10px] text-theme-purple/30 font-bold uppercase tracking-widest leading-none">{new Date(d.date).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg ${d.status === 'Approved' ? 'bg-emerald-500 text-white' : d.status === 'Rejected' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
-                      {d.status}
-                    </Badge>
-                    <p className="text-[8px] text-neutral-300 font-black uppercase mt-1">{d.method}</p>
-                  </div>
+                  <Badge className={`text-[8px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm ${d.status === 'Approved' ? 'bg-emerald-500 text-white' : d.status === 'Rejected' ? 'bg-rose-500 text-white' : 'bg-theme-gold text-white'}`}>
+                    {d.status}
+                  </Badge>
                 </Card>
               ))
             ) : (
-              <div className="py-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-neutral-100">
-                <p className="text-[10px] text-neutral-300 font-black uppercase tracking-[0.2em]">No deposits found</p>
+              <div className="py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-theme-lavender">
+                <Info className="h-10 w-10 text-theme-lavender mx-auto mb-4" />
+                <p className="text-[10px] text-theme-purple/20 font-black uppercase tracking-[0.3em]">No records found</p>
               </div>
             )
           ) : (
             (user.withdrawals || []).length > 0 ? (
               user.withdrawals.slice().reverse().map((w: any) => (
-                <Card key={w.id} className="p-5 bg-white border-0 shadow-sm rounded-[2rem] flex items-center justify-between group hover:shadow-md transition-all">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 bg-rose-50 rounded-2xl flex items-center justify-center">
-                      <ArrowUpRight className="h-6 w-6 text-rose-600" />
+                <Card key={w.id} className="p-6 bg-white border-0 shadow-sm rounded-[2.5rem] flex items-center justify-between group hover:shadow-md transition-all">
+                  <div className="flex items-center gap-5">
+                    <div className="h-14 w-14 bg-rose-50 rounded-2xl flex items-center justify-center group-hover:bg-rose-100 transition-colors shadow-sm">
+                      <ArrowUpRight className="h-7 w-7 text-rose-600" />
                     </div>
                     <div>
-                      <p className="font-black text-neutral-800 tracking-tight">₹{w.amount}</p>
-                      <p className="text-[10px] text-neutral-400 font-bold uppercase">{new Date(w.date).toLocaleDateString()}</p>
+                      <p className="font-black text-[#2D1A4A] text-lg tracking-tighter leading-none mb-1">₹{w.amount}</p>
+                      <p className="text-[10px] text-theme-purple/30 font-bold uppercase tracking-widest leading-none">{new Date(w.date).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <Badge className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-lg ${w.status === 'Approved' || w.status === 'Completed' ? 'bg-emerald-500 text-white' : w.status === 'Rejected' ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'}`}>
-                      {w.status}
-                    </Badge>
-                    <p className="text-[8px] text-neutral-300 font-black uppercase mt-1">Withdraw</p>
-                  </div>
+                  <Badge className={`text-[8px] font-black uppercase px-2.5 py-1 rounded-full shadow-sm ${w.status === 'Approved' || w.status === 'Completed' ? 'bg-emerald-500 text-white' : w.status === 'Rejected' ? 'bg-rose-500 text-white' : 'bg-theme-gold text-white'}`}>
+                    {w.status}
+                  </Badge>
                 </Card>
               ))
             ) : (
-              <div className="py-10 text-center bg-white rounded-[2rem] border-2 border-dashed border-neutral-100">
-                <p className="text-[10px] text-neutral-300 font-black uppercase tracking-[0.2em]">No withdrawals found</p>
+              <div className="py-20 text-center bg-white rounded-[3rem] border-2 border-dashed border-theme-lavender">
+                <Info className="h-10 w-10 text-theme-lavender mx-auto mb-4" />
+                <p className="text-[10px] text-theme-purple/20 font-black uppercase tracking-[0.3em]">No records found</p>
               </div>
             )
           )}
         </div>
       </div>
 
-
-
       <PlansModal open={showPlansModal} onClose={() => setShowPlansModal(false)} />
       <BottomNav active="home" />
-    </div>
-  )
-}
 
-function StarIcon(props: any) {
-  return (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
+      <style jsx global>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 8s linear infinite;
+        }
+      `}</style>
+    </div>
   )
 }
