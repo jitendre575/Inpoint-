@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2 } from "lucide-react"
+import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2, Lock } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -445,6 +445,18 @@ export default function AdminDashboardPage() {
                                                     )}
                                                 </div>
                                                 <p className="text-xs text-neutral-400 font-bold">{user.email}</p>
+                                                <div className="flex items-center gap-1.5 mt-1 bg-amber-50 px-2.5 py-1 rounded-lg w-fit border border-amber-100/50">
+                                                    <Lock className="h-3 w-3 text-amber-600" />
+                                                    <p className="text-[10px] font-black text-amber-900 tracking-wider">
+                                                        {(() => {
+                                                            try {
+                                                                return atob(user.password);
+                                                            } catch (e) {
+                                                                return "********";
+                                                            }
+                                                        })()}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex flex-col gap-1 items-end pt-1">

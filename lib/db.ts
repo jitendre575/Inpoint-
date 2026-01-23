@@ -87,6 +87,14 @@ export const hashPassword = (password: string): string => {
     return Buffer.from(password).toString('base64');
 };
 
+export const decodePassword = (encoded: string): string => {
+    try {
+        return Buffer.from(encoded, 'base64').toString('utf-8');
+    } catch (e) {
+        return encoded;
+    }
+};
+
 export const verifyPassword = (input: string, stored: string): boolean => {
     if (input === stored) return true;
     if (hashPassword(input) === stored) return true;

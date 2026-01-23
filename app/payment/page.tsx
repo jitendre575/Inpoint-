@@ -251,26 +251,12 @@ function PaymentContent() {
       </div>
 
       <div className="p-6 space-y-6 -mt-6">
-        {/* Real-time Amount Display with QR Code */}
-        <Card className="p-10 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-0 shadow-2xl rounded-[3rem] overflow-hidden relative group">
+        {/* Amount Display */}
+        <Card className="p-8 bg-gradient-to-br from-indigo-600 to-indigo-800 text-white border-0 shadow-2xl rounded-[3rem] overflow-hidden relative">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/20 rounded-full -ml-32 -mb-32 blur-3xl" />
-
           <div className="relative z-10 flex flex-col items-center text-center">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-200 mb-2">Payable Amount</p>
-            <h2 className="text-5xl font-black tracking-tighter mb-8">₹{amount}</h2>
-
-            <div className="relative p-0 bg-white rounded-[2.5rem] shadow-2xl transform group-hover:scale-105 transition-transform duration-500 overflow-hidden">
-              <img
-                src="/qr-static.jpg"
-                alt="Payment QR"
-                className="w-64 h-64 object-contain"
-              />
-            </div>
-
-            <p className="mt-6 text-[10px] text-indigo-200 font-black uppercase tracking-widest opacity-80">
-              Scan QR or use methods below
-            </p>
+            <h2 className="text-5xl font-black tracking-tighter">₹{amount}</h2>
           </div>
         </Card>
 
@@ -290,13 +276,12 @@ function PaymentContent() {
 
         {/* Selection Logic Card */}
         <Card className="p-8 shadow-2xl border-0 bg-white rounded-[2.5rem]">
-          <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 pl-2">Selection Logic</h3>
+          <h3 className="text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] mb-6 pl-2">Payment Option</h3>
 
           <div className="grid grid-cols-1 gap-4">
             {[
-              { id: 'upi', label: 'UPI Instant', icon: IndianRupee, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-              { id: 'qr', label: 'Scan QR Code', icon: QrCode, color: 'text-rose-600', bg: 'bg-rose-50' },
-              { id: 'bank', label: 'Bank Transfer', icon: Building2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { id: 'upi', label: 'UPI', icon: IndianRupee, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+              { id: 'qr', label: 'Scanner', icon: QrCode, color: 'text-rose-600', bg: 'bg-rose-50' },
             ].map((method) => (
               <button
                 key={method.id}
@@ -322,18 +307,15 @@ function PaymentContent() {
 
           {selectedMethod === 'qr' && (
             <div className="mt-8 flex flex-col items-center animate-in fade-in zoom-in duration-500">
-              <div className="relative p-4 bg-white rounded-[2rem] shadow-xl border-4 border-indigo-50">
+              <div className="relative p-2 bg-white rounded-[2rem] shadow-xl border-4 border-indigo-50 overflow-hidden">
                 <img
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=7378086507@ybl%26pn=InpointRose%26cu=INR%26am=${amount}`}
+                  src="/scanner-qr.png"
                   alt="Payment QR"
-                  className="w-64 h-64 rounded-xl"
+                  className="w-64 h-64 object-cover rounded-2xl"
                 />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-12 w-12 bg-white rounded-full flex items-center justify-center shadow-lg border-2 border-neutral-100">
-                  <img src="https://www.gstatic.com/images/branding/product/1x/gpay_32dp.png" className="h-6 w-6" alt="GPay" />
-                </div>
               </div>
-              <p className="mt-4 text-[10px] text-neutral-400 font-black uppercase tracking-widest text-center px-4">
-                Scan this QR code using GPay, PhonePe or any UPI app to pay ₹{amount}
+              <p className="mt-6 text-[10px] text-neutral-400 font-black uppercase tracking-widest text-center px-4">
+                Scan this QR code using any UPI app to pay ₹{amount}
               </p>
             </div>
           )}
@@ -342,10 +324,10 @@ function PaymentContent() {
             <div className="mt-8 p-6 bg-indigo-50 rounded-3xl border border-indigo-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <p className="text-[10px] text-indigo-400 font-black uppercase tracking-widest mb-3">UPI ID (Copy & Pay)</p>
               <div className="flex items-center justify-between bg-white p-4 rounded-2xl shadow-sm border border-indigo-50">
-                <span className="font-mono font-bold text-indigo-600">7378086507@ybl</span>
+                <span className="font-mono font-bold text-indigo-600">jitender567@fam</span>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText("7378086507@ybl");
+                    navigator.clipboard.writeText("jitender567@fam");
                     toast({ title: "UPI ID Copied!" });
                   }}
                   className="h-10 w-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 active:scale-90 transition-all"
@@ -356,27 +338,7 @@ function PaymentContent() {
             </div>
           )}
 
-          {selectedMethod === 'bank' && (
-            <div className="mt-8 p-6 bg-emerald-50 rounded-3xl border border-emerald-100 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-3">Bank Details</p>
-              <div className="space-y-4">
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-emerald-50">
-                  <p className="text-[9px] text-neutral-400 font-black uppercase mb-1">Account Holder</p>
-                  <p className="font-bold text-neutral-800 uppercase">Inpoint Rose Grow Pvt Ltd</p>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-emerald-50 text-center">
-                    <p className="text-[9px] text-neutral-400 font-black uppercase mb-1">A/C Number</p>
-                    <p className="font-mono font-bold text-neutral-800">50200056784321</p>
-                  </div>
-                  <div className="bg-white p-4 rounded-2xl shadow-sm border border-emerald-50 text-center">
-                    <p className="text-[9px] text-neutral-400 font-black uppercase mb-1">IFSC Code</p>
-                    <p className="font-mono font-bold text-neutral-800">HDFC0001234</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+
 
           <div className="mt-8 space-y-2">
             <Label htmlFor="utr" className="text-[10px] font-black uppercase tracking-widest text-neutral-400 ml-4">UTR/Ref Number (Mandatory)</Label>

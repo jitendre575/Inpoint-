@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { PlansModal } from "@/components/plans-modal"
 import { BottomNav } from "@/components/bottom-nav"
-import { DownloadAppButton } from "@/components/download-app-button"
 import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, Users, Gift, UserCircle, Bell, Timer, CheckCircle2 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -380,9 +379,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="px-5 mt-4 mb-2">
-        <DownloadAppButton className="w-full h-18 rounded-[2rem] bg-neutral-900 text-white border-0 py-6" />
-      </div>
+
 
       <PlansModal open={showPlansModal} onClose={() => setShowPlansModal(false)} />
       <BottomNav active="home" />
