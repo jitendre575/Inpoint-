@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { BottomNav } from "@/components/bottom-nav"
 import { useToast } from "@/hooks/use-toast"
-import { Users, TrendingUp, Target, Share2, Copy, ShieldCheck, ChevronRight, Award, Trophy, Info, Zap, Star } from "lucide-react"
+import { Users, TrendingUp, Target, Share2, Copy, ShieldCheck, ChevronRight, Award, Trophy, Info, Zap, Star, Activity, Network } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 export default function TeamPage() {
@@ -26,190 +26,166 @@ export default function TeamPage() {
 
   const handleCopy = (text: string, title: string) => {
     navigator.clipboard.writeText(text)
-    toast({ title: `${title} copied!`, description: "Share it with your network now." })
+    toast({ title: "Link Copied", description: "Successfully copied to your clipboard." })
   }
 
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#FDFCFF] pb-32 font-sans selection:bg-theme-lavender selection:text-theme-purple">
-      {/* Premium Luxury Header */}
-      <div className="bg-[#1A0B2E] text-white px-6 pt-16 pb-24 relative overflow-hidden rounded-b-[4rem] shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-theme-purple/20 rounded-full -mr-20 -mt-20 blur-[120px] animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-40 h-40 bg-theme-gold/10 rounded-full -ml-10 -mb-10 blur-[80px]" />
-
-        <div className="relative z-10 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10 backdrop-blur-md">
-              <Users className="h-6 w-6 text-theme-gold" />
+    <div className="min-h-screen bg-[#F8FAF8] pb-24 font-sans selection:bg-green-100">
+      {/* 1. Refined Green Header */}
+      <div className="bg-white border-b border-green-50 px-5 pt-8 pb-6 sticky top-0 z-30 shadow-sm backdrop-blur-md bg-white/90">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-green-50 flex items-center justify-center border border-green-100">
+              <Users className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-theme-lavender/40 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Growth Network</p>
-              <h1 className="text-2xl font-black tracking-tighter">My Team Hub</h1>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[2.5px] mb-0.5">Network Nodes</p>
+              <h1 className="text-base font-bold text-slate-900 leading-tight uppercase">Partnership Hub</h1>
             </div>
           </div>
-          <button onClick={() => router.back()} className="h-12 w-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 active:scale-95 transition-all">
-            <ChevronRight className="h-5 w-5 text-theme-lavender rotate-180" />
+          <button onClick={() => router.back()} className="h-10 w-10 bg-green-50/50 border border-green-100 rounded-full flex items-center justify-center hover:bg-green-100 transition-colors">
+            <ChevronRight className="h-4 w-4 text-green-400 rotate-180" />
           </button>
         </div>
       </div>
 
-      <div className="px-5 -mt-10 relative z-20 space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+      <div className="px-5 mt-6 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-        {/* Network Capital Stats */}
-        <div className="grid grid-cols-2 gap-5">
-          <Card className="p-8 bg-white shadow-xl shadow-theme-purple/5 border border-theme-lavender rounded-[3rem] relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-theme-lavender/40 rounded-full -mr-12 -mt-12" />
+        {/* 2. Cumulative Network Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="p-6 bg-white shadow-sm border border-green-50 rounded-3xl relative overflow-hidden group border-0">
+            <div className="relative z-10 font-sans">
+              <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mb-3">Direct Nodes</p>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none">0</h2>
+              <div className="h-1 w-8 bg-green-600 rounded-full mt-4" />
+            </div>
+          </Card>
+          <Card className="p-6 bg-[#14532D] shadow-xl border-0 rounded-3xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <Zap className="h-12 w-12 text-green-300" />
+            </div>
+            <div className="relative z-10 font-sans">
+              <p className="text-green-300/40 text-[9px] font-bold uppercase tracking-widest mb-3">Total Incentives</p>
+              <h2 className="text-3xl font-black text-white tracking-tighter leading-none">₹{user.referralRewards || 0}</h2>
+              <div className="h-1 w-8 bg-green-400 rounded-full mt-4" />
+            </div>
+          </Card>
+        </div>
+
+        {/* 3. Streamlined Tier Nodes */}
+        <div className="space-y-4 font-sans">
+          <div className="flex items-center justify-between px-1">
+            <p className="text-slate-900 text-[10px] font-bold uppercase tracking-[3px]">Generation Topology</p>
+            <Network className="h-4 w-4 text-green-200" />
+          </div>
+
+          <div className="grid gap-3">
+            {[
+              { level: "Alpha Protocol", yield: "10%", icon: Star, color: "text-green-600", bg: "bg-green-50", label: "Primary Tier" },
+              { level: "Beta Protocol", yield: "5%", icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50", label: "Secondary Tier" }
+            ].map((node, idx) => (
+              <Card key={idx} className="p-5 bg-white border border-green-50 shadow-sm rounded-[2rem] group transition-all border-0">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className={`h-12 w-12 ${node.bg} rounded-2xl flex items-center justify-center border border-transparent shadow-inner group-hover:rotate-6 transition-transform`}>
+                      <node.icon className={`h-6 w-6 ${node.color}`} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-bold text-slate-900 text-sm uppercase tracking-tight leading-none">{node.level}</h4>
+                        <span className="text-[7px] font-bold bg-slate-50 text-slate-400 px-1.5 py-0.5 rounded-lg border border-slate-100 uppercase">{node.label}</span>
+                      </div>
+                      <p className="text-[9px] text-green-600 font-bold uppercase tracking-widest leading-none">{node.yield} Yield Node</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-200" />
+                </div>
+                <div className="flex gap-10 pt-4 border-t border-green-50/50">
+                  <div>
+                    <p className="text-[8px] text-slate-400 font-bold uppercase tracking-[2px] mb-1 leading-none">Partners</p>
+                    <p className="text-lg font-black text-slate-900 leading-none">0</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] text-slate-400 font-bold uppercase tracking-[2px] mb-1 leading-none">Cumulative Yield</p>
+                    <p className="text-lg font-black text-slate-900 leading-none">₹0</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* 4. Reward Progression */}
+        <div className="space-y-4 font-sans">
+          <p className="text-slate-900 text-[10px] font-bold uppercase tracking-[3px] px-1">Performance Benchmarks</p>
+          <Card className="bg-[#14532D] rounded-[3rem] shadow-2xl overflow-hidden relative border-0 p-8">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-green-500/10 rounded-full blur-[100px] -mr-20 -mt-20" />
+
             <div className="relative z-10">
-              <p className="text-theme-purple/30 text-[10px] font-black uppercase tracking-[0.2em] mb-2">Active Link</p>
-              <h2 className="text-4xl font-black text-[#2D1A4A] tracking-tighter italic">0</h2>
-              <Badge className="bg-theme-gold/5 text-theme-gold border border-theme-gold/10 text-[8px] font-black uppercase mt-3">Direct Partners</Badge>
-            </div>
-          </Card>
-          <Card className="p-8 bg-white shadow-xl shadow-theme-purple/5 border border-theme-lavender rounded-[3rem] group">
-            <div className="h-12 w-12 bg-theme-lavender rounded-[1.5rem] flex items-center justify-center mb-4 transition-transform group-hover:rotate-12">
-              <Target className="h-6 w-6 text-theme-purple" />
-            </div>
-            <div>
-              <p className="text-theme-purple/30 text-[10px] font-black uppercase tracking-widest mb-1">Incentives</p>
-              <h2 className="text-3xl font-black text-[#2D1A4A] tracking-tighter italic">₹{user.referralRewards || 0}</h2>
-            </div>
-          </Card>
-        </div>
-
-        {/* Level Breakdown Cards */}
-        <div className="space-y-4">
-          <p className="text-theme-purple/30 text-[10px] font-black uppercase tracking-[0.3em] pl-6">Generation Allocation</p>
-
-          {/* Level A */}
-          <Card className="p-8 bg-white border border-theme-purple/5 shadow-xl shadow-theme-purple/5 rounded-[3.5rem] group hover:bg-theme-lavender/10 transition-all cursor-pointer relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-12 h-12 bg-theme-gold/10 rounded-bl-[2rem]" />
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-5">
-                <div className="h-16 w-16 bg-[#1A0B2E] rounded-[2rem] flex items-center justify-center border-4 border-white shadow-xl">
-                  <Star className="h-8 w-8 text-theme-gold" />
-                </div>
+              <div className="flex items-start justify-between mb-8">
                 <div>
-                  <h4 className="font-black text-[#2D1A4A] leading-tight text-xl italic">Direct Team</h4>
-                  <p className="text-[10px] text-theme-purple/30 font-black uppercase tracking-widest">Level Alpha (10%)</p>
+                  <h4 className="text-2xl font-bold text-white mb-2 leading-none uppercase tracking-tight">Elite Principal</h4>
+                  <Badge className="bg-green-500 text-white border-0 text-[8px] font-bold uppercase rounded-full px-3 py-1.5 tracking-widest">Target: 50+ Global Nodes</Badge>
                 </div>
-              </div>
-              <div className="h-10 w-10 bg-theme-lavender rounded-full flex items-center justify-center">
-                <ChevronRight className="h-5 w-5 text-theme-purple/20 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-theme-lavender/50">
-              <div className="p-4 bg-theme-lavender/40 rounded-2xl border border-theme-purple/5">
-                <p className="text-[9px] text-theme-purple/40 font-black uppercase mb-1 tracking-widest">Members</p>
-                <p className="text-2xl font-black text-[#2D1A4A]">0</p>
-              </div>
-              <div className="p-4 bg-theme-gold/5 rounded-2xl border border-theme-gold/10">
-                <p className="text-[9px] text-theme-gold/60 font-black uppercase mb-1 tracking-widest">Capital Yield</p>
-                <p className="text-2xl font-black text-[#2D1A4A]">₹0</p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Level B */}
-          <Card className="p-8 bg-white border border-theme-purple/5 shadow-xl shadow-theme-purple/5 rounded-[3.5rem] group hover:bg-theme-lavender/10 transition-all cursor-pointer relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-5">
-                <div className="h-16 w-16 bg-theme-lavender rounded-[2rem] flex items-center justify-center border-4 border-white shadow-xl">
-                  <TrendingUp className="h-8 w-8 text-theme-purple" />
-                </div>
-                <div>
-                  <h4 className="font-black text-[#2D1A4A] leading-tight text-xl italic">Extended Team</h4>
-                  <p className="text-[10px] text-theme-purple/30 font-black uppercase tracking-widest">Level Beta (5%)</p>
-                </div>
-              </div>
-              <div className="h-10 w-10 bg-theme-lavender rounded-full flex items-center justify-center">
-                <ChevronRight className="h-5 w-5 text-theme-purple/20 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4 pt-6 border-t border-theme-lavender/50 text-black">
-              <div className="p-4 bg-white rounded-2xl border border-theme-purple/5">
-                <p className="text-[9px] text-theme-purple/40 font-black uppercase mb-1 tracking-widest">Members</p>
-                <p className="text-2xl font-black ">0</p>
-              </div>
-              <div className="p-4 bg-white rounded-2xl border border-theme-purple/5">
-                <p className="text-[9px] text-theme-purple/40 font-black uppercase mb-1 tracking-widest">Capital Yield</p>
-                <p className="text-2xl font-black">₹0</p>
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        {/* Network Milestone Progress */}
-        <div className="space-y-4">
-          <p className="text-theme-purple/30 text-[10px] font-black uppercase tracking-[0.3em] pl-6">Elite Status Track</p>
-          <Card className="p-1 bg-gradient-to-br from-[#1A0B2E] to-[#2D1A4A] rounded-[3.5rem] shadow-2xl overflow-hidden relative group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-theme-purple/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-125 transition-all duration-1000" />
-            <div className="bg-white/5 backdrop-blur-3xl m-1 rounded-[3.3rem] p-10 relative z-10">
-              <div className="flex items-start justify-between mb-10">
-                <div>
-                  <h4 className="text-3xl font-black text-white mb-1 tracking-tighter italic">Elite Principal</h4>
-                  <p className="text-[10px] text-theme-gold font-black uppercase tracking-[0.2em]">Requirement: 50+ Partners</p>
-                </div>
-                <div className="h-16 w-16 bg-theme-gold rounded-[1.8rem] flex items-center justify-center shadow-2xl shadow-theme-gold/20">
-                  <Trophy className="h-8 w-8 text-[#1A0B2E]" />
+                <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 shadow-inner group-hover:scale-110 transition-transform">
+                  <Trophy className="h-7 w-7 text-green-300" />
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-black/20 p-5 rounded-3xl border border-white/5">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-[10px] font-black text-theme-lavender/40 uppercase tracking-widest">Node Saturation</span>
-                    <span className="text-[10px] font-black text-theme-gold">0% Complete</span>
+                <div className="bg-white/5 p-5 rounded-[2rem] border border-white/5 backdrop-blur-sm">
+                  <div className="flex justify-between items-center mb-3 px-1">
+                    <span className="text-[9px] font-bold text-green-300/40 uppercase tracking-[3px]">Maturity Index</span>
+                    <span className="text-[9px] font-bold text-green-300">0%</span>
                   </div>
-                  <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                    <div className="h-full w-0 bg-theme-gold rounded-full shadow-[0_0_15px_rgba(251,191,36,0.5)]" />
+                  <div className="h-2 w-full bg-black/20 rounded-full overflow-hidden">
+                    <div className="h-full w-0 bg-green-500 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.6)]" />
                   </div>
                 </div>
-                <div className="flex items-center gap-4 px-2">
-                  <div className="h-10 w-10 rounded-xl bg-white/5 flex items-center justify-center border border-white/10">
-                    <Zap className="h-5 w-5 text-theme-gold" />
-                  </div>
-                  <p className="text-xs font-bold text-theme-lavender">Unlock <span className="text-white font-black italic">₹10,000</span> Settlement Bonus</p>
+                <div className="flex items-center gap-3 bg-green-400/10 p-4 rounded-xl border border-green-400/20">
+                  <Zap className="h-4 w-4 text-green-400 fill-green-400" />
+                  <p className="text-[10px] font-bold text-white tracking-widest uppercase leading-none">Potential Bonus Payout: <span className="text-green-400 font-black">₹10,000</span></p>
                 </div>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Global Propagation Link */}
-        <div className="space-y-4 pb-12">
-          <p className="text-theme-purple/30 text-[10px] font-black uppercase tracking-[0.3em] pl-6">Invite Protocol</p>
-          <Card className="p-10 bg-white border border-theme-purple/5 shadow-xl shadow-theme-purple/5 rounded-[4rem] relative overflow-hidden group">
-            <div className="absolute bottom-0 right-0 w-48 h-48 bg-theme-lavender/30 rounded-full -mr-16 -mb-16 blur-2xl transition-all duration-1000 group-hover:scale-125" />
+        {/* 5. Precision Invite System */}
+        <div className="space-y-4 pb-12 font-sans">
+          <p className="text-slate-900 text-[10px] font-bold uppercase tracking-[3px] px-1">Network Expansion Protocol</p>
+          <Card className="p-8 bg-white border border-green-50 shadow-sm rounded-[3rem] relative overflow-hidden group border-0">
             <div className="relative z-10 space-y-8">
               <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="text-3xl font-black text-[#2D1A4A] tracking-tighter italic mb-1">Global Expansion</h4>
-                  <p className="text-[10px] text-theme-purple/30 font-black uppercase tracking-widest leading-none">Your unique network identifier</p>
+                  <h4 className="text-xl font-bold text-slate-900 tracking-tight mb-1 uppercase">Invitation Key</h4>
+                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest leading-none">Global Partnership Node Link</p>
                 </div>
-                <div className="h-14 w-14 bg-theme-lavender rounded-2xl flex items-center justify-center shadow-inner">
-                  <Share2 className="h-6 w-6 text-theme-purple" />
+                <div className="h-10 w-10 bg-green-50 rounded-xl flex items-center justify-center border border-green-100">
+                  <Share2 className="h-5 w-5 text-green-600" />
                 </div>
               </div>
 
-              <div className="bg-[#F8F7FF] p-6 rounded-[2.5rem] border border-theme-lavender flex items-center justify-between gap-5 group/copy hover:border-theme-purple/20 transition-all">
-                <span className="text-[10px] font-mono font-bold truncate opacity-40 px-2">{referralLink}</span>
+              <div className="bg-green-50/50 p-5 rounded-2xl border-2 border-dashed border-green-100 flex items-center justify-between gap-4 group-hover:border-green-300 transition-all">
+                <span className="text-[10px] font-mono text-slate-400 truncate tracking-tight px-1 uppercase">{referralLink}</span>
                 <button
                   onClick={() => handleCopy(referralLink, "Link")}
-                  className="h-14 w-14 bg-[#1A0B2E] text-white rounded-[1.2rem] flex items-center justify-center active:scale-90 transition-all shadow-2xl shadow-[#1A0B2E]/20 shrink-0"
+                  className="h-10 w-10 premium-gradient text-white rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-lg shadow-green-200 shrink-0 border-0"
                 >
-                  <Copy className="h-6 w-6" />
+                  <Copy className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-6 bg-theme-gold/5 rounded-3xl border border-theme-gold/10 flex flex-col items-center">
-                  <ShieldCheck className="h-6 w-6 text-theme-gold mb-2" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#2D1A4A]">Encrypted</p>
+                <div className="p-5 bg-white border border-green-50 rounded-[1.8rem] flex flex-col items-center shadow-sm border-0 bg-green-50/20">
+                  <ShieldCheck className="h-5 w-5 text-green-600 mb-2" />
+                  <p className="text-[9px] font-bold uppercase text-slate-800 tracking-widest">Secured</p>
                 </div>
-                <div className="p-6 bg-theme-lavender/50 rounded-3xl border border-theme-purple/10 flex flex-col items-center">
-                  <Award className="h-6 w-6 text-theme-purple mb-2" />
-                  <p className="text-[9px] font-black uppercase tracking-[0.1em] text-[#2D1A4A]">Tiered Yield</p>
+                <div className="p-5 bg-white border border-green-50 rounded-[1.8rem] flex flex-col items-center shadow-sm border-0 bg-green-50/20">
+                  <Award className="h-5 w-5 text-green-500 mb-2" />
+                  <p className="text-[9px] font-bold uppercase text-slate-800 tracking-widest">Elite Tier</p>
                 </div>
               </div>
             </div>

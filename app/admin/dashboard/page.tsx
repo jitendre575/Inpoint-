@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2, Lock, User, Phone, Trash } from "lucide-react"
+import { LogOut, RefreshCw, Search, Eye, ArrowUpCircle, Landmark, ImageIcon, Shield, CheckCircle2, XCircle, Clock, Headphones, Users, Activity, Wallet, Power, Edit3, Calendar, Bell, Plus, Minus, CreditCard, Trash2, Lock, User, Phone, Trash, Zap, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -89,40 +89,16 @@ export default function AdminDashboardPage() {
                                 if (newDeposits > 0) {
                                     const latestDeposit = u.deposits[u.deposits.length - 1];
                                     toast({
-                                        title: "New Deposit Request",
-                                        description: `User ${u.name} requested ₹${latestDeposit.amount}.`
+                                        title: "New Deposit Alert!",
+                                        description: `₹${latestDeposit.amount} from ${u.name}`,
+                                        className: "bg-green-500 text-white font-bold"
                                     });
                                     setNotifications(prev => [...prev, {
                                         id: Date.now().toString(),
                                         title: "New Deposit",
                                         message: `₹${latestDeposit.amount} from ${u.name}`,
-                                        date: new Date().toISOString()
-                                    }]);
-                                }
-                                // Check for new withdrawals
-                                const newWithdraws = (u.withdrawals?.length || 0) - (prevU.withdrawals?.length || 0);
-                                if (newWithdraws > 0) {
-                                    const latestWithdraw = u.withdrawals[u.withdrawals.length - 1];
-                                    toast({
-                                        title: "New Withdrawal Request",
-                                        description: `User ${u.name} requested ₹${latestWithdraw.amount}.`
-                                    });
-                                    setNotifications(prev => [...prev, {
-                                        id: Date.now().toString(),
-                                        title: "New Withdrawal",
-                                        message: `₹${latestWithdraw.amount} from ${u.name}`,
-                                        date: new Date().toISOString()
-                                    }]);
-                                }
-                                // Check for new chat messages
-                                const newChats = (u.supportChats?.length || 0) - (prevU.supportChats?.length || 0);
-                                if (newChats > 0) {
-                                    toast({ title: "New Message", description: `User ${u.name} sent a message.` });
-                                    setNotifications(prev => [...prev, {
-                                        id: Date.now().toString(),
-                                        title: "New Message",
-                                        message: `From ${u.name}`,
-                                        date: new Date().toISOString()
+                                        date: new Date().toISOString(),
+                                        userId: u.id
                                     }]);
                                 }
                             }
@@ -132,7 +108,6 @@ export default function AdminDashboardPage() {
                     prevUsersRef.current = data.users
                 }
             } else if (!silent) {
-                // If not silent and auth fails, kick back to login
                 if (res.status === 401) {
                     sessionStorage.removeItem("adminSecret")
                     router.push("/admin")
@@ -141,7 +116,6 @@ export default function AdminDashboardPage() {
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error("Admin Fetch Error:", error)
-                // Only show toast for manual refresh if it fails
                 if (!silent) {
                     toast({
                         title: "Fetch Failed",
@@ -208,35 +182,6 @@ export default function AdminDashboardPage() {
         }
     }
 
-    const handleEditAmount = async () => {
-        const password = sessionStorage.getItem("adminSecret")
-        setActionLoading(true)
-        try {
-            const res = await fetch('/api/admin/edit-transaction', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    adminSecret: password,
-                    userId: selectedUser.id,
-                    transactionId: editData.id,
-                    type: editData.type,
-                    newAmount: parseFloat(editData.newAmount)
-                })
-            })
-            if (res.ok) {
-                const data = await res.json()
-                setUsers(prev => prev.map(u => u.id === data.user.id ? data.user : u))
-                setSelectedUser(data.user)
-                setShowEditModal(false)
-                toast({ title: "Success", description: "Amount updated successfully" })
-            }
-        } catch (e) {
-            toast({ title: "Error", description: "Failed to update amount", variant: "destructive" })
-        } finally {
-            setActionLoading(false)
-        }
-    }
-
     const handleEditWallet = async () => {
         const password = sessionStorage.getItem("adminSecret")
         setActionLoading(true)
@@ -283,9 +228,6 @@ export default function AdminDashboardPage() {
                 setShowDeleteModal(false)
                 setUserToDelete(null)
                 toast({ title: "User Deleted", description: "The account has been removed successfully." })
-            } else {
-                const data = await res.json()
-                toast({ title: "Delete Failed", description: data.message, variant: "destructive" })
             }
         } catch (e) {
             toast({ title: "Error", description: "Request failed", variant: "destructive" })
@@ -322,9 +264,9 @@ export default function AdminDashboardPage() {
         active: users.filter(u => {
             if (!u.lastActive) return false;
             const diff = Date.now() - new Date(u.lastActive).getTime();
-            return diff < 60000; // Active in last 1 minute
+            return diff < 60000;
         }).length,
-        inactive: users.filter(u => u.plans?.length === 0).length,
+        pendingDeposits: users.reduce((acc, u) => acc + (u.deposits?.filter((d: any) => d.status === 'Processing').length || 0), 0),
         totalWallet: users.reduce((acc, u) => acc + (u.wallet || 0), 0)
     }
 
@@ -332,27 +274,25 @@ export default function AdminDashboardPage() {
         const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             u.id.includes(searchTerm);
-
         const matchesDate = !filterDate || (u.createdAt && u.createdAt.split('T')[0] === filterDate);
-
         return matchesSearch && matchesDate;
     })
 
     const activeUser = selectedUser ? users.find(u => u.id === selectedUser.id) || selectedUser : null;
 
     return (
-        <div className="min-h-screen bg-[#FDFCFF] pb-20 font-sans">
-            <header className="bg-[#1A0B2E] text-white shadow-2xl sticky top-0 z-50 border-b border-white/5">
+        <div className="min-h-screen bg-[#F0FDF4] pb-20 font-sans selection:bg-green-100">
+            <header className="bg-[#14532D] text-white shadow-2xl sticky top-0 z-50 border-b border-white/5">
                 <div className="container mx-auto px-6 py-4 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 bg-gradient-to-br from-theme-purple to-theme-violet rounded-xl flex items-center justify-center p-2.5 shadow-lg shadow-theme-purple/20">
+                        <div className="h-10 w-10 bg-green-500 rounded-xl flex items-center justify-center p-2 shadow-lg shadow-green-900/20">
                             <Shield className="h-full w-full text-white" />
                         </div>
-                        <h1 className="text-xl font-black uppercase tracking-tight">Inpoint<span className="text-theme-gold">Rose</span></h1>
+                        <h1 className="text-xl font-black uppercase tracking-tight">Green<span className="text-green-300">Admin</span></h1>
                     </div>
                     <div className="flex items-center gap-4">
                         <div className="hidden md:flex items-center gap-2 bg-white/10 px-4 py-2 rounded-xl border border-white/10">
-                            <Calendar className="h-4 w-4 text-theme-gold" />
+                            <Calendar className="h-4 w-4 text-green-300" />
                             <input
                                 type="date"
                                 value={filterDate}
@@ -363,30 +303,32 @@ export default function AdminDashboardPage() {
 
                         <div className="relative group cursor-pointer" onClick={() => setNotifications([])}>
                             <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10 hover:bg-white/20 transition-all relative">
-                                <Bell className="h-5 w-5 text-neutral-300" />
+                                <Bell className="h-5 w-5 text-green-100" />
                                 {notifications.length > 0 && (
-                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-rose-500 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-neutral-900 animate-bounce">
+                                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-green-500 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-[#14532D] animate-bounce">
                                         {notifications.length}
                                     </span>
                                 )}
                             </div>
-                            {/* Dropdown for Notifications */}
-                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all transform origin-top-right py-2 z-[100] border border-neutral-100">
-                                <div className="px-4 py-2 border-b border-neutral-50 flex justify-between items-center">
-                                    <span className="text-[10px] font-black text-neutral-400 uppercase">Notifications</span>
-                                    <button onClick={() => setNotifications([])} className="text-[10px] text-indigo-600 font-bold">Clear All</button>
+                            <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all transform origin-top-right py-2 z-[100] border border-green-50">
+                                <div className="px-4 py-2 border-b border-green-50 flex justify-between items-center">
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Alert Hub</span>
+                                    <button onClick={() => setNotifications([])} className="text-[10px] text-green-600 font-bold">Clear All</button>
                                 </div>
-                                <div className="max-h-64 overflow-y-auto">
+                                <div className="max-h-80 overflow-y-auto">
                                     {notifications.length === 0 ? (
-                                        <div className="px-4 py-6 text-center">
-                                            <p className="text-[10px] text-neutral-300 font-bold italic">No new alerts</p>
+                                        <div className="px-4 py-8 text-center">
+                                            <p className="text-[11px] text-slate-300 font-bold uppercase tracking-widest">No Active Alerts</p>
                                         </div>
                                     ) : (
                                         notifications.slice().reverse().map((n) => (
-                                            <div key={n.id} className="px-4 py-3 border-b border-neutral-50 hover:bg-neutral-50 transition-colors">
-                                                <p className="text-[11px] font-black text-neutral-900">{n.title}</p>
-                                                <p className="text-[10px] text-neutral-500 font-medium">{n.message}</p>
-                                                <p className="text-[8px] text-neutral-300 mt-1 uppercase font-black">{new Date(n.date).toLocaleTimeString()}</p>
+                                            <div key={n.id} className="px-4 py-3 border-b border-green-50 hover:bg-green-50 transition-colors cursor-pointer" onClick={() => { setSearchTerm(n.userId || ""); setNotifications([]); }}>
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="h-2 w-2 bg-green-500 rounded-full" />
+                                                    <p className="text-[11px] font-black text-slate-900 uppercase">{n.title}</p>
+                                                </div>
+                                                <p className="text-[10px] text-slate-500 font-semibold leading-relaxed">{n.message}</p>
+                                                <p className="text-[8px] text-slate-300 mt-1 uppercase font-black">{new Date(n.date).toLocaleTimeString()}</p>
                                             </div>
                                         ))
                                     )}
@@ -394,144 +336,129 @@ export default function AdminDashboardPage() {
                             </div>
                         </div>
 
-                        <Button onClick={handleLogout} variant="destructive" className="font-bold">Logout</Button>
+                        <Button onClick={handleLogout} variant="destructive" className="font-bold h-10 rounded-xl border-0 shadow-lg shadow-red-900/20">Exit Node</Button>
                     </div>
                 </div>
             </header>
 
-            <main className="container mx-auto px-6 py-8">
+            <main className="container mx-auto px-4 py-8 max-w-7xl">
                 {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                     {[
-                        { label: 'Total Users', value: stats.total, icon: Users, color: 'text-theme-purple', bg: 'bg-theme-lavender' },
-                        { label: 'Active Users', value: stats.active, icon: Activity, color: 'text-theme-violet', bg: 'bg-theme-lavender' },
-                        { label: 'Inactive Users', value: stats.inactive, icon: XCircle, color: 'text-rose-500', bg: 'bg-rose-50' },
-                        { label: 'Global Wallet', value: `₹${stats.totalWallet.toLocaleString()}`, icon: Wallet, color: 'text-theme-gold', bg: 'bg-theme-gold/10' },
+                        { label: 'Total Users', value: stats.total, icon: Users, color: 'text-green-600', bg: 'bg-green-100' },
+                        { label: 'Active Node', value: stats.active, icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+                        { label: 'Pending Auth', value: stats.pendingDeposits, icon: Zap, color: 'text-amber-500', bg: 'bg-amber-100' },
+                        { label: 'Global Capital', value: `₹${stats.totalWallet.toLocaleString()}`, icon: Wallet, color: 'text-green-700', bg: 'bg-green-200/50' },
                     ].map((stat, i) => (
-                        <Card key={i} className="p-6 border-0 shadow-lg bg-white rounded-3xl flex items-center gap-4">
-                            <div className={`${stat.bg} h-14 w-14 rounded-2xl flex items-center justify-center`}>
-                                <stat.icon className={`h-7 w-7 ${stat.color}`} />
+                        <Card key={i} className="p-4 border-0 shadow-sm bg-white rounded-2xl flex items-center gap-3">
+                            <div className={`${stat.bg} h-10 w-10 rounded-xl flex items-center justify-center shrink-0`}>
+                                <stat.icon className={`h-5 w-5 ${stat.color}`} />
                             </div>
                             <div>
-                                <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">{stat.label}</p>
-                                <p className="text-2xl font-black text-neutral-900">{stat.value}</p>
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{stat.label}</p>
+                                <p className="text-lg font-black text-slate-900 leading-none mt-0.5">{stat.value}</p>
                             </div>
                         </Card>
                     ))}
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-6 mb-8">
+                <div className="flex gap-4 mb-8">
                     <div className="relative flex-1">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                         <Input
-                            placeholder="Search by Name, Email or ID..."
-                            className="h-14 pl-12 bg-white shadow-xl border-0 rounded-2xl font-bold"
+                            placeholder="Search by Identity, Email or UID..."
+                            className="h-12 pl-12 bg-white shadow-sm border-0 rounded-xl font-bold text-sm"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Button onClick={() => fetchUsers()} className="h-14 w-14 rounded-2xl bg-white shadow-xl border-0">
-                        <RefreshCw className={`h-6 w-6 text-neutral-600 ${loading ? 'animate-spin' : ''}`} />
+                    <Button onClick={() => fetchUsers()} className="h-12 px-4 rounded-xl bg-white shadow-sm border-0 hover:bg-green-50 transition-all text-green-600 font-bold">
+                        <RefreshCw className={loading ? 'animate-spin' : ''} />
                     </Button>
                 </div>
 
                 {loading && !users.length ? (
                     <div className="text-center py-20">
-                        <RefreshCw className="h-10 w-10 animate-spin mx-auto text-indigo-600 mb-4" />
-                        <p className="font-bold text-neutral-400 uppercase tracking-widest">Initialising Node...</p>
+                        <Loader2 className="h-10 w-10 animate-spin mx-auto text-green-600 mb-4 opacity-20" />
+                        <p className="font-bold text-slate-300 uppercase tracking-[4px] text-xs">Syncing Core...</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredUsers.map((user) => {
                             const activePlan = user.plans?.find((p: any) => p.status === 'active');
+                            const pendingDeposits = user.deposits?.filter((d: any) => d.status === 'Processing') || [];
                             return (
-                                <Card key={user.id} className={`p-6 border border-theme-purple/5 shadow-xl rounded-[2.5rem] transition-all relative overflow-hidden ${user.isBlocked ? 'bg-rose-50 ring-2 ring-rose-200' : activePlan ? 'bg-theme-lavender group hover:border-theme-gold/20' : 'bg-white'}`}>
-                                    <div className="flex justify-between items-start mb-6 px-1">
+                                <Card key={user.id} className={`p-5 border border-green-50 shadow-sm rounded-[2rem] transition-all relative overflow-hidden bg-white ${user.isBlocked ? 'bg-red-50/30' : ''} group`}>
+                                    {/* Desktop/Tablet Notification Badge */}
+                                    {pendingDeposits.length > 0 && (
+                                        <div className="absolute top-4 right-4 animate-bounce">
+                                            <Badge className="bg-green-600 text-white border-0 text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shadow-lg shadow-green-200">
+                                                New Deposit (₹{pendingDeposits[0].amount})
+                                            </Badge>
+                                        </div>
+                                    )}
+
+                                    <div className="flex items-start justify-between mb-6">
                                         <div className="flex items-center gap-4">
-                                            <div className="h-14 w-14 rounded-full bg-theme-lavender flex items-center justify-center overflow-hidden border-2 border-white shadow-sm relative">
-                                                {user.profilePhoto ? <img src={user.profilePhoto} className="h-full w-full object-cover" /> : <div className="text-xl font-black text-theme-purple">{user.name[0]}</div>}
-                                                <div className={`absolute bottom-0 right-0 h-3.5 w-3.5 rounded-full border-2 border-white ${stats.active > 0 && user.lastActive && (Date.now() - new Date(user.lastActive).getTime() < 60000) ? 'bg-theme-gold' : 'bg-neutral-300'}`} />
+                                            <div className="h-14 w-14 rounded-2xl bg-green-50 border border-green-100 flex items-center justify-center overflow-hidden shrink-0 relative">
+                                                {user.profilePhoto ? <img src={user.profilePhoto} className="h-full w-full object-cover" /> : <div className="text-xl font-black text-green-600 uppercase">{user.name[0]}</div>}
+                                                <div className={`absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-4 border-white ${user.lastActive && (Date.now() - new Date(user.lastActive).getTime() < 60000) ? 'bg-green-500' : 'bg-slate-300'}`} />
                                             </div>
                                             <div>
-                                                <div className="flex items-center gap-2">
-                                                    <h3 className="font-black text-[#2D1A4A] text-lg leading-tight">{user.name}</h3>
-                                                    {(user.supportChats?.filter((c: any) => c.sender === 'user' && !c.read).length || 0) > 0 && (
-                                                        <Badge className="bg-theme-violet text-white animate-bounce h-5 px-1.5 min-w-[20px] flex items-center justify-center text-[10px] rounded-full shadow-lg border-2 border-white">
-                                                            {user.supportChats.filter((c: any) => c.sender === 'user' && !c.read).length}
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <p className="text-xs text-theme-purple/30 font-bold">{user.email}</p>
-                                                <div className="flex items-center gap-1.5 mt-1 bg-amber-50 px-2.5 py-1 rounded-lg w-fit border border-amber-100/50">
-                                                    <Lock className="h-3 w-3 text-amber-600" />
-                                                    <p className="text-[10px] font-black text-amber-900 tracking-wider">
-                                                        {(() => {
-                                                            try {
-                                                                return atob(user.password);
-                                                            } catch (e) {
-                                                                return "********";
-                                                            }
-                                                        })()}
-                                                    </p>
-                                                </div>
+                                                <h3 className="font-bold text-slate-900 text-base leading-tight group-hover:text-green-600 transition-colors uppercase">{user.name}</h3>
+                                                <p className="text-[10px] text-slate-400 font-bold mt-0.5">ID: {user.id}</p>
+                                                <p className="text-[10px] text-slate-400 font-bold tracking-tight">{user.email}</p>
                                             </div>
-                                        </div>
-                                        <div className="flex flex-col gap-1 items-end pt-1">
-                                            {activePlan && <Badge className="bg-emerald-500 text-white text-[8px] font-black uppercase px-2 py-0.5">Active Plan</Badge>}
-                                            <Badge className={`text-[8px] font-black uppercase px-2 py-0.5 ${user.isBlocked ? 'bg-rose-500 text-white' : 'bg-neutral-100 text-neutral-500'}`}>{user.isBlocked ? 'Blocked' : 'User Active'}</Badge>
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4 mb-6">
-                                        <div className="p-4 bg-[#F8F9FD] rounded-2xl relative group cursor-pointer" onClick={() => { setSelectedUser(user); setShowWalletModal(true); }}>
-                                            <p className="text-[10px] text-neutral-400 font-black uppercase mb-1">Wallet</p>
+                                    <div className="grid grid-cols-2 gap-3 mb-6">
+                                        <div className="p-3 bg-green-50/50 rounded-xl border border-green-50 cursor-pointer" onClick={() => { setSelectedUser(user); setShowWalletModal(true); }}>
+                                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Capital</p>
                                             <div className="flex items-center justify-between">
-                                                <p className="text-lg font-black text-emerald-600">₹{user.wallet.toFixed(0)}</p>
-                                                <Edit3 className="h-3 w-3 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                <p className="text-lg font-black text-green-700 leading-none">₹{user.wallet.toFixed(0)}</p>
+                                                <Edit3 className="h-3 w-3 text-green-300" />
                                             </div>
                                         </div>
-                                        <div className="p-4 bg-[#F8F9FD] rounded-2xl">
-                                            <p className="text-[10px] text-neutral-400 font-black uppercase mb-1">Referral</p>
-                                            <p className="text-lg font-black text-indigo-600">{user.referralCode || 'N/A'}</p>
+                                        <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-50">
+                                            <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1.5">Nodes</p>
+                                            <p className="text-lg font-black text-slate-900 leading-none">{user.plans?.length || 0}</p>
                                         </div>
                                     </div>
 
-                                    {/* Quick Transaction Summary */}
-                                    <div className="mb-6 px-1 space-y-2">
-                                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest pl-1">Recent Transactions</p>
-                                        {[...(user.deposits || []), ...(user.withdrawals || [])]
-                                            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                                            .slice(0, 2)
-                                            .map((t, i) => (
-                                                <div key={i} className="flex items-center justify-between text-[11px] font-bold bg-white/50 p-2 rounded-xl border border-neutral-100/50">
-                                                    <div className="flex items-center gap-2">
-                                                        <div className={`h-2 w-2 rounded-full ${t.status === 'Approved' || t.status === 'Completed' ? 'bg-emerald-500' : t.status === 'Rejected' ? 'bg-rose-500' : 'bg-amber-500'}`} />
-                                                        <span className="text-neutral-600">{t.method ? 'Deposit' : 'Withdraw'}</span>
-                                                    </div>
-                                                    <span className={t.method ? 'text-emerald-600' : 'text-rose-600'}>₹{t.amount}</span>
-                                                </div>
-                                            ))}
-                                        {[...(user.deposits || []), ...(user.withdrawals || [])].length === 0 && <p className="text-[10px] text-neutral-300 italic pl-1">No transactions yet</p>}
-                                    </div>
+                                    {/* Real-time Deposit Card Detail */}
+                                    {pendingDeposits.length > 0 && (
+                                        <div className="mb-6 p-4 bg-green-600 rounded-2xl text-white shadow-lg shadow-green-100 border-0">
+                                            <div className="flex justify-between items-center mb-3">
+                                                <span className="text-[9px] font-black uppercase tracking-[2px]">Pending Auth Needed</span>
+                                                <Clock className="h-3 w-3 opacity-60" />
+                                            </div>
+                                            <h4 className="text-xl font-black mb-1 leading-none">₹{pendingDeposits[0].amount}</h4>
+                                            <p className="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-3">{new Date(pendingDeposits[0].date).toLocaleString()}</p>
+                                            <div className="flex gap-2">
+                                                <Button onClick={() => handleAction(pendingDeposits[0].id, 'deposit', 'approve')} className="flex-1 h-8 bg-white text-green-600 hover:bg-green-50 font-black text-[9px] uppercase border-0">Approve</Button>
+                                                <Button onClick={() => handleAction(pendingDeposits[0].id, 'deposit', 'reject')} className="h-8 w-8 bg-white/10 text-white hover:bg-white/20 border-0 p-0 flex items-center justify-center"><XCircle className="h-4 w-4" /></Button>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     <div className="space-y-3">
                                         <div className="flex gap-2">
-                                            <Button onClick={() => { setSelectedUser(user); setShowHistoryModal(true); }} className="flex-1 h-12 rounded-2xl bg-neutral-900 hover:bg-black font-black text-[10px] uppercase">Deposits</Button>
-                                            <Button onClick={() => { setSelectedUser(user); setShowWithdrawModal(true); }} className="flex-1 h-12 rounded-2xl bg-indigo-600 hover:bg-indigo-700 font-black text-[10px] uppercase">Withdrawals</Button>
+                                            <Button onClick={() => { setSelectedUser(user); setShowHistoryModal(true); }} className="flex-1 h-10 rounded-xl bg-slate-900 hover:bg-black text-white font-black text-[9px] uppercase tracking-widest border-0 shadow-sm transition-all active:scale-95">Deposits</Button>
+                                            <Button onClick={() => { setSelectedUser(user); setShowWithdrawModal(true); }} className="flex-1 h-10 rounded-xl bg-green-600 hover:bg-green-700 text-white font-black text-[9px] uppercase tracking-widest border-0 shadow-sm transition-all active:scale-95">Withdrawals</Button>
                                         </div>
                                         <div className="flex gap-2">
-                                            <Button onClick={() => handleToggleBlock(user)} className={`flex-1 h-12 rounded-2xl font-black text-[10px] uppercase ${user.isBlocked ? 'bg-emerald-500 hover:bg-emerald-600 text-white' : 'bg-rose-50 text-rose-600 border border-rose-100'}`}>
-                                                <Power className="h-3 w-3 mr-2" /> {user.isBlocked ? 'Resume' : 'Block'}
+                                            <Button onClick={() => handleToggleBlock(user)} className="flex-1 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-black text-[9px] uppercase tracking-widest border-0 transition-all">
+                                                {user.isBlocked ? <Power className="h-3 w-3 mr-1.5 text-green-500" /> : <Power className="h-3 w-3 mr-1.5 text-red-400" />}
+                                                {user.isBlocked ? 'Resume Account' : 'Freeze Access'}
                                             </Button>
-                                            <Button onClick={() => { setUserToDelete(user); setShowDeleteModal(true); }} className="h-12 w-12 rounded-2xl bg-rose-50 text-rose-600 border border-rose-100"><Trash2 className="h-5 w-5" /></Button>
-                                            <Button onClick={() => { setSelectedUser(user); setShowChatModal(true); }} className="h-12 w-12 rounded-2xl bg-sky-50 text-sky-600"><Headphones className="h-5 w-5" /></Button>
+                                            <Button onClick={() => { setSelectedUser(user); setShowChatModal(true); }} className="h-10 w-10 shrink-0 rounded-xl bg-green-50 hover:bg-green-100 text-green-600 transition-all border-0 flex items-center justify-center"><Headphones className="h-4 w-4" /></Button>
                                         </div>
                                     </div>
 
                                     {user.referredBy && (
-                                        <div className="mt-4 pt-3 border-t border-dashed border-neutral-100 flex justify-between items-center">
-                                            <span className="text-[9px] font-black text-neutral-400 uppercase">Referred By:</span>
-                                            <span className="text-[9px] font-black text-indigo-500">{user.referredBy}</span>
+                                        <div className="mt-4 pt-3 border-t border-dashed border-slate-100 flex justify-between items-center opacity-40">
+                                            <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Upline: {user.referredBy}</span>
                                         </div>
                                     )}
                                 </Card>
@@ -541,249 +468,230 @@ export default function AdminDashboardPage() {
                 )}
             </main>
 
-            {/* Wallet Edit Modal */}
+            {/* Wallet Modal */}
             <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
-                <DialogContent className="max-w-md p-8 rounded-[3rem] border-0 bg-white">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                            <Wallet className="h-7 w-7 text-emerald-500" /> Wallet Manager
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-6 pt-4">
-                        <div className="flex bg-neutral-100 p-1.5 rounded-2xl">
-                            <button
-                                onClick={() => setWalletType('add')}
-                                className={`flex-1 py-3 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all ${walletType === 'add' ? 'bg-white shadow-sm text-emerald-600' : 'text-neutral-400'}`}
-                            >
-                                <Plus className="h-4 w-4" /> Add Balance
-                            </button>
-                            <button
-                                onClick={() => setWalletType('deduct')}
-                                className={`flex-1 py-3 rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2 transition-all ${walletType === 'deduct' ? 'bg-white shadow-sm text-rose-600' : 'text-neutral-400'}`}
-                            >
-                                <Minus className="h-4 w-4" /> Deduct
-                            </button>
-                        </div>
-
-                        <div className="space-y-2">
-                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest px-2">Enter Amount (₹)</p>
-                            <Input
-                                type="number"
-                                placeholder="0.00"
-                                value={walletAmount}
-                                onChange={(e) => setWalletAmount(e.target.value)}
-                                className="h-16 rounded-2xl border-2 focus:border-indigo-500 font-black text-2xl px-6"
-                            />
-                        </div>
-
-                        <div className="space-y-2">
-                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest px-2">Reason for modification</p>
-                            <Input
-                                placeholder="e.g. Compensation, Withdrawal adjustment..."
-                                value={walletReason}
-                                onChange={(e) => setWalletReason(e.target.value)}
-                                className="h-14 rounded-2xl border-2 focus:border-indigo-500 font-bold"
-                            />
-                        </div>
-
-                        <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3">
-                            <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center border border-amber-100 shrink-0">
-                                <Shield className="h-5 w-5 text-amber-500" />
+                <DialogContent className="max-w-md p-0 border-0 bg-transparent shadow-none">
+                    <Card className="p-8 rounded-[2.5rem] border-0 bg-white">
+                        <DialogHeader className="mb-6">
+                            <DialogTitle className="text-xl font-bold flex items-center gap-3 text-slate-900 uppercase tracking-tight">
+                                <Wallet className="h-6 w-6 text-green-500" /> Capital Manager
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-6">
+                            <div className="flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
+                                <button
+                                    onClick={() => setWalletType('add')}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${walletType === 'add' ? 'bg-white shadow-sm text-green-600' : 'text-slate-400'}`}
+                                >
+                                    <Plus className="h-3.5 w-3.5" /> Credit Node
+                                </button>
+                                <button
+                                    onClick={() => setWalletType('deduct')}
+                                    className={`flex-1 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${walletType === 'deduct' ? 'bg-white shadow-sm text-red-500' : 'text-slate-400'}`}
+                                >
+                                    <Minus className="h-3.5 w-3.5" /> Debit Node
+                                </button>
                             </div>
-                            <p className="text-[10px] text-amber-700 font-bold leading-relaxed uppercase">Important: This action is permanent and will be logged in user's history.</p>
-                        </div>
 
-                        <div className="flex gap-3 pt-2">
-                            <Button variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-xs" onClick={() => setShowWalletModal(false)}>Cancel</Button>
-                            <Button
-                                onClick={handleEditWallet}
-                                disabled={actionLoading || !walletAmount}
-                                className={`flex-1 h-14 rounded-2xl font-black uppercase text-xs shadow-xl ${walletType === 'add' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
-                            >
-                                {actionLoading ? 'Saving...' : `Confirm ${walletType === 'add' ? 'Credit' : 'Debit'}`}
-                            </Button>
+                            <div className="space-y-2">
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-2">Transaction Value (₹)</p>
+                                <Input
+                                    type="number"
+                                    placeholder="0.00"
+                                    value={walletAmount}
+                                    onChange={(e) => setWalletAmount(e.target.value)}
+                                    className="h-14 rounded-xl border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-green-500/5 font-black text-xl px-5 transition-all"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-2">Protocol Note</p>
+                                <Input
+                                    placeholder="e.g. Yield Adjustment, System Correction..."
+                                    value={walletReason}
+                                    onChange={(e) => setWalletReason(e.target.value)}
+                                    className="h-12 rounded-xl border-slate-100 bg-slate-50 font-semibold text-sm px-5"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <Button variant="ghost" className="flex-1 h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest text-slate-400" onClick={() => setShowWalletModal(false)}>Cancel</Button>
+                                <Button
+                                    onClick={handleEditWallet}
+                                    disabled={actionLoading || !walletAmount}
+                                    className={`flex-1 h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest shadow-lg border-0 ${walletType === 'add' ? 'bg-green-600 hover:bg-green-700 shadow-green-100' : 'bg-red-500 hover:bg-red-600 shadow-red-100'} text-white`}
+                                >
+                                    {actionLoading ? 'Writing...' : `Confirm ${walletType === 'add' ? 'Credit' : 'Debit'}`}
+                                </Button>
+                            </div>
                         </div>
-                    </div>
+                    </Card>
                 </DialogContent>
             </Dialog>
 
-            {/* Existing Modals... */}
-            {/* Withdraw Modal with Amount Edit */}
-            <Dialog open={showWithdrawModal} onOpenChange={setShowWithdrawModal}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8 rounded-[3rem] border-0 bg-white">
-                    <DialogHeader className="mb-6">
-                        <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                            <ArrowUpCircle className="h-7 w-7 text-rose-500" /> Withdraw Controls
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-6">
-                        {(activeUser?.withdrawals || []).slice().reverse().map((w: any) => (
-                            <Card key={w.id} className="p-6 border border-neutral-100 shadow-sm rounded-3xl">
-                                <div className="flex justify-between items-center mb-6">
-                                    <div className="flex items-center gap-4">
-                                        <h4 className="text-2xl font-black">₹{w.amount}</h4>
-                                        <Badge className={w.status === 'Pending' ? 'bg-amber-500' : w.status === 'Approved' || w.status === 'Completed' ? 'bg-emerald-500' : 'bg-rose-500'}>{w.status}</Badge>
+            {/* History Modal */}
+            <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-0 bg-white rounded-[3rem] shadow-3xl">
+                    <div className="p-8">
+                        <DialogHeader className="mb-8">
+                            <div className="flex items-center justify-between">
+                                <DialogTitle className="text-xl font-bold flex items-center gap-3 text-slate-900 uppercase tracking-tight">
+                                    <Landmark className="h-6 w-6 text-green-500" /> Deposit Protocol
+                                </DialogTitle>
+                                <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-100" onClick={() => setShowHistoryModal(false)}>✕</div>
+                            </div>
+                        </DialogHeader>
+
+                        <div className="space-y-6">
+                            {(activeUser?.deposits || []).slice().reverse().map((d: any) => (
+                                <Card key={d.id} className="p-5 border border-slate-100 shadow-sm rounded-2xl relative overflow-hidden bg-white hover:bg-slate-50 transition-colors">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-10 w-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600 font-bold">₹</div>
+                                            <div>
+                                                <h4 className="text-lg font-black text-slate-900 tracking-tight">₹{d.amount}</h4>
+                                                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(d.date).toLocaleString()}</p>
+                                            </div>
+                                        </div>
+                                        <Badge className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border-0 ${d.status === 'Processing' ? 'bg-amber-100 text-amber-700' : d.status === 'Approved' ? 'bg-green-600 text-white' : 'bg-red-100 text-red-700'}`}>{d.status}</Badge>
                                     </div>
-                                    <Button onClick={() => { setEditData({ id: w.id, type: 'withdraw', amount: w.amount, newAmount: w.amount }); setShowEditModal(true); }} size="sm" variant="ghost">
-                                        <Edit3 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="bg-neutral-50 p-4 rounded-2xl mb-6 text-xs font-bold uppercase tracking-wider space-y-1">
-                                    <div className="flex justify-between border-b pb-1 border-neutral-200/50 mb-1">
-                                        <span className="text-neutral-400">Method</span>
-                                        <span className="text-indigo-600">{w.bankDetails?.type === 'bank' ? 'Bank Transfer' : 'UPI Payment'}</span>
+                                    <div className="bg-slate-100/50 p-4 rounded-xl mb-4 space-y-2 border border-slate-100">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">UTR Number</span>
+                                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider bg-white px-2 py-0.5 rounded-lg border border-slate-200">{d.utr || 'NOT_FOUND'}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Gateway</span>
+                                            <span className="text-[11px] font-bold text-green-600 uppercase">{d.method}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-neutral-400">Name</span>
-                                        <span className="text-neutral-900">{w.bankDetails?.name}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-neutral-400">{w.bankDetails?.type === 'bank' ? 'A/C Number' : 'UPI Address'}</span>
-                                        <span className="text-neutral-900">{w.bankDetails?.accountNumber}</span>
-                                    </div>
-                                    {w.bankDetails?.type === 'bank' && (
-                                        <div className="flex justify-between">
-                                            <span className="text-neutral-400">IFSC Code</span>
-                                            <span className="text-emerald-600 font-black">{w.bankDetails?.ifsc}</span>
+                                    {d.screenshot && <Button onClick={() => setViewingScreenshot(d.screenshot)} variant="outline" className="w-full h-10 rounded-xl border-dashed border-slate-300 text-[10px] font-bold uppercase tracking-widest mb-4 hover:border-green-400 hover:text-green-600 transition-all">Audit Screenshot Proof</Button>}
+                                    {d.status === 'Processing' && (
+                                        <div className="flex gap-3">
+                                            <Button onClick={() => handleAction(d.id, 'deposit', 'reject')} className="flex-1 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white h-10 rounded-xl font-bold uppercase tracking-widest text-[9px] border-0 transition-all">Reject</Button>
+                                            <Button onClick={() => handleAction(d.id, 'deposit', 'approve')} className="flex-1 bg-green-600 text-white hover:bg-green-700 h-10 rounded-xl font-bold uppercase tracking-widest text-[9px] border-0 shadow-lg shadow-green-100 transition-all">Approve</Button>
                                         </div>
                                     )}
+                                </Card>
+                            ))}
+                            {(activeUser?.deposits || []).length === 0 && (
+                                <div className="text-center py-12 opacity-30">
+                                    <ImageIcon className="h-12 w-12 mx-auto mb-4" />
+                                    <p className="text-xs font-bold uppercase tracking-widest">No Settlement History</p>
                                 </div>
-                                {w.status === 'Pending' && (
-                                    <div className="flex gap-3">
-                                        <Button onClick={() => handleAction(w.id, 'withdraw', 'reject')} className="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 h-12 rounded-xl border-0">Reject</Button>
-                                        <Button onClick={() => handleAction(w.id, 'withdraw', 'approve')} className="flex-1 bg-neutral-900 text-white hover:bg-black h-12 rounded-xl">Approve</Button>
-                                    </div>
-                                )}
-                            </Card>
-                        ))}
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* History/Deposit Modal with Amount Edit */}
-            <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-8 rounded-[3rem] border-0 bg-white">
-                    <DialogHeader className="mb-6">
-                        <DialogTitle className="text-2xl font-black flex items-center gap-3">
-                            <Landmark className="h-7 w-7 text-emerald-500" /> User Transaction Hub
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    {/* Wallet Adjustment History */}
-                    {(activeUser?.walletHistory || []).length > 0 && (
-                        <div className="mb-10">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 mb-4 px-2">Wallet Manual Adjustments</h3>
-                            <div className="space-y-3">
-                                {activeUser.walletHistory.slice().reverse().map((h: any, i: number) => (
-                                    <div key={i} className={`p-4 rounded-2xl border flex justify-between items-center ${h.type === 'add' ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
-                                        <div>
-                                            <p className="font-bold text-sm">{h.reason}</p>
-                                            <p className="text-[10px] uppercase font-black opacity-50">{new Date(h.date).toLocaleString()}</p>
-                                        </div>
-                                        <p className={`font-black ${h.type === 'add' ? 'text-emerald-600' : 'text-rose-600'}`}>{h.type === 'add' ? '+' : '-'}₹{h.amount}</p>
-                                    </div>
-                                ))}
-                            </div>
+                            )}
                         </div>
-                    )}
-
-                    <div className="space-y-6">
-                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-neutral-400 mb-4 px-2">Deposit History</h3>
-                        {(activeUser?.deposits || []).slice().reverse().map((d: any) => (
-                            <Card key={d.id} className="p-6 border border-neutral-100 shadow-sm rounded-3xl">
-                                <div className="flex justify-between items-center mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <h4 className="text-2xl font-black">₹{d.amount}</h4>
-                                        <Badge className={d.status === 'Processing' ? 'bg-amber-500' : d.status === 'Approved' ? 'bg-emerald-500' : 'bg-rose-500'}>{d.status}</Badge>
-                                    </div>
-                                    <Button onClick={() => { setEditData({ id: d.id, type: 'deposit', amount: d.amount, newAmount: d.amount }); setShowEditModal(true); }} size="sm" variant="ghost">
-                                        <Edit3 className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                                <div className="bg-neutral-50 p-4 rounded-2xl mb-4 text-xs font-medium">
-                                    <p>Method: {d.method}</p>
-                                    <p>UTR: {d.utr || 'N/A'}</p>
-                                    <p>Date: {new Date(d.date).toLocaleString()}</p>
-                                </div>
-                                {d.screenshot && <Button onClick={() => setViewingScreenshot(d.screenshot)} variant="outline" className="mb-4 w-full h-12 rounded-xl">View Payment Proof</Button>}
-                                {d.status === 'Processing' && (
-                                    <div className="flex gap-3">
-                                        <Button onClick={() => handleAction(d.id, 'deposit', 'reject')} className="flex-1 bg-rose-50 text-rose-600 hover:bg-rose-100 h-12 rounded-xl">Reject</Button>
-                                        <Button onClick={() => handleAction(d.id, 'deposit', 'approve')} className="flex-1 bg-emerald-600 text-white hover:bg-emerald-700 h-12 rounded-xl shadow-lg shadow-emerald-600/20">Approve</Button>
-                                    </div>
-                                )}
-                            </Card>
-                        ))}
                     </div>
                 </DialogContent>
             </Dialog>
 
-            {/* Edit Amount Modal */}
-            <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-                <DialogContent className="max-w-sm p-8 rounded-[2.5rem] border-0 bg-white">
-                    <DialogHeader><DialogTitle className="font-black text-xl">Edit Transaction Amount</DialogTitle></DialogHeader>
-                    <div className="py-4">
-                        <p className="text-[10px] text-neutral-400 font-black uppercase mb-2">New Amount (₹)</p>
-                        <Input
-                            type="number"
-                            value={editData?.newAmount || ""}
-                            onChange={(e) => setEditData({ ...editData, newAmount: e.target.value })}
-                            className="h-14 rounded-2xl border-2 focus:border-indigo-500 font-black text-xl"
-                        />
-                        <p className="text-[10px] text-rose-400 mt-2 font-bold uppercase">* Changing this will immediately affect user wallet if already approved.</p>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button onClick={() => setShowEditModal(false)} variant="ghost" className="flex-1">Cancel</Button>
-                        <Button onClick={handleEditAmount} className="flex-1 bg-indigo-600 text-white rounded-xl">Update</Button>
+            {/* Withdraw Modal */}
+            <Dialog open={showWithdrawModal} onOpenChange={setShowWithdrawModal}>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-0 border-0 bg-white rounded-[3rem] shadow-3xl">
+                    <div className="p-8">
+                        <DialogHeader className="mb-8">
+                            <div className="flex items-center justify-between">
+                                <DialogTitle className="text-xl font-bold flex items-center gap-3 text-slate-900 uppercase tracking-tight">
+                                    <ArrowUpCircle className="h-6 w-6 text-red-500" /> Payout Engine
+                                </DialogTitle>
+                                <div className="h-8 w-8 bg-slate-50 rounded-lg flex items-center justify-center border border-slate-100 text-slate-400 cursor-pointer hover:bg-slate-100" onClick={() => setShowWithdrawModal(false)}>✕</div>
+                            </div>
+                        </DialogHeader>
+
+                        <div className="space-y-6">
+                            {(activeUser?.withdrawals || []).slice().reverse().map((w: any) => (
+                                <Card key={w.id} className="p-5 border border-slate-100 shadow-sm rounded-2xl relative overflow-hidden bg-white hover:bg-slate-50 transition-colors">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <div className="flex items-center gap-4">
+                                            <h4 className="text-2xl font-black text-slate-900 tracking-tighter">₹{w.amount}</h4>
+                                            <Badge className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-full border-0 ${w.status === 'Pending' ? 'bg-amber-100 text-amber-700' : w.status === 'Approved' || w.status === 'Completed' ? 'bg-green-600 text-white' : 'bg-red-100 text-red-700'}`}>{w.status}</Badge>
+                                        </div>
+                                    </div>
+                                    <div className="bg-slate-100/50 p-4 rounded-xl mb-6 space-y-2 border border-slate-100">
+                                        <div className="flex justify-between border-b border-slate-200 pb-1.5 mb-1.5 opacity-80">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Protocol Type</span>
+                                            <span className="text-[10px] font-black text-indigo-600 uppercase tracking-wider">{w.bankDetails?.type === 'bank' ? 'IMPS Bank Transfer' : 'UPI Instant Pay'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Receiver Name</span>
+                                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{w.bankDetails?.name}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{w.bankDetails?.type === 'bank' ? 'Account Number' : 'VPA Address'}</span>
+                                            <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider">{w.bankDetails?.accountNumber}</span>
+                                        </div>
+                                        {w.bankDetails?.type === 'bank' && (
+                                            <div className="flex justify-between pt-1 border-t border-slate-200/50">
+                                                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">IFSC Designation</span>
+                                                <span className="text-[11px] font-black text-emerald-600 uppercase tracking-[2px]">{w.bankDetails?.ifsc}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    {w.status === 'Pending' && (
+                                        <div className="flex gap-3">
+                                            <Button onClick={() => handleAction(w.id, 'withdraw', 'reject')} className="flex-1 bg-red-50 text-red-600 hover:bg-red-500 hover:text-white h-11 rounded-xl font-bold uppercase tracking-widest text-[9px] border-0 transition-all">Reject Settlement</Button>
+                                            <Button onClick={() => handleAction(w.id, 'withdraw', 'approve')} className="flex-1 bg-slate-900 text-white hover:bg-black h-11 rounded-xl font-bold uppercase tracking-widest text-[9px] border-0 shadow-lg shadow-slate-200 transition-all">Confirm Payout</Button>
+                                        </div>
+                                    )}
+                                </Card>
+                            ))}
+                            {(activeUser?.withdrawals || []).length === 0 && (
+                                <div className="text-center py-12 opacity-30">
+                                    <ArrowUpCircle className="h-12 w-12 mx-auto mb-4" />
+                                    <p className="text-xs font-bold uppercase tracking-widest">No Payout Requests</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </DialogContent>
             </Dialog>
 
             {/* Chat Modal */}
             <Dialog open={showChatModal} onOpenChange={setShowChatModal}>
-                <DialogContent className="max-w-md max-h-[80vh] flex flex-col p-0 border-0 rounded-[3rem] bg-white overflow-hidden shadow-2xl">
-                    <div className="p-6 bg-neutral-900 text-white flex items-center justify-between">
-                        <div>
-                            <h2 className="font-black text-xl flex items-center gap-2">
-                                <Headphones className="h-5 w-5 text-emerald-500" /> Support Desk
-                            </h2>
-                            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{activeUser?.name}</p>
+                <DialogContent className="max-w-md max-h-[85vh] flex flex-col p-0 border-0 rounded-[3rem] bg-white overflow-hidden shadow-2xl">
+                    <div className="p-6 bg-[#14532D] text-white flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/10">
+                                <Headphones className="h-5 w-5 text-green-300" />
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-lg uppercase tracking-tight leading-none">Support Desk</h2>
+                                <p className="text-[9px] text-green-300 font-bold uppercase tracking-[2px] mt-1">{activeUser?.name}</p>
+                            </div>
                         </div>
-                        <Button
-                            onClick={handleClearChat}
-                            variant="outline"
-                            size="sm"
-                            className="h-8 border-rose-500/50 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase tracking-wider px-3"
-                        >
-                            <Trash className="h-3 w-3 mr-1.5" /> Clear Chat
-                        </Button>
+                        <button onClick={handleClearChat} className="h-9 w-9 bg-white/10 rounded-xl flex items-center justify-center text-red-300 hover:bg-white/20 transition-all border-0">
+                            <Trash className="h-4 w-4" />
+                        </button>
                     </div>
 
-                    {/* User Info Bar */}
-                    <div className="bg-neutral-100 px-6 py-3 flex items-center justify-between border-b border-neutral-200">
+                    <div className="bg-slate-50 px-6 py-3 flex items-center justify-between border-b border-slate-100">
                         <div className="flex items-center gap-2">
-                            <User className="h-3 w-3 text-neutral-400" />
-                            <span className="text-[10px] font-black text-neutral-500 uppercase">UID: {activeUser?.id?.slice(0, 12)}...</span>
+                            <div className={`h-2 w-2 rounded-full ${activeUser?.lastActive && (Date.now() - new Date(activeUser.lastActive).getTime() < 60000) ? 'bg-green-500' : 'bg-slate-300'}`} />
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">User Online</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Phone className="h-3 w-3 text-neutral-400" />
-                            <span className="text-[10px] font-black text-neutral-500">{activeUser?.phone || 'N/A'}</span>
-                        </div>
+                        <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">UID: {activeUser?.id?.slice(0, 8)}...</span>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50/50 min-h-[350px]">
+                    <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-white min-h-[400px]">
                         {(activeUser?.supportChats || []).map((chat: any) => (
                             <div key={chat.id} className={`flex ${chat.sender === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[80%] p-4 rounded-2xl text-sm ${chat.sender === 'admin' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white text-neutral-800 border-0 border-neutral-100 rounded-tl-none shadow-sm'}`}>
+                                <div className={`max-w-[85%] p-4 rounded-2xl text-[13px] font-semibold leading-relaxed ${chat.sender === 'admin' ? 'bg-green-600 text-white rounded-tr-none shadow-lg shadow-green-100' : 'bg-slate-100 text-slate-800 rounded-tl-none border border-slate-100'}`}>
                                     {chat.message}
                                 </div>
                             </div>
                         ))}
+                        {(activeUser?.supportChats || []).length === 0 && (
+                            <div className="h-full flex items-center justify-center opacity-20 flex-col py-10">
+                                <Headphones className="h-12 w-12 mb-4" />
+                                <p className="text-[10px] font-bold uppercase tracking-[4px]">No Encrypted Messages</p>
+                            </div>
+                        )}
                     </div>
-                    <div className="p-4 bg-white border-t flex gap-2">
-                        <Input value={adminMessage} onChange={(e) => setAdminMessage(e.target.value)} placeholder="Type a reply..." className="h-12 rounded-xl" />
+                    <div className="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <Input value={adminMessage} onChange={(e) => setAdminMessage(e.target.value)} placeholder="Type secure reply..." className="h-12 rounded-xl bg-white border-slate-200 font-semibold text-sm px-5" onKeyPress={(e) => e.key === 'Enter' && adminMessage && handleAction} />
                         <Button
                             onClick={async () => {
+                                if (!adminMessage) return;
                                 const password = sessionStorage.getItem("adminSecret")
                                 await fetch('/api/admin/support', {
                                     method: 'POST',
@@ -793,51 +701,40 @@ export default function AdminDashboardPage() {
                                 setAdminMessage("")
                                 fetchUsers(true)
                             }}
-                            className="h-12 w-12 rounded-xl bg-indigo-600 text-white"
+                            className="h-12 w-12 rounded-xl premium-gradient text-white border-0 shadow-lg shadow-green-200 shrink-0 flex items-center justify-center"
                         >➤</Button>
                     </div>
                 </DialogContent>
             </Dialog>
 
-            {/* Delete Confirmation Modal */}
+            {/* Delete Modal */}
             <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-                <DialogContent className="max-w-md p-8 rounded-[2.5rem] border-0 bg-white">
-                    <DialogHeader>
-                        <DialogTitle className="font-black text-2xl text-rose-600 flex items-center gap-3">
-                            <Trash2 className="h-7 w-7" /> Permanent Deletion
-                        </DialogTitle>
-                    </DialogHeader>
-                    <div className="py-6">
-                        <p className="text-lg text-neutral-900 font-black mb-2">Are you sure you want to permanently delete this user?</p>
-                        <p className="text-sm text-neutral-500 font-medium mb-4">Account: <span className="text-neutral-900 font-bold">{userToDelete?.name}</span> ({userToDelete?.email})</p>
-
-                        <div className="mt-4 p-5 bg-rose-50 rounded-3xl border border-rose-100 flex gap-4">
-                            <div className="h-10 w-10 bg-rose-100 rounded-xl flex items-center justify-center shrink-0">
-                                <Shield className="h-5 w-5 text-rose-600" />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-xs text-rose-700 font-black uppercase tracking-wider">Irreversible Action</p>
-                                <p className="text-[11px] text-rose-600 font-bold leading-relaxed">This action cannot be undone. All profile data, wallet balance, transaction history, and support records will be permanently removed from the database.</p>
-                            </div>
+                <DialogContent className="max-w-sm p-0 border-0 bg-transparent">
+                    <Card className="p-10 rounded-[2.5rem] border-0 bg-white text-center">
+                        <div className="h-20 w-20 bg-red-50 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-red-100 shadow-xl shadow-red-50">
+                            <Trash2 className="h-10 w-10 text-red-500" />
                         </div>
-                    </div>
-                    <div className="flex gap-3">
-                        <Button onClick={() => setShowDeleteModal(false)} variant="ghost" className="flex-1 h-14 rounded-2xl font-black uppercase text-xs">Cancel</Button>
-                        <Button onClick={handleDeleteUser} disabled={actionLoading} className="flex-1 h-14 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl font-black uppercase text-xs shadow-xl shadow-rose-200">
-                            {actionLoading ? 'Puting down users...' : 'Permanently Delete'}
-                        </Button>
-                    </div>
+                        <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight uppercase">Purge Protocol?</h3>
+                        <p className="text-slate-400 text-xs font-bold leading-relaxed mb-10 max-w-[200px] mx-auto uppercase tracking-widest">
+                            This will permanently delete the account and all associated vault data. This action is IRREVERSIBLE.
+                        </p>
+                        <div className="flex gap-3">
+                            <Button variant="ghost" className="flex-1 h-12 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-400" onClick={() => setShowDeleteModal(false)}>Cancel</Button>
+                            <Button onClick={handleDeleteUser} disabled={actionLoading} className="flex-1 h-12 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black text-[10px] uppercase tracking-widest border-0 shadow-xl shadow-red-100">
+                                {actionLoading ? 'Purging...' : 'Confirm Purge'}
+                            </Button>
+                        </div>
+                    </Card>
                 </DialogContent>
             </Dialog>
 
-            {/* Screenshot Viewer */}
-            {viewingScreenshot && (
-                <Dialog open={!!viewingScreenshot} onOpenChange={() => setViewingScreenshot(null)}>
-                    <DialogContent className="max-w-xl p-4 bg-transparent shadow-none border-0">
-                        <img src={viewingScreenshot} className="w-full rounded-[2rem] shadow-2xl border-4 border-white" />
-                    </DialogContent>
-                </Dialog>
-            )}
+            {/* Proof View Modal */}
+            <Dialog open={!!viewingScreenshot} onOpenChange={() => setViewingScreenshot(null)}>
+                <DialogContent className="max-w-4xl p-0 border-0 bg-transparent shadow-none overflow-hidden">
+                    <img src={viewingScreenshot || ""} className="w-full h-auto rounded-[2rem] shadow-3xl border border-white/20" alt="Audit Proof" />
+                    <button onClick={() => setViewingScreenshot(null)} className="absolute top-4 right-4 h-10 w-10 bg-black/50 backdrop-blur-md rounded-full text-white flex items-center justify-center border border-white/20 hover:bg-black transition-all">✕</button>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

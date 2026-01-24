@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { User, Mail, Lock, Phone, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react"
+import { User, Mail, Lock, Phone, ArrowRight, Eye, EyeOff, Sparkles, ShieldCheck } from "lucide-react"
 import Link from "next/link"
 
 function RegisterForm() {
@@ -94,101 +94,107 @@ function RegisterForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0F071F] flex items-center justify-center p-4 overflow-hidden relative selection:bg-theme-violet selection:text-white">
-      {/* Background Glows */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-theme-purple/20 rounded-full blur-[120px] -mr-40 -mt-20 animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-theme-violet/10 rounded-full blur-[100px] -ml-20 -mb-20" />
+    <div className="min-h-screen bg-[#F8FAF8] flex items-center justify-center p-4 overflow-hidden relative font-sans">
+      {/* Background Decor */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-green-500/5 rounded-full blur-[120px] -mr-40 -mt-20" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -ml-20 -mb-20" />
 
-      <div className="w-full max-w-md relative z-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-        {/* Logo Section */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-theme-purple/20 to-theme-violet/20 backdrop-blur-xl rounded-[2rem] border-2 border-theme-violet/30 shadow-[0_0_30px_rgba(124,58,237,0.2)] mb-6 animate-in zoom-in duration-700">
-            <User className="w-10 h-10 text-theme-violet" />
+      <div className="w-full max-w-sm relative z-10 py-8">
+        {/* Brand Logo & Header */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white border border-green-100 rounded-2xl shadow-sm mb-4">
+            <ShieldCheck className="w-8 h-8 text-green-500" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter">Join the <span className="text-theme-violet italic">Elite</span></h1>
-          <p className="text-theme-lavender/40 text-sm font-medium mt-2">Create your account and unlock daily payouts.</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Join <span className="text-green-600">Green Grow</span></h1>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1">Start your wealth journey today</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white/95 backdrop-blur-2xl p-8 rounded-[3.5rem] shadow-[0_32px_80px_rgba(109,40,217,0.15)] border border-theme-lavender">
-          <form onSubmit={handleRegister} className="space-y-5">
-            {/* Full Name */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Display Name</Label>
+        {/* Feature Image */}
+        <div className="mb-8 relative flex justify-center px-4">
+          <div className="relative p-1 bg-white rounded-3xl shadow-lg border border-green-50 group overflow-hidden">
+            <img
+              src="/landing-hero.png"
+              alt="Trading Terminal"
+              className="w-full h-auto object-contain rounded-2xl transform transition-transform group-hover:scale-105 duration-700"
+            />
+          </div>
+        </div>
+
+        {/* Form Card */}
+        <div className="bg-white shadow-[0_20px_50px_rgba(34,197,94,0.06)] border border-green-50 p-6 rounded-[2rem] relative overflow-hidden">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Full Name</Label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-green-500 transition-colors" />
                 <Input
                   name="fullName"
-                  placeholder="e.g. Rahul Sharma"
+                  placeholder="e.g. John Doe"
                   value={formData.fullName}
                   onChange={handleChange}
-                  className={`h-14 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.fullName ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
+                  className={`h-11 pl-11 rounded-xl border-green-50 bg-green-50/20 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm ${errors.fullName ? 'border-red-400' : 'group-hover:border-green-200'}`}
                 />
               </div>
             </div>
 
-            {/* Mobile */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Mobile Number</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mobile Number</Label>
               <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-green-500 transition-colors" />
                 <Input
                   name="mobileNumber"
                   placeholder="10-digit number"
                   type="tel"
                   value={formData.mobileNumber}
                   onChange={handleChange}
-                  className={`h-14 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.mobileNumber ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
+                  className={`h-11 pl-11 rounded-xl border-green-50 bg-green-50/20 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm ${errors.mobileNumber ? 'border-red-400' : 'group-hover:border-green-200'}`}
                 />
               </div>
             </div>
 
-            {/* Email Address */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Email Address</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Address</Label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-green-500 transition-colors" />
                 <Input
                   name="email"
                   placeholder="name@example.com"
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className={`h-14 pl-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.email ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
+                  className={`h-11 pl-11 rounded-xl border-green-50 bg-green-50/20 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm ${errors.email ? 'border-red-400' : 'group-hover:border-green-200'}`}
                 />
               </div>
             </div>
 
-            {/* Password Field */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-theme-purple/50 uppercase tracking-[0.2em] ml-2">Access Password</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-bold text-slate-400 uppercase tracking-widest ml-1">Access Password</Label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors" />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-green-500 transition-colors" />
                 <Input
                   name="password"
-                  placeholder="Secure password"
+                  placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
-                  className={`h-14 pl-12 pr-12 rounded-2xl border-theme-lavender bg-[#FDFCFF] focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold ${errors.password ? 'border-rose-400 focus:ring-rose-50' : 'group-hover:border-theme-purple/20'}`}
+                  className={`h-11 pl-11 pr-11 rounded-xl border-green-50 bg-green-50/20 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm ${errors.password ? 'border-red-400' : 'group-hover:border-green-200'}`}
                 />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-purple/30 hover:text-theme-purple transition-colors">
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 hover:text-green-500 transition-colors">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
             </div>
 
-            {/* Promo Code with Gold Highlight */}
-            <div className="space-y-2">
-              <Label className="text-[10px] font-black text-theme-gold uppercase tracking-[0.2em] ml-2">Referrer Code (Optional)</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[9px] font-bold text-green-600 uppercase tracking-widest ml-1">Promo Code (Optional)</Label>
               <div className="relative group">
-                <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-gold opacity-40 group-focus-within:opacity-100 transition-opacity" />
+                <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-green-400 opacity-50 transition-opacity" />
                 <Input
                   name="promoCode"
-                  placeholder="e.g. JR007"
+                  placeholder="e.g. GREEN2026"
                   value={formData.promoCode}
                   onChange={handleChange}
-                  className="h-14 pl-12 rounded-2xl border-theme-gold/20 bg-theme-gold/[0.02] focus:ring-8 focus:ring-theme-gold/5 border-2 transition-all font-bold group-hover:border-theme-gold/30"
+                  className="h-11 pl-11 rounded-xl border-green-100 bg-green-50/40 focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm group-hover:border-green-200"
                 />
               </div>
             </div>
@@ -196,16 +202,16 @@ function RegisterForm() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full h-16 bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white font-black rounded-[1.5rem] shadow-2xl shadow-theme-purple/20 transition-all border-0 active:scale-95 disabled:opacity-70 mt-4 text-lg"
+              className="w-full h-12 premium-gradient text-white font-bold rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95 disabled:opacity-70 mt-4 text-sm uppercase tracking-widest border-0"
             >
-              {loading ? "Establishing Account..." : "Confirm & Join"}
+              {loading ? "Joining..." : "Create Account"}
             </Button>
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-theme-purple/40 text-[11px] font-black uppercase tracking-widest">
-              Already verified?
-              <Link href="/login" className="text-theme-violet hover:text-theme-purple ml-2 font-black transition-all">
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+              Already a member?
+              <Link href="/login" className="text-green-600 hover:underline ml-1 font-bold">
                 Sign In
               </Link>
             </p>
@@ -213,14 +219,14 @@ function RegisterForm() {
         </div>
 
         {/* Security Footer */}
-        <div className="mt-10 flex items-center justify-center gap-6 opacity-40">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-theme-gold rounded-full animate-pulse" />
-            <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">Secure Node</span>
+        <div className="mt-8 flex items-center justify-center gap-6 opacity-30">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+            <span className="text-[8px] font-bold text-slate-900 uppercase tracking-widest">SSL Secure</span>
           </div>
-          <div className="w-1 h-1 bg-theme-violet rounded-full" />
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black text-white uppercase tracking-[0.2em]">End-to-End Encrypted</span>
+          <div className="w-1 h-1 bg-slate-300 rounded-full" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[8px] font-bold text-slate-900 uppercase tracking-widest">E2E Encrypted</span>
           </div>
         </div>
       </div>
@@ -230,7 +236,7 @@ function RegisterForm() {
 
 export default function CreateAccountPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0F071F] flex items-center justify-center"><div className="animate-spin h-12 w-12 border-4 border-theme-violet border-t-transparent rounded-full" /></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#F8FAF8] flex items-center justify-center"><div className="animate-spin h-12 w-12 border-4 border-green-500 border-t-transparent rounded-full" /></div>}>
       <RegisterForm />
     </Suspense>
   )

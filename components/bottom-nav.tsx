@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { Home, ArrowUpCircle, PlusCircle, Users, User } from "lucide-react"
+import { Home, Wallet, Zap, Users, UserCircle, LayoutGrid, CircleUser } from "lucide-react"
 
 interface BottomNavProps {
   active: "home" | "wallet" | "tool" | "team" | "mine"
@@ -9,54 +9,65 @@ interface BottomNavProps {
 
 export function BottomNav({ active }: BottomNavProps) {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-theme-purple/10 shadow-[0_-8px_32px_rgba(109,40,217,0.08)] z-50">
-      <div className="flex items-center justify-around py-3 px-2">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-green-50 shadow-[0_-10px_40px_rgba(34,197,94,0.06)] z-50">
+      <div className="max-w-md mx-auto flex items-center justify-around py-3 px-2 relative h-[84px] font-sans">
+
+        {/* Home Item */}
         <Link
           href="/dashboard"
-          className={`flex flex-col items-center gap-1.5 px-4 py-1 transition-all duration-300 ${active === "home" ? "text-theme-purple scale-110" : "text-theme-lavender-foreground/40 hover:text-theme-purple"
-            }`}
+          className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${active === "home" ? "text-green-600 scale-105" : "text-slate-300 hover:text-green-300"}`}
         >
-          <Home className={`h-6 w-6 ${active === "home" ? "fill-theme-purple/10" : ""}`} />
-          <span className={`text-[10px] font-black uppercase tracking-widest ${active === "home" ? "opacity-100" : "opacity-0"}`}>Home</span>
+          <div className="p-1">
+            <LayoutGrid className={`h-[24px] w-[24px] ${active === "home" ? "stroke-[2.5px]" : "stroke-[2px]"}`} />
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-0.5">Home</span>
         </Link>
 
+        {/* Assets Item */}
         <Link
           href="/deposit"
-          className={`flex flex-col items-center gap-1.5 px-4 py-1 transition-all duration-300 ${active === "wallet" ? "text-theme-purple scale-110" : "text-theme-lavender-foreground/40 hover:text-theme-purple"
-            }`}
+          className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${active === "wallet" ? "text-green-600 scale-105" : "text-slate-300 hover:text-green-300"}`}
         >
-          <ArrowUpCircle className={`h-6 w-6 ${active === "wallet" ? "fill-theme-purple/10" : ""}`} />
-          <span className={`text-[10px] font-black uppercase tracking-widest ${active === "wallet" ? "opacity-100" : "opacity-0"}`}>Deposit</span>
+          <div className="p-1">
+            <Wallet className={`h-[24px] w-[24px] ${active === "wallet" ? "stroke-[2.5px]" : "stroke-[2px]"}`} />
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-0.5">Assets</span>
         </Link>
 
-        {/* Center Tool Button */}
+        {/* Central Action Item (Invest) */}
         <Link
           href="/tool"
-          className="flex flex-col items-center group -mt-12 transition-transform active:scale-90"
+          className="flex flex-col items-center group -mt-10 relative"
         >
-          <div className="h-16 w-16 rounded-[2.2rem] bg-gradient-to-br from-theme-purple to-theme-violet flex items-center justify-center shadow-[0_12px_24px_rgba(124,58,237,0.4)] border-4 border-white transform group-hover:rotate-12 transition-transform duration-500">
-            <PlusCircle className="h-9 w-9 text-white" />
+          <div className="h-[68px] w-[68px] rounded-[22px] premium-gradient flex items-center justify-center shadow-[0_12px_30px_-5px_rgba(34,197,94,0.4)] border-[5px] border-white active:scale-95 transition-all duration-300 group-hover:-translate-y-1 relative overflow-hidden">
+            <div className="absolute inset-0 bg-white/10 opacity-20" />
+            <Zap className="h-9 w-9 text-white relative z-10 fill-white" />
           </div>
-          <span className="text-[10px] font-black text-theme-purple uppercase tracking-widest mt-2">Invest</span>
+          <span className="text-[10px] font-bold text-green-600 uppercase tracking-[2px] mt-2 leading-none">Invest</span>
         </Link>
 
+        {/* Network Item */}
         <Link
           href="/team"
-          className={`flex flex-col items-center gap-1.5 px-4 py-1 transition-all duration-300 ${active === "team" ? "text-theme-purple scale-110" : "text-theme-lavender-foreground/40 hover:text-theme-purple"
-            }`}
+          className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${active === "team" ? "text-green-600 scale-105" : "text-slate-300 hover:text-green-300"}`}
         >
-          <Users className={`h-6 w-6 ${active === "team" ? "fill-theme-purple/10" : ""}`} />
-          <span className={`text-[10px] font-black uppercase tracking-widest ${active === "team" ? "opacity-100" : "opacity-0"}`}>Network</span>
+          <div className="p-1">
+            <Users className={`h-[24px] w-[24px] ${active === "team" ? "stroke-[2.5px]" : "stroke-[2px]"}`} />
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-0.5">Network</span>
         </Link>
 
+        {/* Profile Item */}
         <Link
           href="/mine"
-          className={`flex flex-col items-center gap-1.5 px-4 py-1 transition-all duration-300 ${active === "mine" ? "text-theme-purple scale-110" : "text-theme-lavender-foreground/40 hover:text-theme-purple"
-            }`}
+          className={`flex flex-col items-center gap-1.5 transition-all duration-300 ${active === "mine" ? "text-green-600 scale-105" : "text-slate-300 hover:text-green-300"}`}
         >
-          <User className={`h-6 w-6 ${active === "mine" ? "fill-theme-purple/10" : ""}`} />
-          <span className={`text-[10px] font-black uppercase tracking-widest ${active === "mine" ? "opacity-100" : "opacity-0"}`}>Menu</span>
+          <div className="p-1">
+            <CircleUser className={`h-[24px] w-[24px] ${active === "mine" ? "stroke-[2.5px]" : "stroke-[2px]"}`} />
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-widest leading-none mt-0.5">Profile</span>
         </Link>
+
       </div>
     </div>
   )

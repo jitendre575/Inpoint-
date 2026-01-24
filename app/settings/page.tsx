@@ -3,48 +3,69 @@
 import { useRouter } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { BottomNav } from "@/components/bottom-nav"
-import { ArrowLeft, ChevronRight, Bell, Shield, User, HelpCircle, Info } from "lucide-react"
+import { ArrowLeft, ChevronRight, Bell, Shield, User, HelpCircle, Info, Settings, ShieldCheck, Activity } from "lucide-react"
 
 export default function SettingsPage() {
   const router = useRouter()
 
   const settingsOptions = [
-    { icon: User, label: "Account Information", path: "/mine" },
-    { icon: Bell, label: "Notifications", path: "#" },
-    { icon: Shield, label: "Security & Privacy", path: "/password" },
-    { icon: HelpCircle, label: "Help & Support", path: "#" },
-    { icon: Info, label: "About", path: "/about" },
+    { icon: User, label: "Account Configuration", path: "/mine", sub: "User Identity & Node Details" },
+    { icon: Bell, label: "Transmission Logs", path: "#", sub: "Node Synchronization Alerts" },
+    { icon: ShieldCheck, label: "Security & Encryption", path: "/password", sub: "Credential Protocol Manager" },
+    { icon: Activity, label: "Support Diagnostic", path: "/support", sub: "Live Ticket Resolution" },
+    { icon: Info, label: "System Information", path: "/about", sub: "Legal & Maintenance Registry" },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-emerald-50 to-white pb-20">
-      <div className="bg-gradient-to-r from-emerald-600 to-purple-600 text-white p-6">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-white/20 rounded-full">
-            <ArrowLeft className="h-6 w-6" />
+    <div className="min-h-screen bg-[#F8FAF8] pb-24 font-sans selection:bg-green-100 uppercase">
+      {/* 1. Deep Green Header */}
+      <div className="bg-[#14532D] text-white px-6 pt-16 pb-24 relative overflow-hidden rounded-b-[4rem] shadow-2xl">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-green-500/10 rounded-full -mr-20 -mt-20 blur-[100px]" />
+
+        <div className="relative z-10 flex items-center gap-6">
+          <button
+            onClick={() => router.back()}
+            className="h-12 w-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md active:scale-90 transition-all border-0 shadow-inner"
+          >
+            <ArrowLeft className="h-6 w-6 text-green-300" />
           </button>
-          <h1 className="text-2xl font-bold">Settings</h1>
+          <div>
+            <p className="text-green-300/40 text-[9px] font-bold tracking-[0.3em] mb-1">Operational Control</p>
+            <h1 className="text-2xl font-bold tracking-tight uppercase not-italic">Device Core</h1>
+          </div>
         </div>
       </div>
 
-      <div className="p-5 space-y-3">
+      <div className="px-5 -mt-10 relative z-20 space-y-3 font-sans">
         {settingsOptions.map((option, index) => (
           <Card
             key={index}
             onClick={() => option.path !== "#" && router.push(option.path)}
-            className="p-4 shadow-md hover:shadow-lg transition-all cursor-pointer active:scale-98"
+            className="p-1 px-1 bg-white border border-green-50 shadow-sm rounded-[2rem] hover:shadow-md transition-all cursor-pointer active:scale-[0.98] border-0"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <option.icon className="h-6 w-6 text-emerald-600" />
+            <div className="flex items-center justify-between p-5">
+              <div className="flex items-center gap-5">
+                <div className="h-14 w-14 rounded-2xl bg-green-50 flex items-center justify-center shrink-0 border border-green-100/50 shadow-inner group-hover:rotate-6 transition-transform">
+                  <option.icon className="h-7 w-7 text-green-600" />
                 </div>
-                <span className="font-semibold text-gray-900 text-base">{option.label}</span>
+                <div className="text-left font-sans">
+                  <span className="font-bold text-slate-900 text-[14px] block tracking-tight uppercase leading-none mb-1.5">{option.label}</span>
+                  <span className="text-[9px] text-slate-400 font-bold tracking-widest">{option.sub}</span>
+                </div>
               </div>
-              <ChevronRight className="h-5 w-5 text-gray-400" />
+              <ChevronRight className="h-5 w-5 text-slate-200" />
             </div>
           </Card>
         ))}
+      </div>
+
+      {/* Footer Info */}
+      <div className="mt-12 text-center px-10">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
+          <p className="text-[9px] text-slate-400 font-bold tracking-[4px]">Verified Infrastructure Node</p>
+        </div>
+        <p className="text-[8px] text-slate-300 font-bold tracking-widest">Version 2.4.9-Stable Built-in-Registry</p>
       </div>
 
       <BottomNav active="mine" />

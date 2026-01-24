@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
-import { Mail, Lock, ArrowRight, Loader2, Sparkles, User, Fingerprint } from "lucide-react"
+import { Mail, Lock, ArrowRight, Loader2, Sparkles, User, ShieldCheck } from "lucide-react"
+import Link from "next/link"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -41,19 +42,11 @@ export default function LoginPage() {
 
       localStorage.setItem("currentUser", JSON.stringify(data.user));
 
-      if (data.bonusMessage) {
-        toast({
-          title: "Congratulations!",
-          description: data.bonusMessage,
-          className: "bg-theme-gold border-theme-gold/20 text-theme-indigo shadow-xl"
-        })
-      } else {
-        toast({
-          title: "Welcome Back",
-          description: "Successfully logged into your account.",
-          className: "bg-theme-lavender border-theme-purple/10 text-theme-purple"
-        })
-      }
+      toast({
+        title: "Welcome Back",
+        description: "Successfully logged into your account.",
+        className: "bg-green-50 border-green-100 text-green-800"
+      })
 
       router.push("/dashboard")
     } catch (error: any) {
@@ -64,68 +57,73 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center p-4 bg-[#0F071F] font-sans selection:bg-theme-violet selection:text-white overflow-hidden">
-      {/* Dynamic Background Glows */}
-      <div className="fixed inset-0 z-0">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-theme-purple/20 rounded-full blur-[120px] -mr-40 -mt-20 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-theme-violet/10 rounded-full blur-[120px] -ml-40 -mb-20 animate-pulse" />
-      </div>
+    <div className="min-h-screen relative flex items-center justify-center p-4 bg-[#F8FAF8] font-sans selection:bg-green-100 overflow-hidden">
+      {/* Background Decor */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-green-500/5 rounded-full blur-[120px] -ml-40 -mt-20" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] -mr-20 -mb-20" />
 
-      <div className={`relative w-full max-w-[440px] z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
+      <div className={`relative w-full max-w-sm z-10 transition-all duration-1000 transform ${isLoaded ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}>
 
         {/* Brand Logo */}
         <div className="flex flex-col items-center mb-10">
-          <div className="w-20 h-20 bg-white/5 backdrop-blur-xl rounded-[2.2rem] shadow-2xl flex items-center justify-center mb-6 border border-white/10 group hover:rotate-12 transition-transform duration-500">
-            <div className="w-12 h-12 bg-gradient-to-tr from-theme-purple to-theme-violet rounded-2xl flex items-center justify-center p-2.5 shadow-inner">
-              <Fingerprint className="text-white w-full h-full" />
-            </div>
+          <div className="w-16 h-16 bg-white border border-green-100 rounded-2xl shadow-sm flex items-center justify-center mb-4">
+            <ShieldCheck className="text-green-500 h-8 w-8" />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighterLEADING-NONE">Inpoint<span className="text-theme-violet italic">Rose</span></h1>
-          <p className="text-theme-lavender/40 font-black text-[10px] uppercase tracking-[0.3em] mt-2">Institutional Trading Link</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Green <span className="text-green-600">Grow</span></h1>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Institutional Access</p>
+        </div>
+
+        {/* Feature Image */}
+        <div className="mb-8 relative flex justify-center px-4">
+          <div className="relative p-1 bg-white rounded-3xl shadow-lg border border-green-50 group overflow-hidden">
+            <img
+              src="/landing-hero.png"
+              alt="Trading Terminal"
+              className="w-full h-auto object-contain rounded-2xl transform transition-transform group-hover:scale-105 duration-700 hover:rotate-2"
+            />
+          </div>
         </div>
 
         {/* Login Card */}
-        <div className="bg-white/95 backdrop-blur-3xl rounded-[3.5rem] shadow-[0_32px_80px_rgba(109,40,217,0.15)] border border-theme-lavender p-10 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-theme-lavender/50 rounded-full blur-3xl -tr-10 -rt-10" />
-
+        <div className="bg-white shadow-[0_20px_50px_rgba(34,197,94,0.06)] border border-green-50 rounded-[2.5rem] p-8 relative overflow-hidden">
           <div className="relative">
-            <div className="mb-10 text-center">
-              <h2 className="text-3xl font-black text-[#2D1A4A] tracking-tighter italic">Welcome Back</h2>
-              <p className="text-theme-purple/40 font-bold text-xs uppercase tracking-widest mt-2">Enter your secure credentials</p>
+            <div className="mb-8 text-center">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Secure Sign In</h2>
+              <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-1">Identity Verification</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-theme-purple/50 font-black text-[10px] uppercase tracking-[0.2em] ml-2">
-                  Identity (Email/UID)
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-slate-400 font-bold text-[9px] uppercase tracking-widest ml-1">
+                  Access Identifier (Email)
                 </Label>
                 <div className="relative group">
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-green-500 transition-colors">
                     <User className="h-5 w-5" />
                   </div>
                   <Input
                     id="email"
-                    type="text"
-                    placeholder="Enter username"
+                    type="email"
+                    placeholder="name@example.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-16 pl-14 pr-4 bg-[#FDFCFF] border-theme-lavender rounded-2xl focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold text-lg"
+                    className="h-12 pl-12 pr-4 bg-green-50/20 border-green-50 rounded-xl focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm"
                     required
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-center px-2">
-                  <Label htmlFor="password" className="text-theme-purple/50 font-black text-[10px] uppercase tracking-[0.2em]">
-                    Access Key
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center px-1">
+                  <Label htmlFor="password" className="text-slate-400 font-bold text-[9px] uppercase tracking-widest">
+                    Security Key
                   </Label>
-                  <button type="button" className="text-[10px] font-black text-theme-violet hover:text-theme-purple uppercase tracking-widest transition-all">
-                    Reset
+                  <button type="button" className="text-[9px] font-bold text-green-600 hover:text-green-700 uppercase tracking-widest">
+                    Recovery
                   </button>
                 </div>
                 <div className="relative group">
-                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-theme-purple/30 group-focus-within:text-theme-purple transition-colors">
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-green-500 transition-colors">
                     <Lock className="h-5 w-5" />
                   </div>
                   <Input
@@ -134,7 +132,7 @@ export default function LoginPage() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-16 pl-14 pr-4 bg-[#FDFCFF] border-theme-lavender rounded-2xl focus:ring-8 focus:ring-theme-purple/5 border-2 transition-all font-bold text-lg"
+                    className="h-12 pl-12 pr-4 bg-green-50/20 border-green-50 rounded-xl focus:bg-white focus:ring-4 focus:ring-green-500/5 transition-all font-semibold text-sm"
                     required
                   />
                 </div>
@@ -142,45 +140,44 @@ export default function LoginPage() {
 
               <Button
                 type="submit"
-                className="w-full h-16 bg-gradient-to-r from-theme-purple to-theme-violet hover:from-theme-violet hover:to-theme-purple text-white border-0 font-black rounded-[1.5rem] shadow-2xl shadow-theme-purple/20 transition-all duration-300 group overflow-hidden active:scale-95 text-lg"
+                className="w-full h-12 premium-gradient text-white rounded-xl shadow-lg shadow-green-200 transition-all active:scale-95 text-sm font-bold uppercase tracking-widest border-0"
                 disabled={loading}
               >
-                <span className="relative z-10 flex items-center justify-center gap-3">
+                <span className="flex items-center justify-center gap-2">
                   {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    <Loader2 className="h-5 w-5 animate-spin" />
                   ) : (
                     <>
-                      Confirm Access
-                      <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                      Auth Link Established
+                      <ArrowRight className="h-4 w-4" />
                     </>
                   )}
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-theme-violet to-theme-purple opacity-0 group-hover:opacity-100 transition-opacity" />
               </Button>
             </form>
 
-            <div className="mt-12 text-center">
-              <p className="text-theme-purple/40 text-[11px] font-black uppercase tracking-widest">
-                New to the network?{' '}
-                <button
-                  onClick={() => router.push("/create-account")}
-                  className="text-theme-violet font-black hover:text-theme-purple transition-all underline-offset-4 hover:underline"
+            <div className="mt-8 text-center">
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                New user?{' '}
+                <Link
+                  href="/create-account"
+                  className="text-green-600 font-bold hover:underline"
                 >
-                  Join Today
-                </button>
+                  Apply for Membership
+                </Link>
               </p>
             </div>
           </div>
         </div>
 
         {/* Security Footer */}
-        <div className="mt-10 flex items-center justify-center gap-6 text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">
+        <div className="mt-10 flex items-center justify-center gap-6 opacity-30 text-slate-900 text-[9px] font-bold uppercase tracking-widest">
           <div className="flex items-center gap-1.5">
-            <Sparkles className="h-3 w-3 text-theme-gold animate-pulse" /> AES-256
+            <Sparkles className="h-3 w-3 text-green-600" /> AES-256
           </div>
-          <div className="w-1 h-1 bg-white/10 rounded-full" />
+          <div className="w-0.5 h-0.5 bg-slate-400 rounded-full" />
           <div className="flex items-center gap-1.5">
-            <Fingerprint className="h-3 w-3 text-theme-violet" /> SSL Protected
+            <ShieldCheck className="h-3 w-3 text-green-600" /> Root Secure
           </div>
         </div>
       </div>
