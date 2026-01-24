@@ -23,18 +23,21 @@ export async function POST(request: Request) {
             const deposit = user.deposits?.find(d => d.id === transactionId);
             if (!deposit) return NextResponse.json({ message: 'Transaction not found' }, { status: 404 });
 
-            // Allow changing status from Pending or Processing (if added later)
-            // But for deposit simply Pending -> Approved/Failed
-            if (deposit.status === 'Approved' || deposit.status === 'Failed') {
+            if (deposit.status === 'Approved' || deposit.status === 'Successful' || deposit.status === 'Failed' || deposit.status === 'Rejected') {
                 return NextResponse.json({ message: 'Transaction already processed' }, { status: 400 });
             }
 
             if (action === 'approve') {
-                deposit.status = 'Approved';
-                user.wallet += deposit.amount;
+                const finalAmount = body.amount ? Number(body.amount) : deposit.amount;
+                deposit.amount = finalAmount;
+                deposit.status = 'Successful';
+                user.wallet += finalAmount;
             } else {
-                deposit.status = 'Failed';
+                deposit.status = 'Rejected';
             }
+
+            // Set user status back to Active after processing the latest deposit
+            user.status = 'Active';
 
         } else if (type === 'withdraw') {
             const withdrawal = user.withdrawals?.find(w => w.id === transactionId);

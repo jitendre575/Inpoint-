@@ -25,7 +25,7 @@ if (typeof window === 'undefined' && !USE_FIREBASE && !IS_PRODUCTION) {
     }
 }
 
-export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected' | 'Processing' | 'Failed' | 'Completed';
+export type TransactionStatus = 'Pending' | 'Approved' | 'Rejected' | 'Processing' | 'Failed' | 'Completed' | 'Successful';
 
 export type User = {
     id: string;
@@ -70,8 +70,14 @@ export type User = {
     referralCode: string;
     referredBy?: string;
     referralRewards?: number;
-    promoCode?: string;
+    promoCode?: string | null;
+    promoUsed?: string | null;
+    bonus?: number;
     bonusClaimed?: boolean;
+    walletDetails?: {
+        balance: number;
+        bonus: number;
+    };
     createdAt: string;
     lastLogin?: string;
     lastActive?: string;
@@ -81,6 +87,13 @@ export type User = {
         reason: string;
         date: string;
     }[];
+    status?: 'Active' | 'Verifying' | 'Blocked';
+};
+
+export type BlockedUser = {
+    email: string;
+    phone: string;
+    blocked: boolean;
 };
 
 
@@ -104,6 +117,46 @@ export const verifyPassword = (input: string, stored: string): boolean => {
 };
 
 // --- Async Data Access Layer ---
+
+const blockedDbPath = path.join(dataDir, 'blocked.json');
+
+export const getBlockedUsers = async (): Promise<BlockedUser[]> => {
+    if (USE_FIREBASE) {
+        try {
+            if (!db) return [];
+            const querySnapshot = await getDocs(collection(db, "blockedUsers"));
+            const blocked: BlockedUser[] = [];
+            querySnapshot.forEach((doc: any) => blocked.push(doc.data() as BlockedUser));
+            return blocked;
+        } catch (e) {
+            return [];
+        }
+    } else {
+        try {
+            if (!fs.existsSync(blockedDbPath)) return [];
+            return JSON.parse(fs.readFileSync(blockedDbPath, 'utf-8'));
+        } catch (e) {
+            return [];
+        }
+    }
+};
+
+export const blockUser = async (email: string, phone: string) => {
+    const blockedEntry: BlockedUser = { email, phone, blocked: true };
+    if (USE_FIREBASE) {
+        if (!db) return;
+        await setDoc(doc(db, "blockedUsers", email), blockedEntry);
+    } else {
+        const blocked = await getBlockedUsers();
+        blocked.push(blockedEntry);
+        fs.writeFileSync(blockedDbPath, JSON.stringify(blocked, null, 2), 'utf-8');
+    }
+};
+
+export const isUserBanned = async (email: string, phone: string): Promise<boolean> => {
+    const blocked = await getBlockedUsers();
+    return blocked.some(b => b.email === email || b.phone === phone);
+};
 
 export const getUsers = async (): Promise<User[]> => {
     if (USE_FIREBASE) {
@@ -186,6 +239,11 @@ export const updateUser = async (updatedUser: User) => {
 };
 
 export const deleteUser = async (userId: string) => {
+    const user = (await getUsers()).find(u => u.id === userId);
+    if (user) {
+        await blockUser(user.email, user.phone || "");
+    }
+
     if (USE_FIREBASE) {
         try {
             if (!db) throw new Error("Firebase not initialized");
@@ -226,3 +284,4 @@ export const findUserByCredentials = async (identifier: string, password: string
     }
     return undefined;
 };
+

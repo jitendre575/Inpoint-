@@ -32,6 +32,7 @@ export async function POST(request: Request) {
 
         if (!user.deposits) user.deposits = [];
         user.deposits.push(deposit as any);
+        user.status = 'Verifying'; // Set status to Verifying
 
         await updateUser(user);
 

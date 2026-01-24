@@ -37,6 +37,9 @@ export default function AdminDashboardPage() {
     const [notifications, setNotifications] = useState<any[]>([])
     const prevUsersRef = useRef<any[]>([])
 
+    const [editingDeposit, setEditingDeposit] = useState<any>(null)
+    const [editedAmount, setEditedAmount] = useState("")
+
     const fetchingRef = useRef(false)
 
     useEffect(() => {
@@ -79,24 +82,23 @@ export default function AdminDashboardPage() {
             if (res.ok) {
                 const data = await res.json()
                 if (data.users) {
-                    // Real-time notification logic
+                    // Real-time notification logic - "Phone Message Style"
                     if (prevUsersRef.current.length > 0) {
                         data.users.forEach((u: any) => {
                             const prevU = prevUsersRef.current.find(p => p.id === u.id);
                             if (prevU) {
-                                // Check for new deposits
-                                const newDeposits = (u.deposits?.length || 0) - (prevU.deposits?.length || 0);
+                                const newDeposits = (u.deposits?.filter((d: any) => d.status === 'Processing').length || 0) - (prevU.deposits?.filter((d: any) => d.status === 'Processing').length || 0);
                                 if (newDeposits > 0) {
-                                    const latestDeposit = u.deposits[u.deposits.length - 1];
+                                    const latestDeposit = [...u.deposits].reverse().find((d: any) => d.status === 'Processing');
                                     toast({
-                                        title: "New Deposit Alert!",
-                                        description: `₹${latestDeposit.amount} from ${u.name}`,
-                                        className: "bg-green-500 text-white font-bold"
+                                        title: "New Incoming Message",
+                                        description: `Deposit Request from ${u.name} – ₹${latestDeposit.amount}`,
+                                        className: "bg-green-600 border-0 text-white font-bold shadow-2xl rounded-2xl"
                                     });
                                     setNotifications(prev => [...prev, {
                                         id: Date.now().toString(),
-                                        title: "New Deposit",
-                                        message: `₹${latestDeposit.amount} from ${u.name}`,
+                                        title: "New Deposit Alert",
+                                        message: `New Deposit Request from ${u.name} – ₹${latestDeposit.amount}`,
                                         date: new Date().toISOString(),
                                         userId: u.id
                                     }]);
@@ -116,13 +118,6 @@ export default function AdminDashboardPage() {
         } catch (error: any) {
             if (error.name !== 'AbortError') {
                 console.error("Admin Fetch Error:", error)
-                if (!silent) {
-                    toast({
-                        title: "Fetch Failed",
-                        description: "Check server connection",
-                        variant: "destructive"
-                    })
-                }
             }
         } finally {
             fetchingRef.current = false
@@ -130,7 +125,7 @@ export default function AdminDashboardPage() {
         }
     }
 
-    const handleAction = async (transactionId: string, type: 'deposit' | 'withdraw', action: 'approve' | 'reject') => {
+    const handleAction = async (transactionId: string, type: 'deposit' | 'withdraw', action: 'approve' | 'reject', overrideAmount?: string) => {
         const password = sessionStorage.getItem("adminSecret")
         setActionLoading(true)
         try {
@@ -139,25 +134,28 @@ export default function AdminDashboardPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     adminSecret: password,
-                    userId: selectedUser.id,
+                    userId: selectedUser?.id || editingDeposit?.userId,
                     transactionId,
                     type,
-                    action
+                    action,
+                    amount: overrideAmount
                 })
             })
 
             if (res.ok) {
                 const data = await res.json()
                 setUsers(prev => prev.map(u => u.id === data.user.id ? data.user : u))
-                setSelectedUser(data.user)
-                toast({ title: "Success", description: `${type} ${action}ed.` })
+                if (selectedUser) setSelectedUser(data.user)
+                if (editingDeposit) setEditingDeposit(null)
+                toast({ title: "Protocol Executed", description: `${type} ${action}ed successfully.` })
             } else {
-                toast({ title: "Error", description: "Action failed", variant: "destructive" })
+                toast({ title: "Error", description: "Operation failed", variant: "destructive" })
             }
         } catch (error) {
-            toast({ title: "Error", description: "Network error", variant: "destructive" })
+            toast({ title: "Error", description: "Network failure", variant: "destructive" })
         } finally {
             setActionLoading(false);
+            setEditingDeposit(null);
         }
     }
 
@@ -437,6 +435,7 @@ export default function AdminDashboardPage() {
                                             <p className="text-[9px] font-bold opacity-70 uppercase tracking-widest mb-3">{new Date(pendingDeposits[0].date).toLocaleString()}</p>
                                             <div className="flex gap-2">
                                                 <Button onClick={() => handleAction(pendingDeposits[0].id, 'deposit', 'approve')} className="flex-1 h-8 bg-white text-green-600 hover:bg-green-50 font-black text-[9px] uppercase border-0">Approve</Button>
+                                                <Button onClick={() => { setEditingDeposit({ ...pendingDeposits[0], userId: user.id }); setEditedAmount(pendingDeposits[0].amount.toString()); }} className="h-8 w-8 bg-white/20 text-white hover:bg-white/30 border-0 p-0 flex items-center justify-center"><Edit3 className="h-4 w-4" /></Button>
                                                 <Button onClick={() => handleAction(pendingDeposits[0].id, 'deposit', 'reject')} className="h-8 w-8 bg-white/10 text-white hover:bg-white/20 border-0 p-0 flex items-center justify-center"><XCircle className="h-4 w-4" /></Button>
                                             </div>
                                         </div>
@@ -735,6 +734,45 @@ export default function AdminDashboardPage() {
                     <button onClick={() => setViewingScreenshot(null)} className="absolute top-4 right-4 h-10 w-10 bg-black/50 backdrop-blur-md rounded-full text-white flex items-center justify-center border border-white/20 hover:bg-black transition-all">✕</button>
                 </DialogContent>
             </Dialog>
+            {/* Verification Terminal (Edit Amount) */}
+            <Dialog open={!!editingDeposit} onOpenChange={() => setEditingDeposit(null)}>
+                <DialogContent className="max-w-sm p-0 border-0 bg-transparent">
+                    <Card className="p-8 rounded-[2.5rem] border-0 bg-white">
+                        <DialogHeader className="mb-6">
+                            <DialogTitle className="text-xl font-bold flex items-center gap-3 text-slate-900 uppercase tracking-tight">
+                                <Shield className="h-6 w-6 text-green-500" /> Verify Engine
+                            </DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-6">
+                            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-2">
+                                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Incoming Value</p>
+                                <p className="text-xl font-black text-slate-900 leading-none">₹{editingDeposit?.amount}</p>
+                            </div>
+
+                            <div className="space-y-2">
+                                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest ml-1">Overrule Amount (₹)</p>
+                                <Input
+                                    type="number"
+                                    value={editedAmount}
+                                    onChange={(e) => setEditedAmount(e.target.value)}
+                                    className="h-14 rounded-xl border-slate-200 bg-white focus:ring-4 focus:ring-green-500/5 font-black text-2xl px-5 transition-all text-green-600"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <Button
+                                    onClick={() => handleAction(editingDeposit.id, 'deposit', 'approve', editedAmount)}
+                                    disabled={actionLoading || !editedAmount}
+                                    className="flex-1 h-12 rounded-xl font-bold uppercase text-[10px] tracking-widest bg-green-600 hover:bg-green-700 text-white border-0 shadow-lg shadow-green-100"
+                                >
+                                    {actionLoading ? 'Syncing...' : 'Confirm & Activate'}
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
+
