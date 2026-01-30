@@ -334,7 +334,9 @@ export default function AdminDashboardPage() {
                             </div>
                         </div>
 
+                        <Button onClick={() => router.push("/admin/casino")} className="h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold border-0 shadow-lg shadow-indigo-900/20 px-4">Casino Control</Button>
                         <Button onClick={handleLogout} variant="destructive" className="font-bold h-10 rounded-xl border-0 shadow-lg shadow-red-900/20">Exit Node</Button>
+
                     </div>
                 </div>
             </header>

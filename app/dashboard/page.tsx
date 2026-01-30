@@ -9,7 +9,7 @@ import {
   Wallet, TrendingUp, Users, Gift, Bell, Timer, ShieldCheck,
   ArrowUpCircle, ArrowDownCircle, ChevronRight, Star, Plus,
   CreditCard, LayoutDashboard, History, Zap, Activity, PieChart,
-  Clock, RefreshCw
+  Clock, RefreshCw, Gamepad2
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
@@ -159,10 +159,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-4 gap-4">
           {[
             { label: 'Market', icon: Zap, color: 'text-green-600', bg: 'bg-green-50', action: () => setShowPlansModal(true) },
+            { label: 'Casino', icon: Gamepad2, color: 'text-indigo-600', bg: 'bg-indigo-50', path: '/casino' },
             { label: 'Network', icon: Users, color: 'text-emerald-600', bg: 'bg-emerald-50', path: '/team' },
             { label: 'Rewards', icon: Gift, color: 'text-green-500', bg: 'bg-green-50', path: '/bonus' },
-            { label: 'History', icon: History, color: 'text-slate-600', bg: 'bg-slate-100', path: '/withdraw' },
           ].map((item, idx) => (
+
             <button
               key={idx}
               onClick={item.action || (() => router.push(item.path!))}
