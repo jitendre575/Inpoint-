@@ -27,60 +27,58 @@ export default function BonusPage() {
 
   return (
     <div className="min-h-screen bg-[#0B1020] pb-24 font-sans selection:bg-purple-500/30 uppercase">
-      {/* 1. Purple Header */}
-      <div className="bg-[#0B1020]/80 border-b border-white/5 px-5 pt-10 pb-8 sticky top-0 z-30 shadow-3xl backdrop-blur-md">
+      {/* 1. Refined Header */}
+      <div className="bg-[#0B1020]/80 border-b border-white/5 px-4 pt-8 pb-6 sticky top-0 z-30 shadow-xl backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-[#5B2EFF]/10 flex items-center justify-center border border-[#5B2EFF]/20 shadow-xl purple-glow">
-              <Trophy className="h-6 w-6 text-[#5B2EFF]" />
+            <div className="h-10 w-10 rounded-xl bg-[#5B2EFF]/10 flex items-center justify-center border border-[#5B2EFF]/20 shadow-lg">
+              <Trophy className="h-5 w-5 text-[#5B2EFF]" />
             </div>
             <div>
-              <p className="text-slate-500 text-[10px] font-black uppercase tracking-[3px] mb-1">Rewards Node</p>
-              <h1 className="text-xl font-black text-white leading-none uppercase tracking-tight">Incentive Center</h1>
+              <p className="text-slate-500 text-[9px] font-semibold uppercase tracking-widest mb-0.5">Rewards Node</p>
+              <h1 className="text-base font-bold text-white leading-none uppercase tracking-tight">Incentive Center</h1>
             </div>
           </div>
-          <button onClick={() => router.back()} className="h-11 w-11 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-95">
-            <ChevronRight className="h-5 w-5 text-[#00F0FF] rotate-180" />
+          <button onClick={() => router.back()} className="h-9 w-9 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-95">
+            <ChevronRight className="h-4 w-4 text-[#00F0FF] rotate-180" />
           </button>
         </div>
       </div>
 
       <div className="px-5 mt-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-        {/* 2. Premium Welcome Asset */}
-        <Card className="p-8 bg-gradient-to-br from-[#0F1C3F] to-[#0B1020] border-white/5 shadow-3xl rounded-[3.5rem] relative overflow-hidden group border-0">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[#5B2EFF]/10 rounded-full blur-[100px] -mr-20 -mt-20" />
-
+        {/* 2. Welcome Asset */}
+        <Card className="p-6 bg-gradient-to-br from-[#0F1C3F] to-[#0B1020] border-white/5 shadow-xl rounded-2xl relative overflow-hidden group border-0">
           <div className="relative z-10 font-sans">
-            <div className="flex items-center gap-2 mb-8">
-              <Badge className="bg-[#5B2EFF] text-white border-0 text-[10px] font-black uppercase tracking-[2px] px-4 py-2 rounded-xl purple-glow">Protocol Active</Badge>
+            <div className="flex items-center gap-2 mb-6">
+              <Badge className="bg-[#5B2EFF] text-white border-0 text-[8px] font-semibold uppercase tracking-widest px-3 py-1.5 rounded-lg">Protocol Active</Badge>
             </div>
 
-            <h2 className="text-3xl font-black text-white tracking-tighter leading-none mb-3 uppercase">Registration Credit</h2>
-            <p className="text-slate-500 text-[9px] font-black mb-10 uppercase tracking-[4px]">Asset Code: PURPLE_BOOST</p>
+            <h2 className="text-2xl font-bold text-white tracking-tight leading-none mb-2 uppercase">Registration Credit</h2>
+            <p className="text-slate-500 text-[8px] font-semibold mb-8 uppercase tracking-widest">Asset Code: PURPLE_BOOST</p>
 
-            <div className="flex items-baseline gap-3 mb-10">
-              <span className="text-6xl font-black text-white tracking-tighter shadow-sm">₹50</span>
-              <span className="text-[#00F0FF] text-[10px] font-black uppercase tracking-[3px] bg-[#00F0FF]/10 px-3 py-1.5 rounded-xl border border-[#00F0FF]/20">Vault Locked</span>
+            <div className="flex items-baseline gap-2 mb-8">
+              <span className="text-5xl font-bold text-white tracking-tighter">₹50</span>
+              <span className="text-[#00F0FF] text-[9px] font-semibold uppercase tracking-widest bg-[#00F0FF]/10 px-2 py-1 rounded-lg border border-[#00F0FF]/20">Vault Locked</span>
             </div>
 
-            <div className="h-2 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
-              <div className="h-full w-full bg-[#5B2EFF] rounded-full shadow-[0_0_20px_rgba(91,46,255,0.8)]" />
+            <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
+              <div className="h-full w-full bg-[#5B2EFF] rounded-full shadow-[0_0_12px_rgba(91,46,255,0.6)]" />
             </div>
           </div>
         </Card>
 
-        {/* 3. Streamlined Incentive Path */}
-        <div className="space-y-6 font-sans">
+        {/* 3. Incentive Path */}
+        <div className="space-y-4 font-sans">
           <div className="flex items-center justify-between px-2">
-            <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[5px]">Market Incentives</h3>
-            <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-              <Sparkles className="h-3.5 w-3.5 text-[#5B2EFF]" />
-              <span className="text-[10px] text-white font-black uppercase tracking-widest">2 Active</span>
+            <h3 className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest">Market Incentives</h3>
+            <div className="flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-lg border border-white/10">
+              <Sparkles className="h-3 w-3 text-[#5B2EFF]" />
+              <span className="text-[9px] text-white font-semibold uppercase tracking-widest">2 Active</span>
             </div>
           </div>
 
-          <div className="grid gap-4">
+          <div className="grid gap-3">
             {[
               {
                 title: "Capital Multiplier",
@@ -104,30 +102,30 @@ export default function BonusPage() {
               <Card
                 key={idx}
                 onClick={() => router.push(item.path)}
-                className="p-6 bg-[#0F1C3F]/40 glass-card border-white/5 shadow-xl rounded-[2.5rem] hover:shadow-[#5B2EFF]/10 transition-all cursor-pointer group border-0"
+                className="p-5 bg-[#0F1C3F]/40 glass-card border-white/5 shadow-lg rounded-2xl hover:shadow-[#5B2EFF]/5 transition-all cursor-pointer group border-0"
               >
-                <div className="flex items-center gap-6">
-                  <div className={`h-16 w-16 ${item.bg} rounded-[1.5rem] flex items-center justify-center shrink-0 border border-white/5 shadow-2xl group-hover:rotate-6 transition-transform purple-glow`}>
-                    <item.icon className={`h-8 w-8 ${item.color}`} />
+                <div className="flex items-center gap-4">
+                  <div className={`h-12 w-12 ${item.bg} rounded-xl flex items-center justify-center shrink-0 border border-white/5 shadow-lg`}>
+                    <item.icon className={`h-6 w-6 ${item.color}`} />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-black text-white text-base uppercase tracking-tight">{item.title}</h4>
-                      <div className="flex items-center gap-1.5 text-white bg-[#5B2EFF] px-2.5 py-1 rounded-lg border border-[#5B2EFF]/20 purple-glow">
-                        <span className="text-[9px] font-black uppercase tracking-tighter">{item.bonus}</span>
-                        <ArrowRightCircle className="h-3 w-3" />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h4 className="font-bold text-white text-sm uppercase tracking-tight">{item.title}</h4>
+                      <div className="flex items-center gap-1 text-white bg-[#5B2EFF] px-2 py-0.5 rounded-md border border-[#5B2EFF]/10">
+                        <span className="text-[8px] font-bold uppercase tracking-tighter">{item.bonus}</span>
+                        <ArrowRightCircle className="h-2.5 w-2.5" />
                       </div>
                     </div>
-                    <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest leading-none">{item.desc}</p>
+                    <p className="text-slate-500 text-[9px] font-semibold uppercase tracking-widest leading-none">{item.desc}</p>
                   </div>
                 </div>
               </Card>
             ))}
 
             {/* Expiring Placeholder */}
-            <div className="p-10 border-2 border-dashed border-white/5 bg-white/[0.02] rounded-[3rem] text-center opacity-40">
-              <Star className="h-8 w-8 text-[#5B2EFF] mx-auto mb-4" />
-              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[5px]">Maintenance Cycle: 24h Remaining</p>
+            <div className="p-8 border-2 border-dashed border-white/5 bg-white/[0.02] rounded-2xl text-center opacity-40">
+              <Star className="h-6 w-6 text-[#5B2EFF] mx-auto mb-3" />
+              <p className="text-[9px] font-semibold text-slate-500 uppercase tracking-widest leading-none">Maintenance Cycle: 24h Remaining</p>
             </div>
           </div>
         </div>

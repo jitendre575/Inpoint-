@@ -27,7 +27,8 @@
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased selection:bg-purple-500/30 not-italic;
+    @apply bg-background text-foreground antialiased selection:bg-purple-500/30 font-medium;
+    font-style: normal !important;
     font-feature-settings: 'ss01' on, 'ss02' on, 'cv01' on, 'cv03' on;
   }
 
@@ -37,7 +38,11 @@
   h4,
   h5,
   h6 {
-    @apply font-bold tracking-tight text-white;
+    @apply font-semibold tracking-tight text-white;
+  }
+
+  * {
+    font-style: normal !important;
   }
 }
 
@@ -46,7 +51,7 @@
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.3s ease;
 }
 
