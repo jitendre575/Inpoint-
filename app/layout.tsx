@@ -14,19 +14,19 @@ const poppins = Poppins({
 })
 
 export const metadata: Metadata = {
-  title: "Inpoint Green Grow - Premium Investment Platform",
+  title: "Inpoint Purple Elite - Premium High-Yield Platform",
   description:
-    "Grow your wealth with Inpoint Green Grow's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system. Start investing today!",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app"),
+    "Master your digital wealth with Inpoint Purple Cluster. Deploy institutional-grade capital nodes and secure automated daily yields on our distributed cluster.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://inpoint-purple.vercel.app"),
   generator: "Next.js",
-  keywords: ["investment", "trading", "wealth growth", "financial planning", "secure investment", "Inpoint Green Grow"],
-  authors: [{ name: "Inpoint Green Grow" }],
+  keywords: ["investment", "trading", "alpha yield", "capital nodes", "secure investment", "Inpoint Purple Elite"],
+  authors: [{ name: "Inpoint Purple Cluster" }],
   openGraph: {
-    title: "Inpoint Green Grow - Smart Investment Platform",
+    title: "Inpoint Purple Elite - Precision Wealth Mastery",
     description:
-      "Grow your wealth with Inpoint Green Grow's trusted investment platform. Get guaranteed returns on your investments with our secure and transparent trading system.",
-    url: process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app",
-    siteName: "Inpoint Green Grow",
+      "Master your digital wealth with Inpoint Purple Cluster. Deploy institutional-grade capital nodes and secure automated daily yields.",
+    url: process.env.NEXT_PUBLIC_APP_URL || "https://inpoint-purple.vercel.app",
+    siteName: "Inpoint Purple Elite",
     images: [
       {
         url: `${process.env.NEXT_PUBLIC_APP_URL || "https://tovexar-roj-grow.vercel.app"}/images/inpoint-rose-grow-og.png`,

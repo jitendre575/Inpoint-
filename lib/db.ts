@@ -38,6 +38,7 @@ export type User = {
     history: any[];
     profilePhoto?: string;
     isBlocked?: boolean;
+    isDeleted?: boolean;
     deposits?: {
         id: string;
         amount: number;

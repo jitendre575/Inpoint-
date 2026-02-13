@@ -13,7 +13,7 @@ export default function ToolPage() {
   useEffect(() => {
     const currentUser = localStorage.getItem("currentUser")
     if (!currentUser) {
-      router.push("/login")
+      router.push("/")
     } else {
       setUser(JSON.parse(currentUser))
     }
@@ -22,95 +22,76 @@ export default function ToolPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#F8FAF8] pb-32 font-sans selection:bg-green-100">
-      {/* Premium Header */}
-      <div className="bg-[#14532D] text-white px-6 pt-16 pb-24 relative overflow-hidden rounded-b-[4rem] shadow-2xl">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-green-500/10 rounded-full -mr-20 -mt-20 blur-[100px]" />
+    <div className="min-h-screen bg-[#0B1020] pb-32 font-sans selection:bg-purple-500/30 uppercase">
+      {/* 1. Purple Header */}
+      <div className="bg-gradient-to-br from-[#0F1C3F] to-[#0B1020] text-white px-6 pt-16 pb-24 relative overflow-hidden rounded-b-[4rem] shadow-3xl border-b border-white/5">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-[#5B2EFF]/10 rounded-full -mr-20 -mt-20 blur-[100px]" />
 
         <div className="relative z-10 flex flex-col items-center">
-          <div className="h-14 w-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10 backdrop-blur-md shadow-inner mb-4">
-            <LayoutGrid className="h-8 w-8 text-green-300" />
+          <div className="h-16 w-16 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10 backdrop-blur-md shadow-3xl mb-6 purple-glow">
+            <LayoutGrid className="h-9 w-9 text-[#5B2EFF]" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight uppercase not-italic">Maintenance Hub</h1>
-          <p className="text-green-300/40 text-[10px] font-bold uppercase tracking-[0.3em] mt-1">Operational Protocol v2.0</p>
+          <h1 className="text-2xl font-black tracking-tighter uppercase leading-none">Maintenance Hub</h1>
+          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[5px] mt-2">Operational Protocol v5.2</p>
         </div>
       </div>
 
-      <div className="px-5 -mt-10 relative z-20 space-y-6">
-        {/* Main Banner */}
-        <Card className="p-8 bg-white border border-green-50 shadow-[0_20px_50px_rgba(20,83,45,0.06)] rounded-[3rem] relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-4 opacity-5">
-            <ShieldCheck className="h-24 w-24 text-green-900" />
+      <div className="px-5 -mt-10 relative z-20 space-y-8">
+        {/* 2. Main Banner */}
+        <Card className="p-10 bg-[#121A33]/80 glass-card border-white/5 shadow-3xl rounded-[3.5rem] relative overflow-hidden text-center border-0">
+          <div className="absolute top-0 right-0 p-6 opacity-5">
+            <ShieldCheck className="h-28 w-28 text-white" />
           </div>
           <div className="relative z-10">
-            <h2 className="text-lg font-bold text-slate-900 mb-2 uppercase tracking-tight leading-none">Management Suite</h2>
-            <p className="text-[11px] text-slate-400 font-medium leading-relaxed uppercase tracking-wider">Configure your liquidity flow and audit your portfolio nodes from a single dashboard.</p>
+            <h2 className="text-xl font-black text-white mb-3 uppercase tracking-tight leading-none">Management Suite</h2>
+            <p className="text-[10px] text-slate-500 font-black leading-loose uppercase tracking-widest max-w-[240px] mx-auto">Configure your liquidity flow and audit your portfolio nodes from a single dashboard.</p>
           </div>
         </Card>
 
-        {/* Action Grid */}
+        {/* 3. Action Grid */}
         <div className="grid grid-cols-2 gap-4">
-          <Card
-            onClick={() => router.push("/deposit")}
-            className="p-6 cursor-pointer hover:shadow-xl transition-all active:scale-95 bg-white border border-green-50 rounded-[2.5rem] group"
-          >
-            <div className="h-11 w-11 rounded-xl bg-green-50 flex items-center justify-center mb-4 group-hover:bg-green-500 transition-colors">
-              <ArrowDownCircle className="h-6 w-6 text-green-600 group-hover:text-white transition-all" />
-            </div>
-            <h3 className="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">Deposit</h3>
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Credit Wallet</p>
-          </Card>
-
-          <Card
-            onClick={() => router.push("/withdraw")}
-            className="p-6 cursor-pointer hover:shadow-xl transition-all active:scale-95 bg-white border border-green-50 rounded-[2.5rem] group"
-          >
-            <div className="h-11 w-11 rounded-xl bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-500 transition-colors">
-              <ArrowUpCircle className="h-6 w-6 text-emerald-600 group-hover:text-white transition-all" />
-            </div>
-            <h3 className="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">Withdraw</h3>
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Exit Capital</p>
-          </Card>
-
-          <Card className="p-6 cursor-pointer hover:shadow-xl transition-all active:scale-95 bg-white border border-green-50 rounded-[2.5rem] group">
-            <div className="h-11 w-11 rounded-xl bg-slate-50 flex items-center justify-center mb-4 group-hover:bg-[#14532D] transition-colors">
-              <Calculator className="h-6 w-6 text-slate-600 group-hover:text-white transition-all" />
-            </div>
-            <h3 className="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">Calculators</h3>
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Profit Projection</p>
-          </Card>
-
-          <Card className="p-6 cursor-pointer hover:shadow-xl transition-all active:scale-95 bg-white border border-green-50 rounded-[2.5rem] group">
-            <div className="h-11 w-11 rounded-xl bg-green-50 flex items-center justify-center mb-4 group-hover:bg-green-600 transition-colors">
-              <PieChart className="h-6 w-6 text-green-600 group-hover:text-white transition-all" />
-            </div>
-            <h3 className="font-bold text-slate-900 text-sm mb-1 uppercase tracking-tight">Analytics</h3>
-            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest leading-none">Growth Metrics</p>
-          </Card>
+          {[
+            { label: 'Deposit', sub: 'Credit Wallet', icon: ArrowDownCircle, color: 'text-[#5B2EFF]', bg: 'bg-[#5B2EFF]/10', path: '/deposit' },
+            { label: 'Withdraw', sub: 'Exit Capital', icon: ArrowUpCircle, color: 'text-[#00F0FF]', bg: 'bg-[#00F0FF]/10', path: '/withdraw' },
+            { label: 'Calculators', sub: 'Profit Projection', icon: Calculator, color: 'text-white', bg: 'bg-white/5' },
+            { label: 'Analytics', sub: 'Growth Metrics', icon: PieChart, color: 'text-[#5B2EFF]', bg: 'bg-[#5B2EFF]/10' },
+          ].map((item, idx) => (
+            <Card
+              key={idx}
+              onClick={() => item.path && router.push(item.path)}
+              className="p-7 cursor-pointer hover:shadow-[#5B2EFF]/10 transition-all active:scale-95 bg-[#0F1C3F]/40 glass-card border-white/5 rounded-[2.5rem] group border-0"
+            >
+              <div className={`h-12 w-12 ${item.bg} rounded-2xl flex items-center justify-center mb-5 group-hover:rotate-6 transition-transform shadow-xl purple-glow`}>
+                <item.icon className={`h-6 w-6 ${item.color}`} />
+              </div>
+              <h3 className="font-black text-white text-base mb-1.5 uppercase tracking-tight leading-none">{item.label}</h3>
+              <p className="text-[8px] text-slate-500 font-black uppercase tracking-[3px] leading-none">{item.sub}</p>
+            </Card>
+          ))}
         </div>
 
-        {/* Recent Activity Log */}
-        <Card className="p-8 bg-white border border-green-50 shadow-sm rounded-[3rem]">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-[11px] text-slate-900 uppercase tracking-[3px]">Audit Activity</h3>
-            <History className="h-4 w-4 text-green-200" />
+        {/* 4. Recent Activity Log */}
+        <Card className="p-10 bg-[#0F1C3F]/40 glass-card border-white/5 shadow-3xl rounded-[3.5rem] border-0">
+          <div className="flex items-center justify-between mb-8 px-2">
+            <h3 className="font-black text-[10px] text-white uppercase tracking-[5px]">Audit Activity</h3>
+            <History className="h-5 w-5 text-[#5B2EFF]" />
           </div>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-green-50/50 rounded-2xl border border-green-50">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-                  <Activity className="h-5 w-5 text-green-500" />
+            <div className="flex items-center justify-between p-5 bg-black/20 rounded-[2rem] border border-white/5 shadow-inner">
+              <div className="flex items-center gap-5">
+                <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center shadow-2xl border border-white/10">
+                  <Activity className="h-6 w-6 text-[#10B981]" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">Node Sync Successful</p>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Real-time update</p>
+                  <p className="text-[11px] font-black text-white uppercase tracking-tight mb-1">Node Sync Successful</p>
+                  <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Real-time update</p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-green-100" />
+              <ChevronRight className="h-5 w-5 text-slate-800" />
             </div>
 
-            <div className="text-center py-6">
-              <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[4px]">End of Registry</p>
+            <div className="text-center py-8">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[5px]">End of Registry</p>
             </div>
           </div>
         </Card>

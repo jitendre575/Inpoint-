@@ -1,35 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #F8FAF8;
-  --color-foreground: #14532D;
-  --color-primary: #22C55E;
-  --color-secondary: #DCFCE7;
-  --color-muted: #F0FDF4;
-  --color-accent: #4ADE80;
+  --color-background: #0B1020;
+  --color-foreground: #F1F5F9;
+  --color-primary: #5B2EFF;
+  --color-secondary: #0F1C3F;
+  --color-muted: #1E293B;
+  --color-accent: #00F0FF;
+  --color-success: #10B981;
   --color-destructive: #EF4444;
-  --color-border: #DCFCE7;
-  --color-input: #F0FDF4;
-  --color-ring: #22C55E;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-input: rgba(255, 255, 255, 0.05);
+  --color-ring: #5B2EFF;
 
-  --color-theme-green: #22C55E;
-  --color-theme-light-green: #F0FDF4;
-  --color-theme-deep-green: #14532D;
-  --color-theme-gold: #F59E0B;
+  --color-theme-purple: #5B2EFF;
+  --color-theme-midnight: #0F1C3F;
+  --color-theme-cyan: #00F0FF;
+  --color-theme-emerald: #10B981;
 
-  --radius-sm: 0.75rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.5rem;
-  --radius-2xl: 1.75rem;
-  --radius-3xl: 2rem;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
 }
 
 @layer base {
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased selection:bg-purple-500/30 not-italic;
     font-feature-settings: 'ss01' on, 'ss02' on, 'cv01' on, 'cv03' on;
-    letter-spacing: -0.01em;
   }
 
   h1,
@@ -38,43 +37,106 @@
   h4,
   h5,
   h6 {
-    @apply font-bold tracking-tight text-foreground;
-    line-height: 1.2;
-  }
-
-  p {
-    @apply leading-relaxed;
-  }
-
-  button,
-  a {
-    @apply transition-all duration-300 ease-in-out;
+    @apply font-bold tracking-tight text-white;
   }
 }
 
-.premium-card {
-  background-color: white;
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--color-theme-light-green);
-  box-shadow: 0 8px 30px rgba(34, 197, 94, 0.08);
-  border-radius: 2rem;
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(91, 46, 255, 0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
 }
 
 .premium-gradient {
-  background: linear-gradient(to right, #22C55E, #16A34A);
+  background: linear-gradient(135deg, #5B2EFF 0%, #3D1FCC 100%);
+  position: relative;
+  overflow: hidden;
 }
 
-.soft-glow-green {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.1);
+.premium-gradient::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.input-modern {
-  @apply h-12 px-4 rounded-xl border border-green-100 bg-green-50/30 transition-all;
+.premium-gradient:hover::after {
+  opacity: 1;
+}
 
-  &:focus {
-    @apply bg-white ring-4 ring-green-500/5 border-green-500/20;
+.cyan-glow {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+}
+
+.purple-glow {
+  box-shadow: 0 0 20px rgba(91, 46, 255, 0.3);
+}
+
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(91, 46, 255, 0.4);
   }
+
+  70% {
+    box-shadow: 0 0 0 12px rgba(91, 46, 255, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(91, 46, 255, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translateY(15px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-reveal {
+  animation: fadeInScale 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.hover-lift {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+.neon-border {
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.1);
+}
+
+.neon-border:hover {
+  border-color: #00F0FF;
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
 }
 
 @keyframes float {
@@ -93,4 +155,17 @@
 
 .animate-float {
   animation: float 4s ease-in-out infinite;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #0B1020;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #5B2EFF;
+  border-radius: 10px;
 }
